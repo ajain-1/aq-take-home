@@ -3,7 +3,7 @@
 ## Part 1 + Part 2: Task executor on Kubernetes
 
 #### What I did
-- Restored the parts of `terminal_bench/` that were missing and broke `tb run`: the run lock models, asciinema marker merging, Anthropic prompt caching, the asciinema timestamp script, and the `timeout.txt` / `formatted-response.txt` prompt templates, plus their imports. The S3/DB upload, registry, and livestream paths are left unimplemented because the executor never uses them.
+- Re-implemented the parts of `terminal_bench/` that were missing and broke `tb run` (written from scratch to match how the harness calls them): the run lock models, asciinema marker merging, Anthropic prompt caching, the asciinema timestamp script, and the `timeout.txt` / `formatted-response.txt` prompt templates, plus their imports. The S3/DB upload, registry, and livestream paths are left unimplemented because the executor never uses them.
 - Built the executor as a pipeline in `runner/`, with a thin FastAPI layer in `api/`:
   - `bundle.py`: safe ZIP extraction (no path traversal or symlinks, size and entry caps), `task.yaml` validation, and generation of the `docker-compose.yaml` that terminal-bench expects.
   - `docker_ops.py`: builds the task image once per submission, layers `tmux`/`asciinema` on top (task images don't include them), builds the content-addressed Job pod image, and cleans up containers, networks, and images by label.
@@ -15,7 +15,8 @@
 - `POST /submit` validates the ZIP synchronously and returns 422 for a malformed task, then queues the submission. It accepts optional `n_attempts` and `agent` (`terminus-1` by default; `oracle`/`nop` for infrastructure checks).
 - `GET /status/{id}` returns status (`queued|running|completed|failed`), a fine-grained phase, timestamps, and per-attempt pod state, including retries and failure reasons.
 - `GET /results/{id}` returns aggregate counts, per-test pass counts across attempts, and for each attempt: per-test pass/fail, failure mode, timings, token usage, the extracted pytest output, and the artifact directory (agent episodes, asciinema recording, tmux panes, pod log).
-- Made the helper scripts run on macOS's bash 3.2 (`head -n -1` and `declare -A` are not available there), and made polling stop on 404.
+- Made the helper scripts run on macOS's bash 3.2 and BSD tools: replaced `head -n -1` and `declare -A`, and fixed `mktemp /tmp/task-XXXXXX.zip`, which BSD `mktemp` does not randomize (every run reused one literal file). `run_all.sh` no longer exits silently under `set -e` when a submit fails, and polling stops on 404.
+- Model routing: the README's `anthropic/claude-opus-4-5-20250514` is not an OpenRouter model ID. The executor uses `openrouter/anthropic/claude-opus-4.5` through LiteLLM (configurable with `AQ_MODEL`).
 
 #### What I changed in tasks/
 Every task was checked with plain Docker. Each one builds, its `solution.sh` passes every test, and every test fails when the task is left unsolved.
@@ -56,7 +57,8 @@ Every task was checked with plain Docker. Each one builds, its `solution.sh` pas
   - A failing test is a normal result, not an infrastructure failure.
   - Infrastructure failures of a single attempt (e.g. an OOM-killed or evicted pod) are retried once via `backoffLimitPerIndex` without touching the other attempts.
   - A retried pod first removes leftover task containers and partial output from the previous try.
-  - Pods that can never start (`ErrImageNeverPull`, `CreateContainerConfigError`, …) fail the submission immediately instead of waiting out the deadline.
+  - Pods that can never start because of a container-level error (`ErrImageNeverPull`, `CreateContainerConfigError`, …) fail the submission immediately instead of waiting out the deadline. Volume mount failures only show up as pod events, so they are not detected and still wait for the deadline.
+- **Task container memory.** `resource_class` caps the task container through compose `mem_limit`. If a task exceeds it, Docker kills the task container rather than the pod, and the attempt surfaces as an agent or test failure, not as a pod `OOMKilled`.
 - **Partial results.** An attempt that produced no results is reported as `status: error` with the pod's reason (e.g. `OOMKilled (exit code 137)`, `DeadlineExceeded`) while the other attempts still report. The submission is `failed` only if no attempt produced test results.
 - **Timeouts everywhere.** Docker builds (`AQ_BUILD_TIMEOUT_SEC`), the Job deadline, and an executor-side wait deadline (Job deadline plus a grace period) after which the Job is deleted.
 - **Cleanup always runs** after a terminal outcome: the Job is deleted, then labelled task containers and networks (which can be orphaned when a pod is killed before compose teardown), then the task images. `ttlSecondsAfterFinished` is a fallback. Each pod log is saved next to its attempt before the Job is deleted.
@@ -71,6 +73,17 @@ cd api && ../.venv/bin/uvicorn main:app --port 8000
 bash scripts/run_all.sh                           # API_URL=... to use another port
 ```
 The first submission builds the Job pod image (a few minutes); later submissions reuse it. Per-submission artifacts live under `data/submissions/<id>/`.
+
+#### Known limitations
+- The Job's `activeDeadlineSeconds` starts when the Job is created, so time spent `Pending` on a saturated node counts against it.
+- A Job that is deleted (for example by its 24h TTL) before a resumed API collects it gets re-created, and its attempts re-run.
+- Docker builds are not interruptible, so a clean API shutdown waits for in-flight builds to finish.
+- Only the latest pod's log per attempt is kept; logs from earlier retried pods are lost.
+
+#### End-to-end verification
+- All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards.
+- The committed real run is in `results/sample-run/` (csv-to-json-cli-fix: results, agent episodes, asciinema recording, tmux panes).
+- Restart recovery: an oracle submission with 2 attempts was interrupted by an API restart, resumed, and passed 5/5 on both attempts.
 
 #### What I'd do next
 - Replace the Docker socket with per-pod DinD/sysbox (or a remote BuildKit plus a registry) for real isolation, and use object storage instead of hostPath.
