@@ -33,5 +33,10 @@ def learnability_verdict(successes: int, trials: int) -> dict:
     else:
         verdict = "insufficient_evidence"
         basis = f"95% interval {low:.0%}-{high:.0%} overlaps the 20-70% boundary; more runs needed"
-    return {"verdict": verdict, "basis": basis, "pass_rate": round(successes / trials, 3) if trials else None,
-            "interval_95": [low, high], "n": trials}
+    return {
+        "verdict": verdict,
+        "basis": basis,
+        "pass_rate": round(successes / trials, 3) if trials else None,
+        "interval_95": [low, high],
+        "n": trials,
+    }

@@ -31,7 +31,7 @@ def _is_excluded(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> bool:
     while parent is not None:
         if isinstance(parent, ast.Assert) and child is parent.msg:
             return True
-        if isinstance(parent, (ast.JoinedStr, ast.Dict, ast.Subscript)):
+        if isinstance(parent, ast.JoinedStr | ast.Dict | ast.Subscript):
             return True
         if isinstance(parent, ast.Call) and child in parent.args and not _is_regex_call(parent):
             return True
@@ -43,8 +43,12 @@ def _is_excluded(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> bool:
 
 def _is_regex_call(call: ast.Call) -> bool:
     func = call.func
-    return isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) and func.value.id == "re" \
+    return (
+        isinstance(func, ast.Attribute)
+        and isinstance(func.value, ast.Name)
+        and func.value.id == "re"
         and func.attr in REGEX_FUNCTIONS
+    )
 
 
 def _literal_text(node: ast.Constant, parents: dict[ast.AST, ast.AST]) -> str:

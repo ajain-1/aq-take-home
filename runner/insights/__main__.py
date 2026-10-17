@@ -18,8 +18,10 @@ def main() -> int:
     report = generate(Path(args[0]), narrative="--no-narrative" not in sys.argv)
     evidence = report["evidence"].values()
     verified = sum(1 for e in evidence if e["verified"])
-    print(f"{report['task_id']}: {len(report['insights'])} findings, {len(report['rejected_insights'])} withheld, "
-          f"{verified}/{len(evidence)} evidence items verified")
+    print(
+        f"{report['task_id']}: {len(report['insights'])} findings, "
+        f"{len(report['rejected_insights'])} withheld, {verified}/{len(evidence)} evidence items verified"
+    )
     return 1 if report["rejected_insights"] else 0
 
 
