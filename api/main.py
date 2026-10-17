@@ -13,6 +13,7 @@ Endpoints:
     GET  /status/{id}    - Check execution status
     GET  /results/{id}   - Get final test results
     GET  /health         - Health check
+    POST /validate       - Task quality checks (see api/validation_routes.py)
     GET  /ui             - Web UI (see api/ui_routes.py for its read-only endpoints)
 """
 
@@ -28,7 +29,7 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from api import insights_routes, ui_routes
+from api import insights_routes, ui_routes, validation, validation_routes
 from api.context import AppContext, configure_logging, get_context
 from api.service import SubmissionRejected
 from runner import docker_ops
@@ -45,13 +46,16 @@ async def lifespan(app: FastAPI):
     context = AppContext.create(Settings.from_env())
     app.state.context = context
     context.service.resume_unfinished()
+    context.validations.resume_unfinished()
     yield
+    context.validations.shutdown()
     context.service.shutdown()
 
 
 app = FastAPI(title="AQ Task Executor", lifespan=lifespan)
 app.include_router(ui_routes.router)
 app.include_router(insights_routes.router)
+app.include_router(validation_routes.router)
 app.mount("/ui/static", StaticFiles(directory=ui_routes.STATIC_DIR), name="ui-static")
 
 
@@ -70,6 +74,9 @@ def submit_task(
     agent: Annotated[str | None, Form()] = None,
     strategy: Annotated[str | None, Form()] = None,
     confidence: Annotated[float | None, Form()] = None,
+    validation_gate: Annotated[
+        validation.ValidationGate, Form(alias="validation")
+    ] = validation.ValidationGate.NONE,
 ):
     """
     Accept a task ZIP and execute it as a K8s Job.
@@ -86,10 +93,17 @@ def submit_task(
     (terminus-1, or oracle/nop for infrastructure checks). `strategy=adaptive`
     runs attempts in waves and stops once the 10-run learnability class is
     decided; `confidence` < 1.0 allows earlier, probabilistic stopping.
+    `validation=static` rejects tasks with static quality errors; `validation=full`
+    also runs oracle/nop checks before any agent and fails the submission on errors.
     """
     archive = file.file.read(context.settings.max_upload_bytes + 1)
     try:
-        submission = context.service.submit(archive, n_attempts, agent, strategy, confidence)
+        gate = context.validations.check_gate(archive, validation_gate)
+        pending_gate = context.validations.pending_gate_id(gate)
+        submission = context.service.submit(archive, n_attempts, agent, strategy, confidence, pending_gate)
+        context.validations.mark_gating(submission)
+    except validation.ValidationRejected as e:
+        raise HTTPException(status_code=422, detail=e.report or str(e)) from None
     except SubmissionRejected as e:
         raise HTTPException(status_code=422, detail=str(e)) from None
     return {
@@ -100,6 +114,7 @@ def submit_task(
         "strategy": submission.strategy,
         "confidence": submission.confidence,
         "agent": submission.agent,
+        "validation_id": submission.validation_id,
         "status_url": f"/status/{submission.id}",
         "results_url": f"/results/{submission.id}",
     }

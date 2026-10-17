@@ -6,10 +6,12 @@ from dataclasses import dataclass
 from fastapi import Request
 
 from api.service import SubmissionService
+from api.validation import ValidationService
 from runner.config import Settings
 from runner.k8s import KubeClient
-from runner.run_task import TaskRunner
 from runner.store import SubmissionStore
+from runner.validation.gate import GatedTaskRunner
+from runner.validation.store import ValidationStore
 
 LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 
@@ -20,13 +22,16 @@ class AppContext:
     store: SubmissionStore
     kube: KubeClient
     service: SubmissionService
+    validations: ValidationService
 
     @classmethod
     def create(cls, settings: Settings) -> "AppContext":
         store = SubmissionStore(settings.db_path)
         kube = KubeClient(settings.namespace)
-        service = SubmissionService(store, TaskRunner(store, kube, settings), settings)
-        return cls(settings=settings, store=store, kube=kube, service=service)
+        runner = GatedTaskRunner(store, kube, ValidationStore(settings.db_path), settings)
+        service = SubmissionService(store, runner, settings)
+        validations = ValidationService(runner.validator, settings)
+        return cls(settings=settings, store=store, kube=kube, service=service, validations=validations)
 
 
 def configure_logging() -> None:

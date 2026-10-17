@@ -2,8 +2,6 @@
 unfinished by a previous API process."""
 
 import logging
-import shutil
-import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from runner import bundle
@@ -36,6 +34,7 @@ class SubmissionService:
         agent: str | None,
         strategy: str | None = None,
         confidence: float | None = None,
+        validation_id: str | None = None,
     ) -> Submission:
         agent = self._settings.agent if agent is None else agent
         try:
@@ -57,24 +56,18 @@ class SubmissionService:
         if len(archive) > self._settings.max_upload_bytes:
             raise SubmissionRejected(f"upload exceeds {self._settings.max_upload_bytes} bytes")
 
-        model = self._settings.model if self._settings.requires_model(agent) else None
-        submission = Submission.create(
-            uuid.uuid4().hex[:12], n_attempts, agent, model, strategy=strategy, confidence=confidence
-        )
-        paths = self._runner.paths(submission.id)
-        paths.root.mkdir(parents=True)
-        paths.upload.write_bytes(archive)
-
-        # Validate synchronously so a malformed task is rejected with a 4xx instead of
-        # surfacing later as a failed submission.
         try:
-            bundle.extract_zip(paths.upload, paths.tasks, self._settings.max_extracted_bytes)
-            submission.task_id = bundle.load_task_spec(bundle.locate_task_dir(paths.tasks)).task_id
+            submission = self._runner.create(
+                archive,
+                n_attempts,
+                agent,
+                strategy=strategy,
+                confidence=confidence,
+                validation_id=validation_id,
+            )
         except bundle.InvalidTaskBundle as e:
-            shutil.rmtree(paths.root, ignore_errors=True)
             raise SubmissionRejected(str(e)) from e
 
-        self._store.save(submission)
         self._enqueue(submission.id)
         return submission
 

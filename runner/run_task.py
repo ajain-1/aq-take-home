@@ -14,6 +14,7 @@ import os
 import shutil
 import threading
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -99,11 +100,45 @@ class TaskRunner:
     def stop(self) -> None:
         self._stopping.set()
 
+    def create(
+        self,
+        archive: bytes,
+        n_attempts: int,
+        agent: str,
+        strategy: Strategy = Strategy.FIXED,
+        confidence: float = 1.0,
+        validation_id: str | None = None,
+    ) -> Submission:
+        """Persist a new submission after validating its bundle; raises InvalidTaskBundle.
+
+        The bundle is checked synchronously so a malformed task is rejected up front
+        instead of surfacing later as a failed submission."""
+        model = self._settings.model if self._settings.requires_model(agent) else None
+        submission = Submission.create(
+            uuid.uuid4().hex[:12], n_attempts, agent, model, strategy=strategy, confidence=confidence
+        )
+        if validation_id:
+            submission.validation_id = validation_id
+            submission.progress.phase = Phase.VALIDATING
+        paths = self.paths(submission.id)
+        paths.root.mkdir(parents=True)
+        paths.upload.write_bytes(archive)
+        try:
+            bundle.extract_zip(paths.upload, paths.tasks, self._settings.max_extracted_bytes)
+            submission.task_id = bundle.load_task_spec(bundle.locate_task_dir(paths.tasks)).task_id
+        except bundle.InvalidTaskBundle:
+            shutil.rmtree(paths.root, ignore_errors=True)
+            raise
+        self._store.save(submission)
+        return submission
+
     def paths(self, submission_id: str) -> SubmissionPaths:
         return SubmissionPaths(self._settings.submissions_dir / submission_id)
 
     def run(self, submission_id: str) -> dict[str, Any] | None:
         """Execute (or resume) a submission and return its structured results."""
+        if (existing := self._store.get(submission_id)).status.is_terminal:
+            return existing.results
         submission = self._store.update(submission_id, _mark_started)
         paths = self.paths(submission_id)
         try:
