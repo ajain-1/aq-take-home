@@ -13,8 +13,8 @@ import logging
 import os
 import shutil
 import threading
+import time
 import uuid
-from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -254,18 +254,15 @@ class TaskRunner:
         # Persisted so a resumed run re-attaches instead of re-running paid attempts,
         # even if the Job has since been garbage-collected.
         def mark_launched(s: Submission) -> None:
-            now = utcnow()
-            s.launched_at = s.launched_at or now
-            s.progress.waves[wave.index].launched_at = now
-            s.progress.waves[wave.index].deadline_at = now + self._wait_budget(spec)
+            s.launched_at = s.launched_at or utcnow()
+            s.progress.waves[wave.index].launched_at = utcnow()
 
         self._store.update(submission.id, mark_launched)
 
     def _wait(self, submission: Submission, spec: TaskSpec, wave: Wave) -> None:
         self._set_phase(submission.id, Phase.RUNNING_ATTEMPTS)
         name = job_name(submission.id, wave.index)
-        stored = self._store.get(submission.id).progress.waves[wave.index]
-        deadline = stored.deadline_at or (stored.launched_at or utcnow()) + self._wait_budget(spec)
+        deadline = time.monotonic() + job_deadline_sec(spec, self._settings) + WAIT_GRACE_SEC
 
         while True:
             try:
@@ -278,15 +275,12 @@ class TaskRunner:
                     return
                 if reason := snapshot.fatal_reason:
                     raise ExecutionError(f"attempt pods cannot start: {reason}")
-            if utcnow() > deadline:
+            if time.monotonic() > deadline:
                 logger.warning("submission %s exceeded its deadline; stopping job", submission.id)
                 self._kube.delete_job(name)
                 return
             if self._stopping.wait(self._settings.poll_interval_sec):
                 raise Interrupted
-
-    def _wait_budget(self, spec: TaskSpec) -> timedelta:
-        return timedelta(seconds=job_deadline_sec(spec, self._settings) + WAIT_GRACE_SEC)
 
     def _record_attempts(self, submission_id: str, snapshot: JobSnapshot, wave: Wave) -> None:
         """Pods vanish when a Job fails (e.g. DeadlineExceeded) and the Job itself can vanish,

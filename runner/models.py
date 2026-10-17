@@ -65,8 +65,6 @@ class Wave(BaseModel):
     offset: int
     size: int
     launched_at: datetime | None = None
-    # Persisted at launch so a resumed run keeps the original deadline.
-    deadline_at: datetime | None = None
     done: bool = False
 
 

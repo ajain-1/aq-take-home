@@ -292,7 +292,7 @@ def test_adaptive_strategy_stops_once_the_class_is_decided(settings, monkeypatch
     assert sum(w.size for w in waves) == 8  # 8 passes decide "too_easy"; nothing more is launched
     assert outcome["learnability"]["classification"] == "too_easy"
     assert outcome["learnability"]["estimated_savings_vs_target"]["attempts"] == 2
-    assert all(w.deadline_at is not None and w.done for w in waves)
+    assert all(w.done for w in waves)
 
 
 def test_a_submission_never_runs_in_two_threads_at_once(harness):
@@ -323,17 +323,6 @@ def test_waves_are_planned_once_under_concurrent_callers(harness):
         thread.join()
     assert len(h.store.get("sub1").progress.waves) == 1
     assert {(w.index, w.offset, w.size) for w in planned} == {(0, 0, 3)}
-
-
-def test_resumed_wave_keeps_its_original_deadline(harness):
-    h = harness([running_snapshot()])
-    h.submit()
-    expired = Wave(index=0, offset=0, size=1, launched_at=utcnow(), deadline_at=utcnow())
-    h.store.update("sub1", lambda s: s.progress.waves.append(expired))
-    outcome = h.runner.run("sub1")
-    assert h.kube.created == []  # re-attached, not relaunched
-    assert "aq-sub1-w0" in h.kube.deleted  # the persisted deadline had passed: stopped at once
-    assert outcome["status"] == "failed"
 
 
 def test_corrupt_trial_results_fail_only_that_attempt(harness):
