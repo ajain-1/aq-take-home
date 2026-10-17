@@ -1,7 +1,8 @@
 """Extracts the literal strings each pytest test checks for, from the test source.
 
 These are compared against the task instruction to find requirements the tests enforce
-but the instruction never states, a common cause of tasks being unfair to agents.
+but the instruction never states, a common cause of tasks being unfair to agents. Used by
+both task validation (statically) and run insights (against agent trajectories).
 """
 
 import ast
@@ -25,13 +26,16 @@ def _parents(tree: ast.AST) -> dict[ast.AST, ast.AST]:
 
 
 def _is_excluded(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> bool:
-    """Skip assertion messages, f-strings, dict/subscript keys, and call arguments such as
-    file modes or subprocess argv: they are not content the agent must produce."""
+    """Skip assertion messages, f-strings, dict/subscript keys, set literals (allow-lists),
+    call arguments such as file modes or subprocess argv, and `x not in y` checks: none
+    are content the agent must produce."""
     child, parent = node, parents.get(node)
     while parent is not None:
         if isinstance(parent, ast.Assert) and child is parent.msg:
             return True
-        if isinstance(parent, ast.JoinedStr | ast.Dict | ast.Subscript):
+        if isinstance(parent, ast.Compare) and child is parent.left and isinstance(parent.ops[0], ast.NotIn):
+            return True
+        if isinstance(parent, ast.JoinedStr | ast.Dict | ast.Set | ast.Subscript | ast.keyword):
             return True
         if isinstance(parent, ast.Call) and child in parent.args and not _is_regex_call(parent):
             return True

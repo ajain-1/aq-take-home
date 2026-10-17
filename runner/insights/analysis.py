@@ -9,7 +9,7 @@ from typing import Any
 from runner.insights.artifacts import Attempt, Submission, load_submission
 from runner.insights.evidence import EvidenceLedger
 from runner.insights.stats import learnability_verdict, wilson_interval
-from runner.insights.test_spec import TestLiteral, required_literals
+from runner.test_literals import TestLiteral, required_literals
 
 LLM_FAILURE_MODES = {"context_length_exceeded", "output_length_exceeded", "fatal_llm_parse_error"}
 CONFIRMATION_WARNING = "TESTS FAILED! Are you sure you want to mark complete?"
@@ -51,12 +51,14 @@ class Analyzer:
         rejected = [i for i in self.insights if not self.ledger.all_verified(i.evidence)]
         cited = {e for insight in accepted + rejected for e in insight.evidence}
         resolved = sum(a.resolved for a in self.s.attempts)
+        errored = sum(a.status == "error" for a in self.s.attempts)
+        failures = len(self.s.attempts) - errored - resolved
         return {
             "task_id": self.s.task_id,
             "outcome": {
                 "resolved_attempts": resolved,
                 "n_attempts": len(self.s.attempts),
-                "learnability": learnability_verdict(resolved, len(self.s.attempts)),
+                "learnability": learnability_verdict(resolved, failures, errored),
             },
             "tests": self._test_table(),
             "attempts": attempts,
@@ -98,9 +100,9 @@ class Analyzer:
 
     def _attempt_category(self, attempt: Attempt) -> tuple[str, list[str]]:
         if attempt.infrastructure_issues and not attempt.resolved:
-            return "infrastructure_issue", self._infrastructure_evidence(attempt)
+            return "task_container_oom", self._infrastructure_evidence(attempt)
         if attempt.status != "completed":
-            category = "infrastructure_error" if attempt.status == "error" else attempt.status
+            category = "no_results" if attempt.status == "error" else attempt.status
             return category, [
                 self.ledger.quote("results.json", attempt.error or attempt.status, attempt=attempt.index)
             ]

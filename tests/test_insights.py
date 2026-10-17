@@ -12,7 +12,7 @@ from runner.insights.evidence import Evidence, EvidenceLedger, verify
 from runner.insights.narrative import summarize
 from runner.insights.report import render_markdown
 from runner.insights.stats import learnability_verdict, wilson_interval
-from runner.insights.test_spec import required_literals
+from runner.test_literals import required_literals
 
 TEST_SOURCE = '''
 import re
@@ -102,10 +102,13 @@ def test_wilson_interval_is_wide_for_small_samples():
 
 
 def test_learnability_uses_exact_rule_at_ten_and_hedges_below():
-    assert learnability_verdict(4, 10)["verdict"] == "learnable"
-    assert learnability_verdict(9, 10)["verdict"] == "too_easy"
-    assert learnability_verdict(2, 5)["verdict"] == "insufficient_evidence"
-    assert learnability_verdict(0, 40)["verdict"] == "likely_too_hard"
+    assert learnability_verdict(4, 6)["verdict"] == "learnable"
+    assert learnability_verdict(9, 1)["verdict"] == "too_easy"
+    assert learnability_verdict(2, 3)["verdict"] == "learnable"  # decided early, as the adaptive runner
+    assert learnability_verdict(8, 0)["verdict"] == "too_easy"
+    assert learnability_verdict(0, 9)["verdict"] == "too_hard"
+    assert learnability_verdict(5, 0)["verdict"] == "undetermined"
+    assert "1 errored" in learnability_verdict(1, 1, errored=1)["basis"]
 
 
 def test_literal_extraction_ignores_messages_docstrings_and_call_args():
@@ -163,7 +166,7 @@ def test_analysis_finds_hidden_requirement_divergence_and_errors(submission: Pat
     assert {a["category"] for a in report["attempts"]} == {
         "solved",
         "declared_done_with_failing_tests",
-        "infrastructure_error",
+        "no_results",
     }
     assert "REPORT HEADER" in render_markdown(report)
 
@@ -182,7 +185,7 @@ def test_narrative_drops_uncited_and_unsupported_sentences(submission: Path, mon
             ]
         }
     )
-    summary = summarize(report, complete=lambda prompt, model, key: response)
+    summary = summarize(report, "test-model", complete=lambda prompt, model, key: response)
     assert summary["kept_sentences"] == 1 and summary["dropped_sentences"] == 3
     assert "REPORT HEADER" in summary["text"] and "73%" not in summary["text"]
 
@@ -198,7 +201,7 @@ def test_infrastructure_issues_and_tests_not_run_are_their_own_categories(submis
 
     report = analyze(submission)
     categories = {a["attempt"]: a["category"] for a in report["attempts"]}
-    assert categories[1] == "infrastructure_issue" and categories[2] == "tests_not_run"
-    infra = next(i for i in report["insights"] if i["title"] == "Attempt 1: infrastructure_issue")
+    assert categories[1] == "task_container_oom" and categories[2] == "tests_not_run"
+    infra = next(i for i in report["insights"] if i["title"] == "Attempt 1: task_container_oom")
     sources = [report["evidence"][e]["source"] for e in infra["evidence"]]
     assert sources and all(source.endswith("task-container-events.jsonl") for source in sources)

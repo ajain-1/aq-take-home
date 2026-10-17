@@ -8,6 +8,8 @@ from api.service import SubmissionRejected, SubmissionService
 from runner.models import Status, Submission
 from runner.run_task import TaskRunner
 from runner.store import SubmissionNotFound, SubmissionStore
+from runner.validation.pipeline import Validator
+from runner.validation.store import ValidationStore
 
 
 def test_store_survives_reopen_and_tracks_unfinished(settings):
@@ -45,7 +47,8 @@ def service(settings):
     settings = replace(settings, max_concurrent_submissions=1, max_upload_bytes=50_000)
     store = SubmissionStore(settings.db_path)
     runner = RecordingRunner(store, settings)
-    yield SubmissionService(store, runner, settings), store, runner, settings
+    validator = Validator(ValidationStore(settings.db_path), runner, settings)
+    yield SubmissionService(store, runner, validator, settings), store, runner, settings
     runner.stop()
 
 

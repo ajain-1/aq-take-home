@@ -2,17 +2,16 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from api.context import AppContext, get_context
+from api.context import Context, unprocessable
 from api.validation import ValidationRejected
 from runner.validation.models import ValidationMode
 from runner.validation.store import ValidationNotFound
 
 router = APIRouter()
-Context = Annotated[AppContext, Depends(get_context)]
 
 
 @router.post("/validate")
@@ -33,7 +32,7 @@ def validate_task(
     try:
         validation = context.validations.validate(archive, mode, force)
     except ValidationRejected as e:
-        raise HTTPException(status_code=422, detail=str(e)) from None
+        return unprocessable(str(e))
     status_code = 200 if validation.status.is_terminal else 202
     return JSONResponse(status_code=status_code, content=jsonable_encoder(validation.report()))
 

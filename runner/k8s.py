@@ -52,8 +52,8 @@ def api_error_message(error: ApiException) -> str:
         return f"{error.status} {error.reason}"
 
 
-def job_name(submission_id: str, wave: int = 0) -> str:
-    return f"aq-{submission_id}" if wave == 0 else f"aq-{submission_id}-w{wave}"
+def job_name(submission_id: str, wave: int) -> str:
+    return f"aq-{submission_id}-w{wave}"
 
 
 def job_deadline_sec(spec: TaskSpec, settings: Settings) -> int:

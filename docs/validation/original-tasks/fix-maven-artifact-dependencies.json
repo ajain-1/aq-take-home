@@ -6,7 +6,7 @@
   "passed": false,
   "counts": {
     "error": 3,
-    "warning": 2,
+    "warning": 3,
     "info": 0
   },
   "stages_run": [
@@ -51,6 +51,19 @@
           "math-lib-1.0.0.jar",
           "pom.xml"
         ]
+      }
+    },
+    {
+      "check": "unstated_test_literals",
+      "stage": "static",
+      "severity": "warning",
+      "message": "tests require text the instruction never states and the task never shows (test_rpath_configured_properly: 'RUNPATH'); state the expected format in the instruction or relax the tests",
+      "details": {
+        "literals": {
+          "test_rpath_configured_properly": [
+            "RUNPATH"
+          ]
+        }
       }
     },
     {

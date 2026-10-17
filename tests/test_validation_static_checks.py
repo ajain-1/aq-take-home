@@ -131,6 +131,36 @@ def test_invalid_task_yaml(tmp_path):
     assert checks(make_task(tmp_path, resource_class="gigantic"))["task_schema"] == "error"
 
 
+REPORT_TESTS = """\
+from pathlib import Path
+
+ALLOWED = {"build", "README.md"}
+
+def test_report():
+    content = Path("/app/result.txt").read_text(errors="ignore")
+    assert "SUMMARY:" in content
+    assert "not found" not in content
+"""
+
+
+def test_unstated_test_literal(tmp_path):
+    _, findings = run_static_checks(make_task(tmp_path, tests=REPORT_TESTS))
+    unstated = [f for f in findings if f.check == "unstated_test_literals"]
+    assert [f.severity for f in unstated] == ["warning"]
+    assert unstated[0].details["literals"] == {"test_report": ["SUMMARY:"]}
+
+
+def test_literal_stated_in_instruction_is_not_flagged(tmp_path):
+    instruction = "Create /app/result.txt with a 'Summary:' line."
+    task = make_task(tmp_path, instruction=instruction, tests=REPORT_TESTS)
+    assert "unstated_test_literals" not in checks(task)
+
+
+def test_literal_shown_by_shipped_files_is_not_flagged(tmp_path):
+    task = make_task(tmp_path, tests=REPORT_TESTS, files={"template.txt": "SUMMARY: ..."})
+    assert "unstated_test_literals" not in checks(task)
+
+
 @pytest.mark.parametrize(
     "dockerfile, workdir, roots",
     [

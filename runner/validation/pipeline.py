@@ -14,6 +14,7 @@ from pathlib import Path
 from runner import bundle
 from runner.config import Settings
 from runner.models import Status, utcnow
+from runner.paths import SubmissionPaths
 from runner.run_task import TaskRunner
 from runner.validation import image_probe, reference_runs, static_checks
 from runner.validation.models import Stage, Validation, ValidationMode
@@ -22,6 +23,7 @@ from runner.validation.store import ValidationStore
 logger = logging.getLogger(__name__)
 
 ORACLE_ATTEMPTS = 2
+STATIC_ERRORS_NOTE = "static checks failed; skipped image probe and reference runs"
 
 
 class Validator:
@@ -36,34 +38,53 @@ class Validator:
     def list_unfinished(self) -> list[Validation]:
         return self._store.list_unfinished()
 
-    def mark_gating(self, validation_id: str, submission_id: str) -> None:
-        self._store.update(validation_id, lambda v: setattr(v, "gates_submission_id", submission_id))
-
     def root(self, validation_id: str) -> Path:
         return self._settings.data_dir / "validations" / validation_id
 
-    def create(self, archive: bytes, mode: ValidationMode, force: bool = False) -> Validation:
-        """Run the static stage synchronously; raises InvalidTaskBundle for unreadable ZIPs."""
-        validation = Validation(id=uuid.uuid4().hex[:12], mode=mode, force=force)
-        root = self.root(validation.id)
-        root.mkdir(parents=True)
-        (root / "upload.zip").write_bytes(archive)
+    def create(
+        self,
+        archive: bytes,
+        mode: ValidationMode,
+        force: bool = False,
+        gates_submission_id: str | None = None,
+    ) -> Validation:
+        """Run the static stage synchronously; raises InvalidTaskBundle for unreadable ZIPs.
+
+        A gating validation is linked to its submission from the start, so a crash can
+        never leave it running on its own for a submission that was never created."""
+        validation = Validation(
+            id=uuid.uuid4().hex[:12], mode=mode, force=force, gates_submission_id=gates_submission_id
+        )
+        paths = SubmissionPaths(self.root(validation.id))
+        paths.root.mkdir(parents=True)
+        paths.upload.write_bytes(archive)
         try:
-            bundle.extract_zip(root / "upload.zip", root / "tasks", self._settings.max_extracted_bytes)
-            task_dir = bundle.locate_task_dir(root / "tasks")
+            bundle.extract_zip(paths.upload, paths.tasks, self._settings.max_extracted_bytes)
+            task_dir = bundle.locate_task_dir(paths.tasks)
         except bundle.InvalidTaskBundle:
-            shutil.rmtree(root, ignore_errors=True)
+            shutil.rmtree(paths.root, ignore_errors=True)
             raise
 
         _, findings = static_checks.run_static_checks(task_dir)
         validation.task_id = task_dir.name
         validation.findings = findings
         validation.stages_run = [Stage.STATIC]
-        if mode == ValidationMode.STATIC:
+        if mode == ValidationMode.STATIC or (validation.has_errors and not force):
             validation.status = Status.COMPLETED
             validation.finished_at = utcnow()
+            if mode == ValidationMode.FULL:
+                validation.note = STATIC_ERRORS_NOTE
         self._store.save(validation)
         return validation
+
+    def active_child_submission_ids(self) -> set[str]:
+        """Oracle/nop submissions owned by unfinished validations, which resume them."""
+        return {
+            child_id
+            for validation in self._store.list_unfinished()
+            for child_id in (validation.oracle_submission_id, validation.nop_submission_id)
+            if child_id
+        }
 
     def run(self, validation_id: str) -> Validation:
         """Run the remaining stages; idempotent and safe to resume after a restart."""
@@ -84,7 +105,7 @@ class Validator:
         context, _ = static_checks.load_context(task_dir)
 
         if validation.has_errors and not validation.force:
-            self._finish(validation_id, note="static checks failed; skipped image probe and reference runs")
+            self._finish(validation_id, note=STATIC_ERRORS_NOTE)
             return
         if context.spec is None:
             self._finish(validation_id, note="task.yaml is invalid; skipped image probe and reference runs")
@@ -128,7 +149,7 @@ class Validator:
 
     def _reference_submissions(self, validation_id: str, has_solution: bool) -> tuple[str | None, str]:
         validation = self._store.get(validation_id)
-        archive = (self.root(validation_id) / "upload.zip").read_bytes()
+        archive = SubmissionPaths(self.root(validation_id)).upload.read_bytes()
         oracle_id = validation.oracle_submission_id
         if has_solution and oracle_id is None:
             oracle_id = self._runner.create(archive, ORACLE_ATTEMPTS, "oracle").id

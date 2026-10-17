@@ -60,6 +60,10 @@ class Harness:
         )
 
 
+def launched_wave(size: int) -> Wave:
+    return Wave(index=0, offset=0, size=size, launched_at=utcnow())
+
+
 @pytest.fixture
 def harness(settings, monkeypatch):
     return lambda snapshots: Harness(settings, FakeKube(snapshots), monkeypatch)
@@ -71,7 +75,7 @@ def test_happy_path_completes_and_cleans_up(harness):
     h.write_trial_result()
     outcome = h.runner.run("sub1")
     assert outcome["status"] == "completed" and outcome["passed"] is True
-    assert len(h.kube.created) == 1 and h.kube.deleted == ["aq-sub1"]
+    assert len(h.kube.created) == 1 and h.kube.deleted == ["aq-sub1-w0"]
     assert h.kube.deleted_submissions == ["sub1"]
     assert ("labels", "aq.submission=sub1") in h.removed
     assert h.store.get("sub1").launched_at is not None
@@ -147,7 +151,7 @@ def test_executor_deadline_stops_a_job_that_never_finishes(harness):
     h = harness([running_snapshot()])
     h.submit(agent_timeout=0.05, test_timeout=0.05)
     outcome = h.runner.run("sub1")
-    assert h.kube.deleted.count("aq-sub1") == 2
+    assert h.kube.deleted.count("aq-sub1-w0") == 2
     assert outcome["status"] == "failed"
     assert h.store.get("sub1").error.startswith("no attempt produced test results")
 
@@ -166,7 +170,7 @@ def test_shutdown_leaves_submission_resumable(harness):
 def test_resume_adopts_running_job_without_recreating_it(harness):
     h = harness([running_snapshot(), finished_snapshot()])
     h.submit()
-    h.store.update("sub1", lambda s: setattr(s, "launched_at", utcnow()))
+    h.store.update("sub1", lambda s: s.progress.waves.append(launched_wave(size=1)))
     h.write_trial_result()
     assert h.runner.run("sub1")["status"] == "completed"
     assert h.kube.created == []
@@ -175,7 +179,7 @@ def test_resume_adopts_running_job_without_recreating_it(harness):
 def test_resume_never_relaunches_a_vanished_job(harness):
     h = harness([JobSnapshot(exists=False)])
     h.submit(n_attempts=2)
-    h.store.update("sub1", lambda s: setattr(s, "launched_at", utcnow()))
+    h.store.update("sub1", lambda s: s.progress.waves.append(launched_wave(size=2)))
     h.write_trial_result(attempt=0)
     outcome = h.runner.run("sub1")
     assert h.kube.created == []

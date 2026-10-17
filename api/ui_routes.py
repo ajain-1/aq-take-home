@@ -1,64 +1,36 @@
 """Read-only endpoints backing the web UI: submission listing and agent trajectories."""
 
-import json
-import re
 from pathlib import Path
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from api.context import AppContext, get_context
-from runner.results import find_trial_dir
-from runner.run_task import SubmissionPaths
+from api.context import AppContext, Context
+from runner import trajectory
+from runner.paths import SubmissionPaths
 from runner.store import SubmissionNotFound
 
 STATIC_DIR = Path(__file__).parent / "static"
-EPISODE_DIR_PATTERN = re.compile(r"^episode-(\d+)$")
 PANES = ("pre-agent", "post-agent", "post-test")
 
 router = APIRouter()
-Context = Annotated[AppContext, Depends(get_context)]
 
 
 def _read_text(path: Path) -> str | None:
     return path.read_text(errors="replace") if path.is_file() else None
 
 
-def _read_json(path: Path) -> dict | str | None:
-    text = _read_text(path)
-    if text is None:
-        return None
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        return text
-
-
-def _episodes(agent_logs: Path) -> list[dict]:
-    """Each episode is one LLM turn. The terminal output the agent saw after its
-    commands is the next episode's prompt."""
-    if not agent_logs.is_dir():
-        return []
-    indexed = sorted(
-        (int(match.group(1)), path)
-        for path in agent_logs.iterdir()
-        if path.is_dir() and (match := EPISODE_DIR_PATTERN.match(path.name))
-    )
-
-    episodes = []
-    for position, (index, path) in enumerate(indexed):
-        has_next = position + 1 < len(indexed)
-        next_prompt = _read_text(indexed[position + 1][1] / "prompt.txt") if has_next else None
-        episodes.append(
-            {
-                "index": index,
-                "prompt": _read_text(path / "prompt.txt"),
-                "response": _read_json(path / "response.json"),
-                "observation": next_prompt,
-            }
-        )
-    return episodes
+def _episodes(trial_dir: Path) -> list[dict]:
+    episodes = trajectory.load_episodes(trial_dir)
+    return [
+        {
+            "index": episode.index,
+            "prompt": episode.prompt or None,
+            "response": episode.response or episode.raw_response or None,
+            "observation": episodes[position + 1].prompt if position + 1 < len(episodes) else None,
+        }
+        for position, episode in enumerate(episodes)
+    ]
 
 
 def _trial_dir(context: AppContext, submission_id: str, attempt: int) -> Path:
@@ -68,11 +40,9 @@ def _trial_dir(context: AppContext, submission_id: str, attempt: int) -> Path:
         raise HTTPException(status_code=404, detail=f"submission {submission_id} not found") from None
     if not 0 <= attempt < submission.n_attempts or submission.task_id is None:
         raise HTTPException(status_code=404, detail=f"attempt {attempt} not found")
-    attempt_dir = SubmissionPaths(context.settings.submissions_dir / submission.id).attempt(attempt)
+    paths = SubmissionPaths(context.settings.submissions_dir / submission.id)
     # A running trial has no results.json yet, but its agent logs already stream in.
-    found = find_trial_dir(attempt_dir, submission.task_id) or next(
-        (p for p in sorted(attempt_dir.glob(f"*/{submission.task_id}/*")) if p.is_dir()), None
-    )
+    found = paths.trial(attempt, submission.task_id, finished_only=False)
     if found is None:
         raise HTTPException(status_code=404, detail="attempt has no artifacts yet")
     return found
@@ -110,6 +80,6 @@ def get_episodes(context: Context, submission_id: str, attempt: int):
     return {
         "submission_id": submission_id,
         "attempt": attempt,
-        "episodes": _episodes(directory / "agent-logs"),
+        "episodes": _episodes(directory),
         "panes": {pane: _read_text(directory / "panes" / f"{pane}.txt") for pane in PANES},
     }

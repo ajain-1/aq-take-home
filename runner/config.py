@@ -44,10 +44,12 @@ class Settings:
     namespace: str = "default"
     agent: str = "terminus-1"
     model: str = "openrouter/anthropic/claude-opus-4.5"
+    insights_model: str = "openai/gpt-4.1-mini"
     default_attempts: int = 1
     max_attempts: int = 10
     max_concurrent_submissions: int = 16
     max_concurrent_builds: int = 4
+    max_concurrent_validations: int = 2
     max_upload_bytes: int = 50 * 1024**2
     max_extracted_bytes: int = 500 * 1024**2
     build_timeout_sec: int = 1800
@@ -79,12 +81,16 @@ class Settings:
             namespace=_env("AQ_NAMESPACE", defaults.namespace),
             agent=_env("AQ_AGENT", defaults.agent),
             model=_env("AQ_MODEL", defaults.model),
+            insights_model=_env("AQ_INSIGHTS_MODEL", defaults.insights_model),
             default_attempts=int(_env("AQ_DEFAULT_ATTEMPTS", str(defaults.default_attempts))),
             max_attempts=int(_env("AQ_MAX_ATTEMPTS", str(defaults.max_attempts))),
             max_concurrent_submissions=int(
                 _env("AQ_MAX_CONCURRENT_SUBMISSIONS", str(defaults.max_concurrent_submissions))
             ),
             max_concurrent_builds=int(_env("AQ_MAX_CONCURRENT_BUILDS", str(defaults.max_concurrent_builds))),
+            max_concurrent_validations=int(
+                _env("AQ_MAX_CONCURRENT_VALIDATIONS", str(defaults.max_concurrent_validations))
+            ),
             max_upload_bytes=int(_env("AQ_MAX_UPLOAD_BYTES", str(defaults.max_upload_bytes))),
             max_extracted_bytes=int(_env("AQ_MAX_EXTRACTED_BYTES", str(defaults.max_extracted_bytes))),
             build_timeout_sec=int(_env("AQ_BUILD_TIMEOUT_SEC", str(defaults.build_timeout_sec))),

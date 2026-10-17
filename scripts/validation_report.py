@@ -1,20 +1,29 @@
 """Validate every task under a directory and write the reports.
 
 Usage: python scripts/validation_report.py <tasks-dir> <out-dir> [--mode full|static] [--force]
+       python scripts/validation_report.py <tasks-dir> <out-dir> --refresh-static
 
 Tasks are validated one at a time (each full validation runs three Job pods).
-Writes <out-dir>/<task>.json per task and <out-dir>/SUMMARY.md.
+Writes <out-dir>/<task>.json per task and <out-dir>/SUMMARY.md. --refresh-static re-runs
+only the static checks locally against existing reports, keeping the findings of the
+image probe and oracle/nop stages, so a new static check doesn't require new Job runs.
 """
 
 import argparse
 import io
 import json
 import os
+import sys
 import time
 import urllib.request
 import uuid
 import zipfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from runner.validation.models import Severity, Stage  # noqa: E402
+from runner.validation.static_checks import run_static_checks  # noqa: E402
 
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
 POLL_SEC = 5
@@ -86,13 +95,32 @@ def rewrite_summary(out_dir: Path) -> None:
     (out_dir / "SUMMARY.md").write_text(summarize(reports))
 
 
+def refresh_static(tasks_dir: Path, out_dir: Path) -> None:
+    for report_path in sorted(out_dir.glob("*.json")):
+        report = json.loads(report_path.read_text())
+        _, static_findings = run_static_checks(tasks_dir / report_path.stem)
+        kept = [f for f in report["findings"] if f["stage"] != Stage.STATIC]
+        report["findings"] = [f.model_dump(mode="json") for f in static_findings] + kept
+        report["counts"] = {
+            severity: sum(1 for f in report["findings"] if f["severity"] == severity) for severity in Severity
+        }
+        report["passed"] = report["status"] == "completed" and report["counts"][Severity.ERROR] == 0
+        report_path.write_text(json.dumps(report, indent=2) + "\n")
+        print(f"{report_path.stem}: {'PASS' if report['passed'] else 'FAIL'} {report['counts']}")
+    rewrite_summary(out_dir)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("tasks_dir", type=Path)
     parser.add_argument("out_dir", type=Path)
     parser.add_argument("--mode", default="full", choices=["full", "static"])
     parser.add_argument("--force", action="store_true")
+    parser.add_argument("--refresh-static", action="store_true")
     args = parser.parse_args()
+    if args.refresh_static:
+        refresh_static(args.tasks_dir, args.out_dir)
+        return
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     reports = {}

@@ -7,7 +7,7 @@
 - Built the executor as a pipeline in `runner/`, with a thin FastAPI layer in `api/`:
   - `bundle.py`: safe ZIP extraction (no path traversal or symlinks, size and entry caps), `task.yaml` validation, and generation of the `docker-compose.yaml` that terminal-bench expects.
   - `docker_ops.py`: builds the task image once per submission, layers `tmux`/`asciinema` on top (task images don't include them), builds the content-addressed Job pod image, and cleans up containers, networks, and images by label.
-  - `k8s.py`: one Indexed Job per submission, one index per attempt. The manifest is derived from `task.yaml`; the module also reads per-attempt state from pods and syncs the LLM Secret.
+  - `k8s.py`: one Indexed Job per wave of attempts (a fixed-strategy submission is a single wave), one index per attempt. The manifest is derived from `task.yaml`; the module also reads per-attempt state from pods and syncs the LLM Secret.
   - `results.py`: turns terminal-bench trial output into per-attempt and aggregate results.
   - `run_task.py`: the orchestrator (prepare → build → launch → wait → collect → cleanup).
   - `store.py`: SQLite-backed submission state.
@@ -33,11 +33,12 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
 - `tasks/fix-maven-artifact-dependencies/solution.sh`: The guard that skips adding `add_dependencies` if it is already present also matched that comment, so the oracle never added the line. The guard now only matches an uncommented line.
 - `tasks/log-rotation-analyzer/generate-samples.sh`: The sample logs and logrotate configs were written to `/app/sample_logs` and `/app/sample_configs`, while the instruction points the agent at `/var/log/samples/` and `/etc/logrotate.d/samples/`, which were left empty. The script now writes there; `log_metadata.json` stays in `/app`.
 - `tasks/log-rotation-analyzer/task.yaml`: The tests read `analysis_report.txt`, `optimized_logrotate.conf` and `rotation_summary.csv` from the working directory, but the instruction never said where to write them. It now says `/app`.
+  - **Report format.** The tests also require exact text the instruction never stated: the title `LOG ROTATION ANALYSIS REPORT`, the section headings `SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `SUMMARY` and `RECOMMENDATIONS:`, `ISSUE (HIGH|MEDIUM|LOW)` markers, and the `Total log size:`, `Estimated total savings:` and `Potential space reduction: N%` lines. Stretch goal D's insight report found this (`results/insights/log-rotation-analyzer/insights.md`): 0/5 terminus-1 attempts resolved, with four tests failing in every attempt on exactly these strings. The instruction now states the format, the CSV header and the config expectations; the tests are unchanged. The oracle still passes 7/7 and nop fails 7/7 (`results/task-verification/log-rotation-analyzer.*.log`). The insight runs predate this fix.
 - `tasks/csv-to-json-cli-fix`: Checked; no changes needed.
 
 #### Design decisions
 - **The harness runs in the pod; the task container is a sibling on the host Docker daemon.** terminal-bench drives tasks through `docker compose` and `docker exec` + tmux, so each Job pod mounts the Docker socket. The alternative, Docker-in-Docker sidecars, would mean privileged pods plus a registry or `docker load` to get the image into every pod. Locally that is slower and has more moving parts. The tradeoff is that the socket mount effectively gives root on the node. In production I'd use DinD/sysbox or a registry-backed runtime.
-- **Build once, run N times.** The task image is built a single time per submission on the host daemon; the N attempt pods use it via `imagePullPolicy: Never` and the generated compose file (which has no `build:` section). `tb` runs with `--no-rebuild --no-cleanup` so one attempt can't delete the image another attempt is using; the executor removes it once, after every attempt has finished. The Job pod image is tagged by a content hash of its sources, so it is rebuilt only when `runner/` or `terminal_bench/` changes.
+- **Build once, run N times.** The task image is built a single time per submission on the host daemon; the N attempt pods use it via `imagePullPolicy: Never` and the generated compose file (which has no `build:` section). `tb` runs with `--no-rebuild --no-cleanup` so one attempt can't delete the image another attempt is using; the executor removes it once, after every attempt has finished. The Job pod image is tagged by a content hash of its sources, so it is rebuilt only when `runner/` or `terminal_bench/` changes. One exception: with `validation=full`, the image probe and the oracle and nop reference runs each build the task image again before the gated run. That keeps every validation stage independent at the cost of extra builds, which Docker's layer cache keeps cheap.
 - **`task.yaml` drives execution.**
   - `resource_class` maps to pod resource requests, so the scheduler queues work when the node is full, and to `cpus`/`mem_limit` on the task container.
   - The agent and test timeouts are enforced by `tb`.
@@ -78,7 +79,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - The Job's `activeDeadlineSeconds` starts when the Job is created, so time spent `Pending` on a saturated node counts against it.
 - Docker builds are not interruptible, so a clean API shutdown waits for in-flight builds to finish.
 
-#### Fixes from code review
+#### Fixes from code reviews
 - **Resume:** never re-creates a Job once launched. The persisted `launched_at` makes a resumed run re-attach and collect instead of re-running paid attempts, even if the Job was garbage-collected.
 - **API startup:** the API is wired in the FastAPI lifespan (`api/context.py`), and the cluster client connects lazily, so a missing kubeconfig shows up as `k8s_available: false` on `/health` instead of a crash at startup. The `runner`/`api` loggers get their own handler, because uvicorn owns the root logger.
 - **Settings and agents:** settings are read from the environment when the API starts (`Settings.from_env()`), not at import, and the agent catalog lives in one place (`runner/config.py`).
@@ -86,11 +87,18 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - **Store and uploads:** `store.update` holds its lock across the read and the write, and uploads are read only up to the size limit.
 - **Retried pods:** logs from every try of an attempt are kept (`pod-try-N.log`). The pod entrypoint forwards SIGTERM to `tb`.
 - **Linting:** `ruff.toml` added, and the code is clean under it.
+- **Second review (after the stretch goals were merged):**
+  - **Validation gate:** composed instead of inherited. `TaskRunner` no longer knows about validations. `SubmissionService` runs the gate (validate, then run or fail), and `/submit` with a gate is one call that checks every parameter before creating anything. A gating validation is linked to its submission from the moment it is created, and one whose static checks fail finishes immediately, so neither can be orphaned. Oracle/nop runs of an unfinished validation are resumed only by that validation, never twice.
+  - **Shared code:** one `DocumentStore` base for submissions and validations (atomic updates in both), one submission layout (`runner/paths.py`) and one trajectory loader (`runner/trajectory.py`) shared by the runner, results, UI, insights and validation.
+  - **One learnability rule:** insights (D) use the same exact 10-run rule as the adaptive strategy (B), so the two can't disagree. Savings are reported only for adaptive runs.
+  - **Robustness:** a truncated `results.json` or events line now fails only its own attempt, not the whole submission.
+  - **Insights endpoint:** read-only; the LLM summary is opt-in, its model is a setting (`AQ_INSIGHTS_MODEL`), and failures are logged.
+  - **Consistency:** every 422 has a string `detail` (plus `report` when there is one), insight categories are renamed to `no_results` / `task_container_oom`, and the remaining limits (`AQ_MAX_CONCURRENT_VALIDATIONS`) are settings.
 
 #### End-to-end verification
-- All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards.
+- All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`, one attempt each. Tests passed per task: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards. Evidence: each submission's `/results` JSON and the script output are in `results/e2e-all-tasks/`.
 - The committed real run is in `results/sample-run/` (csv-to-json-cli-fix: results, agent episodes, asciinema recording, tmux panes).
-- Restart recovery: an oracle submission with 2 attempts was interrupted by an API restart, resumed, and passed 5/5 on both attempts.
+- Restart recovery: a submission was interrupted by an API restart while its attempt was running, then resumed and completed. Evidence: `results/restart-recovery/` holds the API's interrupted and resuming log lines and the final results.
 
 #### What I'd do next
 - Replace the Docker socket with per-pod DinD/sysbox (or a remote BuildKit plus a registry) for real isolation, and use object storage instead of hostPath.
@@ -163,6 +171,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
      - `copy_renames_directory`: a `COPY` renames a directory that other task files still refer to by its old name.
      - `tested_files_not_in_instruction`: the tests open a file that the task doesn't ship and the instruction never names.
      - `instruction_describes_other_project`: the instruction names several files that nothing else in the task contains.
+     - `unstated_test_literals` (warning): text a test requires that the instruction never states and no file the task ships shows, e.g. an exact report heading. It reuses the literal extraction from stretch goal D (`runner/test_literals.py`, shared by both), which skips assertion messages, f-strings, dict keys, set literals (allow-lists), call arguments and `x not in y` checks. Paths and file names are left to the file checks.
      - `test_timeout_budget`: `run-tests.sh` installs packages over the network but the test timeout is under 90s.
      - `solution_present`: the task has a `solution.sh`.
   2. **Image probe** (`image_probe.py`): builds the image exactly as the executor does and runs a shell probe in it with networking off. It flags directories the instruction points the agent at that are missing or empty, and tools the tests call that the image lacks and `run-tests.sh` doesn't install.
@@ -172,10 +181,10 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - **API endpoints** (`api/validation.py`, `api/validation_routes.py`):
   - `POST /validate` (`mode=static|full`, `force`) returns a report of findings, each with a stage, severity, check and message.
   - `GET /validations/{id}` returns a report.
-  - `POST /submit` gains `validation=none|static|full`.
-    - `static` rejects with a 422 that carries the report.
-    - `full` puts the submission in a `validating` phase. `GatedTaskRunner` runs the validation before the agents and fails the submission (pointing at the report) if it finds errors, so no agent compute is spent on a broken task.
-- `scripts/validation_report.py` validates every task in a directory and writes per-task JSON reports and a `SUMMARY.md`.
+  - `POST /submit` gains an optional `validation=static|full` (omit it for no gate).
+    - `static` rejects with a 422 whose body carries the report.
+    - `full` puts the submission in a `validating` phase. The submission worker runs the validation before the agents and fails the submission (pointing at the report) if it finds errors, so no agent compute is spent on a broken task.
+- `scripts/validation_report.py` validates every task in a directory and writes per-task JSON reports and a `SUMMARY.md`. `--refresh-static` re-runs only the static checks locally against existing reports, keeping the image-probe and oracle/nop findings, so a new static check doesn't need new Job runs.
 - Unit tests for each static check and for the Dockerfile parser: `tests/test_validation_static_checks.py`.
 
 #### Evidence
@@ -187,9 +196,11 @@ The first submission builds the Job pod image (a few minutes); later submissions
     - `test_timeout_budget` (60s);
     - the oracle fails all 10 tests.
   - **config-manifest-validator:** `tested_files_not_in_instruction` (`hello.txt`) and `instruction_files_unused` (`manifest.txt`).
-  - **log-rotation-analyzer:** `instruction_path_empty` for both `/var/log/samples/` and `/etc/logrotate.d/samples/`.
+  - **log-rotation-analyzer:** `instruction_path_empty` for both `/var/log/samples/` and `/etc/logrotate.d/samples/`, and `unstated_test_literals` for the report headings and summary lines the tests require.
+  - **fix-maven-artifact-dependencies** also gets `unstated_test_literals` for `RUNPATH`, which its Maven/Java instruction never mentions.
   - **Duplicated instructions:** `duplicated_instruction` on all three affected tasks.
 - `docs/validation/fixed-tasks/`: the current tasks. All six pass every stage with no errors or warnings. The only findings are `info` notes on two tests that pass without any work (Flask's `test_requirements_file_exists`, csv's `test_utf8_stdout_encoding`).
+  - **Before the log-rotation instruction fix,** `unstated_test_literals` flagged the fixed log-rotation-analyzer too, matching what stretch goal D found from real runs. The git history keeps both versions of the report.
 
 #### Design decisions
 - **Cheap stages gate expensive ones.** Static errors stop the pipeline before an image is built unless `force` is set, which is the point of validating at all. The image probe only builds the image, which the reference runs then reuse from Docker's layer cache.
@@ -205,23 +216,22 @@ The first submission builds the Job pod image (a few minutes); later submissions
 #### What I'd do next
 - Mutation checks: break the oracle's output (truncate files, flip values) and confirm the tests catch it. Some tests could only be confirmed to pass for the wrong reason, like the original link-order test, by reading the code.
 - Run the oracle under the task's own resource limits with N>2 attempts on a loaded node, to surface timing flakiness before customers see it.
-- An optional LLM reviewer that compares the instruction, tests and solution for unstated requirements, kept advisory and separate from these deterministic checks.
 
 ## Stretch goal D: Beyond pass/fail
 
 #### What I did
-- Added `runner/insights/`, which turns the N attempts of a submission into findings a customer can act on. It is served by `GET /insights/{id}` (`?format=markdown`, `?refresh=true`, `?narrative=false`) and written to `insights.json` / `insights.md` in the submission directory. `python -m runner.insights <dir>` regenerates and re-verifies a report offline.
+- Added `runner/insights/`, which turns the N attempts of a submission into findings a customer can act on. It is served read-only by `GET /insights/{id}` (`?format=markdown`, `?narrative=true` for the LLM summary), computed from the stored artifacts on each request. `python -m runner.insights <dir>` regenerates and re-verifies a report offline and writes `insights.json` / `insights.md` beside it.
 - What it reports:
-  - **Outcome with honest uncertainty.** Resolved k/N with a 95% Wilson interval, and a learnability verdict. At N=10 it applies the exact 2–7-of-10 rule; below that it commits to "likely learnable / too easy / too hard" only when the whole interval supports it, and otherwise says `insufficient_evidence`.
+  - **Outcome with honest uncertainty.** Resolved k/N with a 95% Wilson interval for context, and the learnability class from `runner.learnability`, the same exact 10-run rule the adaptive strategy (B) stops on. Errored attempts are excluded, as in B. If the runs so far don't decide the class, the verdict is `undetermined` rather than a guess, so B and D can never disagree about the same run.
   - **Per-test pass rates**, each with its own interval.
-  - **Per-attempt failure taxonomy**: `infrastructure_issue` (e.g. task-container OOM, cited from the pod's `task-container-events.jsonl`), `infrastructure_error`, `tests_not_run`, `agent_timeout`, `test_timeout`, `llm_error`, `tests_unparseable`, `stopped_without_completing`, `declared_done_with_failing_tests`, and `declared_done_despite_failure_warning` (terminus showed the agent its "TESTS FAILED! Are you sure" prompt and it declared done anyway).
+  - **Per-attempt failure taxonomy**: `task_container_oom` (cited from the pod's `task-container-events.jsonl`), `no_results` (the pod produced no trial results), `tests_not_run`, `agent_timeout`, `test_timeout`, `llm_error`, `tests_unparseable`, `stopped_without_completing`, `declared_done_with_failing_tests`, and `declared_done_despite_failure_warning` (terminus showed the agent its "TESTS FAILED! Are you sure" prompt and it declared done anyway).
   - **Consistent failures**: a test that fails in every completed attempt, flagged as systematic when the assertion message is identical each time.
-  - **Hidden requirements (task-quality signal).** The test file is parsed with `ast` to find the literal strings each failing test checks for, skipping assertion messages, docstrings, f-strings, dict keys and call arguments, and taking the literal prefix of regexes. A literal counts as hidden if it is absent from the instruction and was never shown to an agent by the environment before that agent typed it. The agent's own echoed output doesn't count as discovery.
+  - **Hidden requirements (task-quality signal).** The test file is parsed with `ast` (`runner/test_literals.py`, shared with stretch goal C's `unstated_test_literals` static check) to find the literal strings each failing test checks for. It skips assertion messages, docstrings, f-strings, dict keys, set literals, call arguments and `x not in y` checks, and takes the literal prefix of regexes. A literal counts as hidden if it is absent from the instruction and was never shown to an agent by the environment before that agent typed it. The agent's own echoed output doesn't count as discovery.
   - **Divergence**: for tests that pass in some attempts and fail in others, a literal that every passing attempt typed and no failing attempt did.
 - Evidence committed in `results/insights/`:
-  - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files.
-  - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and still gives `insufficient_evidence` for learnability (interval 57–100%) rather than declaring it too easy.
-  - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `insufficient_evidence` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
+  - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files. This finding led to fixing the task's instruction (see the tasks section); the committed runs predate that fix.
+  - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and gives `undetermined` for learnability (8 passes are needed to call it too easy) rather than declaring it too easy.
+  - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `undetermined` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
 
 #### How trust is enforced
 - Every finding carries evidence IDs. Each item is either a verbatim quote, with its source path relative to the submission and, where relevant, line, attempt and episode, or an absence claim scoped to exactly what it is about (`task.yaml#instruction`).

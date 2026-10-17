@@ -33,6 +33,17 @@ instruction: |-
   Disk space impact analysis
   Recommendations for improvement
 
+  The report must use this format (it is checked automatically):
+  - A title line "LOG ROTATION ANALYSIS REPORT", then sections headed "SYSTEM OVERVIEW",
+    "LOG FILE ANALYSIS", "SUMMARY" and "RECOMMENDATIONS:" (in that order).
+  - Under LOG FILE ANALYSIS, mark each problem as "ISSUE (HIGH)", "ISSUE (MEDIUM)" or
+    "ISSUE (LOW)" followed by a description, e.g. "ISSUE (HIGH): Large file exceeds 10MB threshold".
+    Describe the files in terms of their size, rotation and days since last rotation.
+  - Under SUMMARY, include the lines "Total log size: <N> MB", "Estimated total savings: <N> MB"
+    and "Potential space reduction: <P>%", where P is a number.
+  - Under RECOMMENDATIONS:, give specific actions: rotation frequency (daily/weekly/monthly),
+    compression, retention, and monitoring disk usage.
+
 
   optimized_logrotate.conf - An optimized logrotate configuration that:
 
@@ -40,11 +51,16 @@ instruction: |-
   Includes appropriate compression settings
   Sets reasonable retention policies
   Handles edge cases (empty files, rapid growth, etc.)
+  Uses standard logrotate blocks ("<path> { ... }") with "rotate" and "compress" directives,
+  covering at least two of /var/log/samples/app.log, system.log, access.log and error.log.
 
 
-  rotation_summary.csv - A CSV file with columns:
+  rotation_summary.csv - A CSV file whose header row is exactly:
 
-  log_path, current_size_mb, days_since_rotation, recommended_schedule, estimated_savings_mb
+  log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+
+  with one row per log file; current_size_mb and estimated_savings_mb are numbers and
+  days_since_rotation is a whole number of days.
 
   Success Criteria
   Your analyzer should handle various log types (application logs, system logs, access logs) and
