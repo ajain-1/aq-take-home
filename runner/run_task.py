@@ -195,16 +195,20 @@ class TaskRunner:
         """Pods vanish when a Job fails (e.g. DeadlineExceeded), so keep the last known pod
         for each attempt and attribute the Job's failure to attempts that never succeeded."""
 
+        failure = snapshot.reason if snapshot.finished else None if snapshot.exists else "JobNotFound"
+
         def mutate(s: Submission) -> None:
             previous = {a.index: a for a in s.progress.attempts}
-            attempts = [a if a.pod or a.index not in previous else previous[a.index] for a in snapshot.attempts]
-            if snapshot.finished and snapshot.reason:
+            attempts = [
+                a if a.pod or a.index not in previous else previous[a.index] for a in snapshot.attempts
+            ] or list(previous.values())
+            if failure:
                 for attempt in attempts:
                     if attempt.state != AttemptState.SUCCEEDED:
-                        attempt.state, attempt.reason = AttemptState.FAILED, f"job failed: {snapshot.reason}"
+                        attempt.state, attempt.reason = AttemptState.FAILED, f"job failed: {failure}"
             s.progress.attempts = attempts
 
-        if snapshot.attempts:
+        if snapshot.attempts or failure:
             self._store.update(submission_id, mutate)
 
     def _collect(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> dict[str, Any]:

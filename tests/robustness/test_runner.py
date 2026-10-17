@@ -99,6 +99,14 @@ def test_job_deadline_is_attributed_to_attempts_whose_pods_vanished(harness):
     assert outcome["attempts"][0]["error"] == "job failed: DeadlineExceeded"
 
 
+def test_vanished_job_is_reported_as_such(harness):
+    running = JobSnapshot(exists=True, attempts=[AttemptProgress(index=0, state="running", pod="aq-sub1-0-abc")])
+    h = harness([running, JobSnapshot(exists=False)])
+    h.submit()
+    outcome = h.runner.run("sub1")
+    assert outcome["attempts"][0]["error"] == "job failed: JobNotFound"
+
+
 def test_executor_deadline_stops_a_job_that_never_finishes(harness):
     h = harness([running_snapshot()])
     h.submit(agent_timeout=0.05, test_timeout=0.05)
