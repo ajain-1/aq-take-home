@@ -30,12 +30,33 @@ def _pytest_output(pane_path: Path) -> str | None:
     return "\n".join(lines[start:]).strip()
 
 
+def _read_trial(trial_dir: Path) -> dict[str, Any] | None:
+    """A pod-written results.json; None if it is truncated or unreadable."""
+    try:
+        trial = json.loads((trial_dir / "results.json").read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    return trial if isinstance(trial, dict) else None
+
+
+def _read_events(events_path: Path) -> list[dict[str, Any]]:
+    events = []
+    for line in events_path.read_text(errors="replace").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(event, dict):
+            events.append(event)
+    return events
+
+
 def infrastructure_issues(attempt_dir: Path) -> list[str]:
     """Problems outside the agent's control, recorded by the pod while the attempt ran."""
     events_path = attempt_dir / TASK_CONTAINER_EVENTS_FILE
     if not events_path.exists():
         return []
-    events = [json.loads(line) for line in events_path.read_text().splitlines() if line.strip()]
+    events = _read_events(events_path)
     if any(event.get("status") == "oom" or event.get("Action") == "oom" for event in events):
         return ["task container was OOM-killed (exceeded its resource_class memory limit)"]
     return []
@@ -44,21 +65,23 @@ def infrastructure_issues(attempt_dir: Path) -> list[str]:
 def attempt_resolved(attempt_dir: Path, task_id: str) -> bool | None:
     """Whether the attempt passed every test; None if it produced no results."""
     trial_dir = find_trial_dir(attempt_dir, task_id)
-    if trial_dir is None:
-        return None
-    return bool(json.loads((trial_dir / "results.json").read_text()).get("is_resolved"))
+    trial = _read_trial(trial_dir) if trial_dir else None
+    return None if trial is None else bool(trial.get("is_resolved"))
 
 
 def collect_attempt(
     attempt_dir: Path, task_id: str, progress: AttemptProgress, data_dir: Path
 ) -> dict[str, Any]:
     trial_dir = find_trial_dir(attempt_dir, task_id)
-    if trial_dir is None:
+    trial = _read_trial(trial_dir) if trial_dir else None
+    if trial is None:
+        no_results = f"attempt produced no results (pod state: {progress.state})"
+        unreadable = f"attempt results are unreadable: {trial_dir}/results.json" if trial_dir else None
         return {
             "attempt": progress.index,
             "status": "error",
             "resolved": False,
-            "error": progress.reason or f"attempt produced no results (pod state: {progress.state})",
+            "error": progress.reason or unreadable or no_results,
             "retries": progress.retries,
             "infrastructure_issues": infrastructure_issues(attempt_dir),
             "tests": [],
@@ -66,7 +89,6 @@ def collect_attempt(
             "total_tests": 0,
         }
 
-    trial = json.loads((trial_dir / "results.json").read_text())
     parser_results = trial.get("parser_results")
     tests = [{"name": name, "status": status} for name, status in (parser_results or {}).items()]
     failure_mode = trial.get("failure_mode")
