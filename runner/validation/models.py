@@ -46,6 +46,7 @@ class Validation(BaseModel):
     stages_run: list[Stage] = []
     oracle_submission_id: str | None = None
     nop_submission_id: str | None = None
+    note: str | None = None
     error: str | None = None
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
@@ -74,6 +75,7 @@ class Validation(BaseModel):
             "findings": [finding.model_dump(exclude_none=True) for finding in self.findings],
             "oracle_submission_id": self.oracle_submission_id,
             "nop_submission_id": self.nop_submission_id,
+            "note": self.note,
             "error": self.error,
             "created_at": self.created_at,
             "finished_at": self.finished_at,
