@@ -20,7 +20,14 @@ from kubernetes.client.exceptions import ApiException
 
 from runner import bundle, docker_ops, results
 from runner.config import RESOURCE_CLASSES, Settings
-from runner.k8s import JobSnapshot, KubeClient, api_error_message, build_job_manifest, job_deadline_sec, job_name
+from runner.k8s import (
+    JobSnapshot,
+    KubeClient,
+    api_error_message,
+    build_job_manifest,
+    job_deadline_sec,
+    job_name,
+)
 from runner.models import AttemptProgress, AttemptState, Phase, Status, Submission, TaskSpec, utcnow
 from runner.store import SubmissionNotFound, SubmissionStore
 
