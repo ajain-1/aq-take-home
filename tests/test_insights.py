@@ -34,12 +34,16 @@ def write_attempt(root: Path, index: int, resolved: bool, keystrokes: str, final
     episode = trial / "agent-logs" / "episode-0"
     episode.mkdir(parents=True)
     (episode / "prompt.txt").write_text("root@box:/app# ls\nreport.txt\n")
-    (episode / "response.json").write_text(json.dumps({
-        "state_analysis": final_analysis,
-        "explanation": "write the report",
-        "commands": [{"keystrokes": keystrokes, "is_blocking": True, "timeout_sec": 5}],
-        "is_task_complete": True,
-    }))
+    (episode / "response.json").write_text(
+        json.dumps(
+            {
+                "state_analysis": final_analysis,
+                "explanation": "write the report",
+                "commands": [{"keystrokes": keystrokes, "is_blocking": True, "timeout_sec": 5}],
+                "is_task_complete": True,
+            }
+        )
+    )
     (trial / "commands.txt").write_text(repr(keystrokes) + "\n")
     status = "passed" if resolved else "failed"
     summary = "PASSED" if resolved else "FAILED"
@@ -50,11 +54,19 @@ def write_attempt(root: Path, index: int, resolved: bool, keystrokes: str, final
         f"{summary} ../tests/test_outputs.py::test_report_sections{message}\n"
         "PASSED ../tests/test_outputs.py::test_file_exists\n"
     )
-    (trial / "results.json").write_text(json.dumps({"is_resolved": resolved, "failure_mode": "unset"}))
+    (trial / "results.json").write_text(json.dumps({"is_resolved": resolved, "failure_mode": "none"}))
     return {
-        "attempt": index, "status": "completed", "resolved": resolved, "failure_mode": "unset",
-        "tests": [{"name": "test_report_sections", "status": status}, {"name": "test_file_exists", "status": "passed"}],
-        "duration_sec": 10.0, "input_tokens": 100, "output_tokens": 10,
+        "attempt": index,
+        "status": "completed",
+        "resolved": resolved,
+        "failure_mode": "none",
+        "tests": [
+            {"name": "test_report_sections", "status": status},
+            {"name": "test_file_exists", "status": "passed"},
+        ],
+        "duration_sec": 10.0,
+        "input_tokens": 100,
+        "output_tokens": 10,
     }
 
 
@@ -63,12 +75,21 @@ def submission(tmp_path: Path) -> Path:
     task = tmp_path / "tasks" / "demo-task"
     (task / "tests").mkdir(parents=True)
     (task / "tests" / "test_outputs.py").write_text(TEST_SOURCE)
-    (task / "task.yaml").write_text(yaml.safe_dump({"instruction": "Write report.txt with a savings estimate.",
-                                                    "difficulty": "medium"}))
+    (task / "task.yaml").write_text(
+        yaml.safe_dump({"instruction": "Write report.txt with a savings estimate.", "difficulty": "medium"})
+    )
     attempts = [
-        write_attempt(tmp_path, 0, True, "printf 'REPORT HEADER\\nSavings: 30%' > report.txt\n", "Report written."),
+        write_attempt(
+            tmp_path, 0, True, "printf 'REPORT HEADER\\nSavings: 30%' > report.txt\n", "Report written."
+        ),
         write_attempt(tmp_path, 1, False, "echo hello > report.txt\n", "The report is complete."),
-        {"attempt": 2, "status": "error", "resolved": False, "error": "OOMKilled (exit code 137)", "tests": []},
+        {
+            "attempt": 2,
+            "status": "error",
+            "resolved": False,
+            "error": "OOMKilled (exit code 137)",
+            "tests": [],
+        },
     ]
     (tmp_path / "results.json").write_text(json.dumps({"task_id": "demo-task", "attempts": attempts}))
     return tmp_path
@@ -114,13 +135,18 @@ def test_unverifiable_insights_are_withheld(submission: Path, monkeypatch):
     original = EvidenceLedger.quote
 
     def tampered(self, source, quote, **location):
-        return original(self, source, quote + " (fabricated)", **location) if "post-test" in source else \
-            original(self, source, quote, **location)
+        return (
+            original(self, source, quote + " (fabricated)", **location)
+            if "post-test" in source
+            else original(self, source, quote, **location)
+        )
 
     monkeypatch.setattr(EvidenceLedger, "quote", tampered)
     report = analyze(submission)
     assert not any(i["title"] == "Attempt 1: declared_done_with_failing_tests" for i in report["insights"])
-    assert any(i["title"] == "Attempt 1: declared_done_with_failing_tests" for i in report["rejected_insights"])
+    assert any(
+        i["title"] == "Attempt 1: declared_done_with_failing_tests" for i in report["rejected_insights"]
+    )
 
 
 def test_analysis_finds_hidden_requirement_divergence_and_errors(submission: Path):
@@ -135,7 +161,9 @@ def test_analysis_finds_hidden_requirement_divergence_and_errors(submission: Pat
     assert any("REPORT HEADER" in i["title"] for i in by_category["divergence"])
     assert all(e["verified"] for e in report["evidence"].values())
     assert {a["category"] for a in report["attempts"]} == {
-        "solved", "declared_done_with_failing_tests", "infrastructure_error"
+        "solved",
+        "declared_done_with_failing_tests",
+        "infrastructure_error",
     }
     assert "REPORT HEADER" in render_markdown(report)
 
@@ -144,12 +172,33 @@ def test_narrative_drops_uncited_and_unsupported_sentences(submission: Path, mon
     monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
     report = analyze(submission)
     hidden = next(i for i in report["insights"] if i["category"] == "hidden_requirement")
-    response = json.dumps({"sentences": [
-        {"text": "The test expects an unstated REPORT HEADER.", "evidence": hidden["evidence"][:1]},
-        {"text": "Agents fail 73% of the time.", "evidence": hidden["evidence"][:1]},
-        {"text": "No citation here.", "evidence": []},
-        {"text": "Cites a made-up ID.", "evidence": ["E999"]},
-    ]})
+    response = json.dumps(
+        {
+            "sentences": [
+                {"text": "The test expects an unstated REPORT HEADER.", "evidence": hidden["evidence"][:1]},
+                {"text": "Agents fail 73% of the time.", "evidence": hidden["evidence"][:1]},
+                {"text": "No citation here.", "evidence": []},
+                {"text": "Cites a made-up ID.", "evidence": ["E999"]},
+            ]
+        }
+    )
     summary = summarize(report, complete=lambda prompt, model, key: response)
     assert summary["kept_sentences"] == 1 and summary["dropped_sentences"] == 3
     assert "REPORT HEADER" in summary["text"] and "73%" not in summary["text"]
+
+
+def test_infrastructure_issues_and_tests_not_run_are_their_own_categories(submission: Path):
+    results = json.loads((submission / "results.json").read_text())
+    results["attempts"][1]["infrastructure_issues"] = ["task container was OOM-killed"]
+    results["attempts"][2] = {"attempt": 2, "status": "tests_not_run", "resolved": False, "tests": []}
+    (submission / "results.json").write_text(json.dumps(results))
+    (submission / "runs" / "attempt-1" / "task-container-events.jsonl").write_text(
+        json.dumps({"status": "oom", "Action": "oom", "id": "abc"}) + "\n"
+    )
+
+    report = analyze(submission)
+    categories = {a["attempt"]: a["category"] for a in report["attempts"]}
+    assert categories[1] == "infrastructure_issue" and categories[2] == "tests_not_run"
+    infra = next(i for i in report["insights"] if i["title"] == "Attempt 1: infrastructure_issue")
+    sources = [report["evidence"][e]["source"] for e in infra["evidence"]]
+    assert sources and all(source.endswith("task-container-events.jsonl") for source in sources)

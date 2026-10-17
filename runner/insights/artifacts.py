@@ -11,6 +11,7 @@ from pathlib import Path
 
 import yaml
 
+TASK_CONTAINER_EVENTS_FILE = "task-container-events.jsonl"
 SUMMARY_LINE = re.compile(r"^(?:FAILED|ERROR) \S*::(?P<name>[^\s\[]+)\S*(?: - (?P<message>.*))?$")
 
 
@@ -48,6 +49,8 @@ class Attempt:
     duration_sec: float | None = None
     input_tokens: int | None = None
     output_tokens: int | None = None
+    infrastructure_issues: list[str] = field(default_factory=list)
+    events_source: str | None = None
 
     @property
     def declared_complete(self) -> bool:
@@ -132,7 +135,11 @@ def load_submission(root: Path) -> Submission:
             duration_sec=summary.get("duration_sec"),
             input_tokens=summary.get("input_tokens"),
             output_tokens=summary.get("output_tokens"),
+            infrastructure_issues=summary.get("infrastructure_issues") or [],
         )
+        events = root / "runs" / f"attempt-{attempt.index}" / TASK_CONTAINER_EVENTS_FILE
+        if events.exists():
+            attempt.events_source = _relative(root, events)
         if trial_dir := _find_trial_dir(root, attempt.index, task_id):
             attempt.trial_source = _relative(root, trial_dir)
             attempt.episodes = _load_episodes(root, trial_dir)

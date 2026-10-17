@@ -75,7 +75,14 @@ class Analyzer:
             if failed:
                 detail += f"; failing tests: {', '.join(failed)}"
             self.insights.append(
-                Insight("attempt_failure", "info", f"Attempt {attempt.index}: {category}", detail, evidence, [attempt.index])
+                Insight(
+                    "attempt_failure",
+                    "info",
+                    f"Attempt {attempt.index}: {category}",
+                    detail,
+                    evidence,
+                    [attempt.index],
+                )
             )
         return {
             "attempt": attempt.index,
@@ -90,9 +97,13 @@ class Analyzer:
         }
 
     def _attempt_category(self, attempt: Attempt) -> tuple[str, list[str]]:
+        if attempt.infrastructure_issues and not attempt.resolved:
+            return "infrastructure_issue", self._infrastructure_evidence(attempt)
         if attempt.status != "completed":
             category = "infrastructure_error" if attempt.status == "error" else attempt.status
-            return category, [self.ledger.quote("results.json", attempt.error or attempt.status, attempt=attempt.index)]
+            return category, [
+                self.ledger.quote("results.json", attempt.error or attempt.status, attempt=attempt.index)
+            ]
         trial_results = f"{attempt.trial_source}/results.json"
         mode = attempt.failure_mode or ""
         if attempt.resolved:
@@ -101,7 +112,9 @@ class Analyzer:
             category = "llm_error" if mode in LLM_FAILURE_MODES else mode
             return category, [self.ledger.quote(trial_results, mode, attempt=attempt.index)]
         if mode == "parse_error" or not attempt.tests:
-            return "tests_unparseable", [self.ledger.quote(trial_results, mode or "failure_mode", attempt=attempt.index)]
+            return "tests_unparseable", [
+                self.ledger.quote(trial_results, mode or "failure_mode", attempt=attempt.index)
+            ]
 
         failure_evidence = [
             self.ledger.quote(attempt.pane_source, f.text, line=f.line, attempt=attempt.index)
@@ -109,16 +122,41 @@ class Analyzer:
         ]
         if not attempt.declared_complete:
             last = attempt.episodes[-1] if attempt.episodes else None
-            evidence = [self.ledger.quote(last.source, last.state_analysis, attempt=attempt.index, episode=last.index)] if last else []
+            evidence = (
+                [
+                    self.ledger.quote(
+                        last.source, last.state_analysis, attempt=attempt.index, episode=last.index
+                    )
+                ]
+                if last
+                else []
+            )
             return "stopped_without_completing", evidence + failure_evidence
 
         final = attempt.episodes[-1]
-        evidence = [self.ledger.quote(final.source, final.state_analysis, attempt=attempt.index, episode=final.index)]
+        evidence = [
+            self.ledger.quote(final.source, final.state_analysis, attempt=attempt.index, episode=final.index)
+        ]
         warned = next((e for e in attempt.episodes if CONFIRMATION_WARNING in e.prompt), None)
         if warned:
-            evidence.append(self.ledger.quote(warned.prompt_source, CONFIRMATION_WARNING, attempt=attempt.index, episode=warned.index))
+            evidence.append(
+                self.ledger.quote(
+                    warned.prompt_source, CONFIRMATION_WARNING, attempt=attempt.index, episode=warned.index
+                )
+            )
             return "declared_done_despite_failure_warning", evidence + failure_evidence
         return "declared_done_with_failing_tests", evidence + failure_evidence
+
+    def _infrastructure_evidence(self, attempt: Attempt) -> list[str]:
+        """Cite the recorded container event itself, not the executor's summary of it."""
+        if not attempt.events_source:
+            return []
+        lines = (self.s.root / attempt.events_source).read_text(errors="replace").splitlines()
+        return [
+            self.ledger.quote(attempt.events_source, line, line=number, attempt=attempt.index)
+            for number, line in enumerate(lines, start=1)
+            if '"oom"' in line
+        ][:3]
 
     def _failed_in(self, test: str) -> list[Attempt]:
         return [a for a in self.completed if a.tests.get(test) not in (None, "passed")]
@@ -134,16 +172,28 @@ class Analyzer:
             messages = {a.failures[test].message for a in failed if test in a.failures}
             identical = len(messages) == 1
             evidence = [
-                self.ledger.quote(a.pane_source, a.failures[test].text, line=a.failures[test].line, attempt=a.index)
-                for a in failed if test in a.failures
+                self.ledger.quote(
+                    a.pane_source, a.failures[test].text, line=a.failures[test].line, attempt=a.index
+                )
+                for a in failed
+                if test in a.failures
             ]
-            detail = (
-                f"{test} failed in all {len(failed)} completed attempts"
-                + (" with the identical assertion message, which points at a systematic cause "
-                   "(a task/spec issue or a capability gap) rather than run-to-run noise." if identical else ".")
+            detail = f"{test} failed in all {len(failed)} completed attempts" + (
+                " with the identical assertion message, which points at a systematic cause "
+                "(a task/spec issue or a capability gap) rather than run-to-run noise."
+                if identical
+                else "."
             )
-            self.insights.append(Insight("consistent_test_failure", "high", f"{test} never passes", detail, evidence,
-                                         [a.index for a in failed]))
+            self.insights.append(
+                Insight(
+                    "consistent_test_failure",
+                    "high",
+                    f"{test} never passes",
+                    detail,
+                    evidence,
+                    [a.index for a in failed],
+                )
+            )
 
     def _literals(self) -> dict[str, list[TestLiteral]]:
         if not self.s.tests_source:
@@ -177,13 +227,19 @@ class Analyzer:
                 evidence.append(self.ledger.absence(self.s.instruction_source, lit.literal))
             quoted = ", ".join(f"'{lit.literal}'" for lit in hidden)
             severity = "high" if len(failed) == len(self.completed) else "medium"
-            self.insights.append(Insight(
-                "hidden_requirement", severity, f"{test} checks for text the instruction never specifies",
-                f"{test} looks for {quoted}, but none of these appear in the instruction or in any terminal "
-                f"output the agents saw. It failed in {len(failed)}/{len(self.completed)} completed attempts. "
-                "Either state the expected format in the instruction or relax the test.",
-                evidence, [a.index for a in failed],
-            ))
+            self.insights.append(
+                Insight(
+                    "hidden_requirement",
+                    severity,
+                    f"{test} checks for text the instruction never specifies",
+                    f"{test} looks for {quoted}, but none of these appear in the instruction or in any "
+                    f"terminal output the agents saw. It failed in {len(failed)}/{len(self.completed)} "
+                    "completed attempts. "
+                    "Either state the expected format in the instruction or relax the test.",
+                    evidence,
+                    [a.index for a in failed],
+                )
+            )
 
     def _divergences(self) -> None:
         for test, literals in self._literals().items():
@@ -198,24 +254,43 @@ class Analyzer:
                 evidence = []
                 for attempt in passed:
                     episode = next(e for e in attempt.episodes if any(lit.literal in k for k in e.keystrokes))
-                    evidence.append(self.ledger.quote(episode.source, lit.literal, attempt=attempt.index, episode=episode.index))
+                    evidence.append(
+                        self.ledger.quote(
+                            episode.source, lit.literal, attempt=attempt.index, episode=episode.index
+                        )
+                    )
                 for attempt in failed:
                     if attempt.trial_source and '"' not in lit.literal and "\\" not in lit.literal:
-                        evidence.append(self.ledger.absence(f"{attempt.trial_source}/commands.txt", lit.literal))
-                self.insights.append(Insight(
-                    "divergence", "medium", f"Passing attempts produced '{lit.literal}'; failing ones never did",
-                    f"Every attempt that passed {test} ({_indices(passed)}) typed '{lit.literal}' into the terminal; "
-                    f"none of the failing attempts ({_indices(failed)}) did. This literal is what separates them.",
-                    evidence, [a.index for a in passed + failed],
-                ))
+                        evidence.append(
+                            self.ledger.absence(f"{attempt.trial_source}/commands.txt", lit.literal)
+                        )
+                self.insights.append(
+                    Insight(
+                        "divergence",
+                        "medium",
+                        f"Passing attempts produced '{lit.literal}'; failing ones never did",
+                        f"Every attempt that passed {test} ({_indices(passed)}) typed '{lit.literal}' "
+                        f"into the terminal; none of the failing attempts ({_indices(failed)}) did. "
+                        "This literal is what separates them.",
+                        evidence,
+                        [a.index for a in passed + failed],
+                    )
+                )
 
     def _test_table(self) -> list[dict[str, Any]]:
         rows = []
         for test in self.test_names:
             passed = len(self._passed_in(test))
             low, high = wilson_interval(passed, len(self.completed))
-            rows.append({"name": test, "passed": passed, "failed": len(self.completed) - passed,
-                         "pass_rate": round(passed / len(self.completed), 3), "interval_95": [low, high]})
+            rows.append(
+                {
+                    "name": test,
+                    "passed": passed,
+                    "failed": len(self.completed) - passed,
+                    "pass_rate": round(passed / len(self.completed), 3),
+                    "interval_95": [low, high],
+                }
+            )
         return rows
 
     def _attempt_stats(self) -> dict[str, Any]:
