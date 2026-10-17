@@ -185,7 +185,7 @@ def test_narrative_drops_uncited_and_unsupported_sentences(submission: Path, mon
             ]
         }
     )
-    summary = summarize(report, complete=lambda prompt, model, key: response)
+    summary = summarize(report, "test-model", complete=lambda prompt, model, key: response)
     assert summary["kept_sentences"] == 1 and summary["dropped_sentences"] == 3
     assert "REPORT HEADER" in summary["text"] and "73%" not in summary["text"]
 

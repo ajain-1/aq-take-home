@@ -44,6 +44,7 @@ class Settings:
     namespace: str = "default"
     agent: str = "terminus-1"
     model: str = "openrouter/anthropic/claude-opus-4.5"
+    insights_model: str = "openai/gpt-4.1-mini"
     default_attempts: int = 1
     max_attempts: int = 10
     max_concurrent_submissions: int = 16
@@ -80,6 +81,7 @@ class Settings:
             namespace=_env("AQ_NAMESPACE", defaults.namespace),
             agent=_env("AQ_AGENT", defaults.agent),
             model=_env("AQ_MODEL", defaults.model),
+            insights_model=_env("AQ_INSIGHTS_MODEL", defaults.insights_model),
             default_attempts=int(_env("AQ_DEFAULT_ATTEMPTS", str(defaults.default_attempts))),
             max_attempts=int(_env("AQ_MAX_ATTEMPTS", str(defaults.max_attempts))),
             max_concurrent_submissions=int(

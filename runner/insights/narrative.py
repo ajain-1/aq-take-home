@@ -6,13 +6,14 @@ containing numbers that do not appear in the cited findings, are dropped.
 """
 
 import json
+import logging
 import os
 import re
 import urllib.request
 from typing import Any
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_MODEL = os.environ.get("AQ_INSIGHTS_MODEL", "openai/gpt-4.1-mini")
+logger = logging.getLogger(__name__)
 NUMBER = re.compile(r"\d+(?:\.\d+)?")
 EVIDENCE_ID = re.compile(r"\bE\d+\b")
 
@@ -67,9 +68,7 @@ def _complete(prompt: str, model: str, api_key: str) -> str:
         return json.loads(response.read())["choices"][0]["message"]["content"]
 
 
-def summarize(
-    report: dict[str, Any], model: str = DEFAULT_MODEL, complete=_complete
-) -> dict[str, Any] | None:
+def summarize(report: dict[str, Any], model: str, complete=_complete) -> dict[str, Any] | None:
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not report["insights"] or not api_key:
         return None
@@ -78,6 +77,7 @@ def summarize(
             "sentences"
         ]
     except Exception:
+        logger.warning("insights narrative via %s failed", model, exc_info=True)
         return None
 
     kept = [s for s in sentences if isinstance(s, dict) and _supported(s, report)]
