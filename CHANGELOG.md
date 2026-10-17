@@ -79,7 +79,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - The Job's `activeDeadlineSeconds` starts when the Job is created, so time spent `Pending` on a saturated node counts against it.
 - Docker builds are not interruptible, so a clean API shutdown waits for in-flight builds to finish.
 
-#### Fixes from code review
+#### Fixes from code reviews
 - **Resume:** never re-creates a Job once launched. The persisted `launched_at` makes a resumed run re-attach and collect instead of re-running paid attempts, even if the Job was garbage-collected.
 - **API startup:** the API is wired in the FastAPI lifespan (`api/context.py`), and the cluster client connects lazily, so a missing kubeconfig shows up as `k8s_available: false` on `/health` instead of a crash at startup. The `runner`/`api` loggers get their own handler, because uvicorn owns the root logger.
 - **Settings and agents:** settings are read from the environment when the API starts (`Settings.from_env()`), not at import, and the agent catalog lives in one place (`runner/config.py`).
@@ -87,6 +87,13 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - **Store and uploads:** `store.update` holds its lock across the read and the write, and uploads are read only up to the size limit.
 - **Retried pods:** logs from every try of an attempt are kept (`pod-try-N.log`). The pod entrypoint forwards SIGTERM to `tb`.
 - **Linting:** `ruff.toml` added, and the code is clean under it.
+- **Second review (after the stretch goals were merged):**
+  - **Validation gate:** composed instead of inherited. `TaskRunner` no longer knows about validations. `SubmissionService` runs the gate (validate, then run or fail), and `/submit` with a gate is one call that checks every parameter before creating anything. A gating validation is linked to its submission from the moment it is created, and one whose static checks fail finishes immediately, so neither can be orphaned. Oracle/nop runs of an unfinished validation are resumed only by that validation, never twice.
+  - **Shared code:** one `DocumentStore` base for submissions and validations (atomic updates in both), one submission layout (`runner/paths.py`) and one trajectory loader (`runner/trajectory.py`) shared by the runner, results, UI, insights and validation.
+  - **One learnability rule:** insights (D) use the same exact 10-run rule as the adaptive strategy (B), so the two can't disagree. Savings are reported only for adaptive runs.
+  - **Robustness:** a truncated `results.json` or events line now fails only its own attempt, not the whole submission.
+  - **Insights endpoint:** read-only; the LLM summary is opt-in, its model is a setting (`AQ_INSIGHTS_MODEL`), and failures are logged.
+  - **Consistency:** every 422 has a string `detail` (plus `report` when there is one), insight categories are renamed to `no_results` / `task_container_oom`, and the remaining limits (`AQ_MAX_CONCURRENT_VALIDATIONS`) are settings.
 
 #### End-to-end verification
 - All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`, one attempt each. Tests passed per task: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards. Evidence: each submission's `/results` JSON and the script output are in `results/e2e-all-tasks/`.
@@ -174,9 +181,9 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - **API endpoints** (`api/validation.py`, `api/validation_routes.py`):
   - `POST /validate` (`mode=static|full`, `force`) returns a report of findings, each with a stage, severity, check and message.
   - `GET /validations/{id}` returns a report.
-  - `POST /submit` gains `validation=none|static|full`.
-    - `static` rejects with a 422 that carries the report.
-    - `full` puts the submission in a `validating` phase. `GatedTaskRunner` runs the validation before the agents and fails the submission (pointing at the report) if it finds errors, so no agent compute is spent on a broken task.
+  - `POST /submit` gains an optional `validation=static|full` (omit it for no gate).
+    - `static` rejects with a 422 whose body carries the report.
+    - `full` puts the submission in a `validating` phase. The submission worker runs the validation before the agents and fails the submission (pointing at the report) if it finds errors, so no agent compute is spent on a broken task.
 - `scripts/validation_report.py` validates every task in a directory and writes per-task JSON reports and a `SUMMARY.md`. `--refresh-static` re-runs only the static checks locally against existing reports, keeping the image-probe and oracle/nop findings, so a new static check doesn't need new Job runs.
 - Unit tests for each static check and for the Dockerfile parser: `tests/test_validation_static_checks.py`.
 
@@ -213,7 +220,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
 ## Stretch goal D: Beyond pass/fail
 
 #### What I did
-- Added `runner/insights/`, which turns the N attempts of a submission into findings a customer can act on. It is served by `GET /insights/{id}` (`?format=markdown`, `?refresh=true`, `?narrative=false`) and written to `insights.json` / `insights.md` in the submission directory. `python -m runner.insights <dir>` regenerates and re-verifies a report offline.
+- Added `runner/insights/`, which turns the N attempts of a submission into findings a customer can act on. It is served read-only by `GET /insights/{id}` (`?format=markdown`, `?narrative=true` for the LLM summary), computed from the stored artifacts on each request. `python -m runner.insights <dir>` regenerates and re-verifies a report offline and writes `insights.json` / `insights.md` beside it.
 - What it reports:
   - **Outcome with honest uncertainty.** Resolved k/N with a 95% Wilson interval for context, and the learnability class from `runner.learnability`, the same exact 10-run rule the adaptive strategy (B) stops on. Errored attempts are excluded, as in B. If the runs so far don't decide the class, the verdict is `undetermined` rather than a guess, so B and D can never disagree about the same run.
   - **Per-test pass rates**, each with its own interval.
