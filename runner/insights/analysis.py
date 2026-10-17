@@ -100,9 +100,9 @@ class Analyzer:
 
     def _attempt_category(self, attempt: Attempt) -> tuple[str, list[str]]:
         if attempt.infrastructure_issues and not attempt.resolved:
-            return "infrastructure_issue", self._infrastructure_evidence(attempt)
+            return "task_container_oom", self._infrastructure_evidence(attempt)
         if attempt.status != "completed":
-            category = "infrastructure_error" if attempt.status == "error" else attempt.status
+            category = "no_results" if attempt.status == "error" else attempt.status
             return category, [
                 self.ledger.quote("results.json", attempt.error or attempt.status, attempt=attempt.index)
             ]

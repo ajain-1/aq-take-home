@@ -166,7 +166,7 @@ def test_analysis_finds_hidden_requirement_divergence_and_errors(submission: Pat
     assert {a["category"] for a in report["attempts"]} == {
         "solved",
         "declared_done_with_failing_tests",
-        "infrastructure_error",
+        "no_results",
     }
     assert "REPORT HEADER" in render_markdown(report)
 
@@ -201,7 +201,7 @@ def test_infrastructure_issues_and_tests_not_run_are_their_own_categories(submis
 
     report = analyze(submission)
     categories = {a["attempt"]: a["category"] for a in report["attempts"]}
-    assert categories[1] == "infrastructure_issue" and categories[2] == "tests_not_run"
-    infra = next(i for i in report["insights"] if i["title"] == "Attempt 1: infrastructure_issue")
+    assert categories[1] == "task_container_oom" and categories[2] == "tests_not_run"
+    infra = next(i for i in report["insights"] if i["title"] == "Attempt 1: task_container_oom")
     sources = [report["evidence"][e]["source"] for e in infra["evidence"]]
     assert sources and all(source.endswith("task-container-events.jsonl") for source in sources)
