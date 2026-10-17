@@ -1,16 +1,14 @@
 import json
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from api.context import AppContext, get_context
+from api.context import Context
 from runner import insights
 from runner.paths import SubmissionPaths
 from runner.store import SubmissionNotFound
 
 router = APIRouter()
-Context = Annotated[AppContext, Depends(get_context)]
 
 
 @router.get("/insights/{submission_id}")

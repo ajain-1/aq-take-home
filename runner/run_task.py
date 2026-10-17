@@ -38,6 +38,10 @@ class Interrupted(Exception):
     """Raised when the runner is shutting down; the submission is left resumable."""
 
 
+def new_submission_id() -> str:
+    return uuid.uuid4().hex[:12]
+
+
 def task_image_tag(submission_id: str) -> str:
     return f"aq-task-{submission_id}:latest"
 
@@ -60,19 +64,17 @@ class TaskRunner:
         agent: str,
         strategy: Strategy = Strategy.FIXED,
         confidence: float = 1.0,
-        validation_id: str | None = None,
+        submission_id: str | None = None,
     ) -> Submission:
         """Persist a new submission after validating its bundle; raises InvalidTaskBundle.
 
         The bundle is checked synchronously so a malformed task is rejected up front
         instead of surfacing later as a failed submission."""
         model = self._settings.model if self._settings.requires_model(agent) else None
+        submission_id = submission_id or new_submission_id()
         submission = Submission.create(
-            uuid.uuid4().hex[:12], n_attempts, agent, model, strategy=strategy, confidence=confidence
+            submission_id, n_attempts, agent, model, strategy=strategy, confidence=confidence
         )
-        if validation_id:
-            submission.validation_id = validation_id
-            submission.progress.phase = Phase.VALIDATING
         paths = self.paths(submission.id)
         paths.root.mkdir(parents=True)
         paths.upload.write_bytes(archive)
@@ -108,10 +110,10 @@ class TaskRunner:
             logger.info("submission %s interrupted; it will resume on restart", submission_id)
             return None
         except (bundle.InvalidTaskBundle, docker_ops.BuildError, ExecutionError) as e:
-            outcome = self._fail(submission_id, str(e))
+            outcome = self.fail(submission_id, str(e))
         except Exception as e:
             logger.exception("submission %s crashed", submission_id)
-            outcome = self._fail(submission_id, f"internal error: {e}")
+            outcome = self.fail(submission_id, f"internal error: {e}")
 
         self._cleanup(submission_id)
         return outcome
@@ -316,7 +318,8 @@ class TaskRunner:
                 attempt_dir.mkdir(parents=True, exist_ok=True)
                 (attempt_dir / f"pod-try-{try_number}.log").write_text(log)
 
-    def _fail(self, submission_id: str, error: str) -> dict[str, Any]:
+    def fail(self, submission_id: str, error: str) -> dict[str, Any]:
+        """Mark a submission failed without running it (or after it broke)."""
         logger.warning("submission %s failed: %s", submission_id, error)
 
         def mutate(s: Submission) -> None:

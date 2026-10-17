@@ -48,6 +48,7 @@ class Settings:
     max_attempts: int = 10
     max_concurrent_submissions: int = 16
     max_concurrent_builds: int = 4
+    max_concurrent_validations: int = 2
     max_upload_bytes: int = 50 * 1024**2
     max_extracted_bytes: int = 500 * 1024**2
     build_timeout_sec: int = 1800
@@ -85,6 +86,9 @@ class Settings:
                 _env("AQ_MAX_CONCURRENT_SUBMISSIONS", str(defaults.max_concurrent_submissions))
             ),
             max_concurrent_builds=int(_env("AQ_MAX_CONCURRENT_BUILDS", str(defaults.max_concurrent_builds))),
+            max_concurrent_validations=int(
+                _env("AQ_MAX_CONCURRENT_VALIDATIONS", str(defaults.max_concurrent_validations))
+            ),
             max_upload_bytes=int(_env("AQ_MAX_UPLOAD_BYTES", str(defaults.max_upload_bytes))),
             max_extracted_bytes=int(_env("AQ_MAX_EXTRACTED_BYTES", str(defaults.max_extracted_bytes))),
             build_timeout_sec=int(_env("AQ_BUILD_TIMEOUT_SEC", str(defaults.build_timeout_sec))),

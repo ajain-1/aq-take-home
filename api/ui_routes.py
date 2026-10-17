@@ -1,12 +1,11 @@
 """Read-only endpoints backing the web UI: submission listing and agent trajectories."""
 
 from pathlib import Path
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from api.context import AppContext, get_context
+from api.context import AppContext, Context
 from runner import trajectory
 from runner.paths import SubmissionPaths
 from runner.store import SubmissionNotFound
@@ -15,7 +14,6 @@ STATIC_DIR = Path(__file__).parent / "static"
 PANES = ("pre-agent", "post-agent", "post-test")
 
 router = APIRouter()
-Context = Annotated[AppContext, Depends(get_context)]
 
 
 def _read_text(path: Path) -> str | None:
