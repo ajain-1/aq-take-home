@@ -9,7 +9,7 @@ from typing import Any
 from runner.insights.artifacts import Attempt, Submission, load_submission
 from runner.insights.evidence import EvidenceLedger
 from runner.insights.stats import learnability_verdict, wilson_interval
-from runner.insights.test_spec import TestLiteral, required_literals
+from runner.test_literals import TestLiteral, required_literals
 
 LLM_FAILURE_MODES = {"context_length_exceeded", "output_length_exceeded", "fatal_llm_parse_error"}
 CONFIRMATION_WARNING = "TESTS FAILED! Are you sure you want to mark complete?"
