@@ -86,3 +86,19 @@ def test_worker_pool_bounds_active_submissions(service):
     threading.Event().wait(0.2)
     assert runner.ran == [first.id]
     assert store.get(second.id).status == Status.QUEUED
+
+
+def test_concurrent_updates_are_not_lost(settings):
+    store = SubmissionStore(settings.db_path)
+    store.save(Submission.create("a", 1, "oracle", None))
+
+    def bump():
+        for _ in range(25):
+            store.update("a", lambda s: setattr(s.progress, "attempts_total", s.progress.attempts_total + 1))
+
+    threads = [threading.Thread(target=bump) for _ in range(8)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert store.get("a").progress.attempts_total == 1 + 8 * 25

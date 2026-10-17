@@ -1,8 +1,16 @@
 import json
+from datetime import datetime, timedelta
 
 from runner import results
 from runner.config import RESOURCE_CLASSES
-from runner.k8s import JobSnapshot, _pod_state, build_job_manifest, job_deadline_sec
+from runner.k8s import (
+    COMPLETION_INDEX_ANNOTATION,
+    JobSnapshot,
+    _attempts_from_pods,
+    _pod_state,
+    build_job_manifest,
+    job_deadline_sec,
+)
 from runner.models import AttemptProgress, AttemptState, TaskSpec, Wave
 
 
@@ -156,3 +164,26 @@ def test_oom_killed_pod_reason_is_surfaced():
         )
     )
     assert _pod_state(pod) == (AttemptState.FAILED, "OOMKilled (exit code 137)")
+
+
+def test_pods_map_to_global_attempt_indexes_with_all_tries():
+    start = datetime(2026, 1, 1)
+
+    def pod(name, local_index, minutes, phase):
+        return _Obj(
+            metadata=_Obj(
+                name=name,
+                annotations={COMPLETION_INDEX_ANNOTATION: str(local_index)},
+                creation_timestamp=start + timedelta(minutes=minutes),
+            ),
+            status=_Obj(phase=phase, reason=None, container_statuses=[]),
+        )
+
+    pods = [pod("retry", 0, 5, "Running"), pod("first", 0, 0, "Failed"), pod("done", 2, 1, "Succeeded")]
+    attempts = _attempts_from_pods(pods, Wave(index=1, offset=5, size=3))
+    assert [(a.index, a.pods, a.state) for a in attempts] == [
+        (5, ["first", "retry"], AttemptState.RUNNING),
+        (6, [], AttemptState.PENDING),
+        (7, ["done"], AttemptState.SUCCEEDED),
+    ]
+    assert attempts[0].retries == 1

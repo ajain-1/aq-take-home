@@ -90,3 +90,21 @@ def test_compose_file_pins_image_limits_and_labels(tmp_path):
     assert client["labels"]["aq.submission"] == "abc"
     assert all(volume.startswith("${AQ_HOST_PATH_PREFIX:-}") for volume in client["volumes"])
     assert compose["networks"]["default"]["labels"]["aq.submission"] == "abc"
+
+
+def test_platform_junk_is_skipped(tmp_path):
+    entries = {f"tiny-task/{name}": body for name, body in task_files().items()}
+    entries |= {
+        "__MACOSX/tiny-task/._task.yaml": "x",
+        "tiny-task/.DS_Store": "x",
+        "tiny-task/__pycache__/a.pyc": "x",
+    }
+    _extract(tmp_path, make_zip(entries))
+    extracted = {p.name for p in (tmp_path / "tasks").rglob("*")}
+    assert not extracted & {"__MACOSX", ".DS_Store", "__pycache__", "a.pyc"}
+
+
+def test_entry_count_cap(tmp_path, monkeypatch):
+    monkeypatch.setattr(bundle, "MAX_ENTRIES", 3)
+    with pytest.raises(bundle.InvalidTaskBundle, match="more than 3 entries"):
+        _extract(tmp_path, task_zip())
