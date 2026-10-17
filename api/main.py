@@ -32,7 +32,7 @@ from fastapi.staticfiles import StaticFiles
 from api import insights_routes, ui_routes, validation_routes
 from api.context import AppContext, Context, SubmissionDep, configure_logging, unprocessable
 from api.service import SubmissionRejected
-from runner import docker_ops
+from runner import catalog, docker_ops
 from runner.config import Settings
 from runner.models import AttemptState
 from runner.validation.models import ValidationMode
@@ -158,7 +158,7 @@ def get_results(submission: SubmissionDep):
             "total_tests": 0,
             "attempts": [],
         }
-    return {**submission.results, "error": submission.error}
+    return {**catalog.with_categories(submission.results), "error": submission.error}
 
 
 @app.get("/health")

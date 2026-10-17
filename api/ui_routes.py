@@ -1,17 +1,18 @@
-"""Read-only endpoints backing the web UI: submission listing and agent trajectories."""
+"""Read-only endpoints backing the web UI: dashboard, task pages, and agent trajectories."""
 
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from api.context import AppContext, Context
-from runner import trajectory
+from api.context import Context, SubmissionDep
+from runner import catalog, trajectory
+from runner.models import Submission
 from runner.paths import SubmissionPaths
-from runner.store import SubmissionNotFound
 
 STATIC_DIR = Path(__file__).parent / "static"
 PANES = ("pre-agent", "post-agent", "post-test")
+RECORDING = Path("sessions") / "agent.cast"
 
 router = APIRouter()
 
@@ -21,6 +22,8 @@ def _read_text(path: Path) -> str | None:
 
 
 def _episodes(trial_dir: Path) -> list[dict]:
+    """Each episode is one LLM turn; the terminal output the agent saw after its
+    commands is the next episode's prompt."""
     episodes = trajectory.load_episodes(trial_dir)
     return [
         {
@@ -33,12 +36,9 @@ def _episodes(trial_dir: Path) -> list[dict]:
     ]
 
 
-def _trial_dir(context: AppContext, submission_id: str, attempt: int) -> Path:
-    try:
-        submission = context.store.get(submission_id)
-    except SubmissionNotFound:
-        raise HTTPException(status_code=404, detail=f"submission {submission_id} not found") from None
-    if not 0 <= attempt < submission.n_attempts or submission.task_id is None:
+def _trial_dir(context: Context, submission: Submission, attempt: int) -> Path:
+    """The artifacts of an attempt that actually ran; never built from request paths."""
+    if submission.task_id is None or attempt not in catalog.attempt_indices(submission):
         raise HTTPException(status_code=404, detail=f"attempt {attempt} not found")
     paths = SubmissionPaths(context.settings.submissions_dir / submission.id)
     # A running trial has no results.json yet, but its agent logs already stream in.
@@ -53,33 +53,51 @@ def ui():
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@router.get("/dashboard")
+def get_dashboard(context: Context):
+    """Global metrics across every run, plus the runs still in flight."""
+    return catalog.dashboard(context.store.list_all(), context.settings)
+
+
+@router.get("/tasks")
+def list_tasks(context: Context):
+    """One row per task: pass rate across agent attempts, learnability, last run."""
+    return catalog.task_summaries(context.store.list_all(), context.settings)
+
+
+@router.get("/tasks/{task_id}")
+def get_task(context: Context, task_id: str):
+    """A task's spec, aggregate results across all its runs, and a per-test heatmap."""
+    detail = catalog.task_detail(task_id, context.store.list_all(), context.settings)
+    if detail is None:
+        raise HTTPException(status_code=404, detail=f"task {task_id} has no runs")
+    validation = context.validations.latest_for_task(task_id)
+    return {**detail, "latest_validation": validation.report() if validation else None}
+
+
 @router.get("/submissions")
 def list_submissions(context: Context, limit: int = 50):
-    """Most recent submissions first, with enough detail to render a list."""
-    return [
-        {
-            "submission_id": s.id,
-            "task_id": s.task_id,
-            "status": s.status,
-            "phase": s.progress.phase,
-            "agent": s.agent,
-            "n_attempts": s.n_attempts,
-            "created_at": s.created_at,
-            "finished_at": s.finished_at,
-            "summary": (s.results or {}).get("summary"),
-            "passed": (s.results or {}).get("passed"),
-        }
-        for s in context.store.list_recent(min(max(limit, 1), 200))
-    ]
+    """Most recent submissions first."""
+    return [catalog.run_summary(s) for s in context.store.list_recent(min(max(limit, 1), 200))]
 
 
 @router.get("/submissions/{submission_id}/attempts/{attempt}/episodes")
-def get_episodes(context: Context, submission_id: str, attempt: int):
+def get_episodes(context: Context, submission: SubmissionDep, attempt: int):
     """The agent's turn-by-turn trajectory plus terminal snapshots for one attempt."""
-    directory = _trial_dir(context, submission_id, attempt)
+    directory = _trial_dir(context, submission, attempt)
     return {
-        "submission_id": submission_id,
+        "submission_id": submission.id,
         "attempt": attempt,
         "episodes": _episodes(directory),
         "panes": {pane: _read_text(directory / "panes" / f"{pane}.txt") for pane in PANES},
+        "has_recording": (directory / RECORDING).is_file(),
     }
+
+
+@router.get("/submissions/{submission_id}/attempts/{attempt}/recording")
+def get_recording(context: Context, submission: SubmissionDep, attempt: int):
+    """The attempt's asciinema recording, with the agent's turns merged in as markers."""
+    recording = _trial_dir(context, submission, attempt) / RECORDING
+    if not recording.is_file():
+        raise HTTPException(status_code=404, detail="attempt has no recording")
+    return FileResponse(recording, media_type="application/x-asciicast")

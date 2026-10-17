@@ -67,6 +67,9 @@ class DocumentStore(Generic[Document]):
         placeholders = ",".join("?" * len(terminal))
         return self._select(f"WHERE status NOT IN ({placeholders}) ORDER BY created_at", terminal)
 
+    def list_all(self) -> list[Document]:
+        return self._select("ORDER BY created_at", [])
+
     def list_recent(self, limit: int) -> list[Document]:
         return self._select("ORDER BY created_at DESC LIMIT ?", [limit])
 
