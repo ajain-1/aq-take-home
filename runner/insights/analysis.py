@@ -36,7 +36,7 @@ class Insight:
 
 
 # Messages pytest prints when a test cannot find a file the task should have produced.
-MISSING_OUTPUT = re.compile(r"not found|No such file or directory", re.IGNORECASE)
+MISSING_OUTPUT = re.compile(r"No such file or directory|\b[\w./-]+\.\w+ not found", re.IGNORECASE)
 
 # What a customer can change when one way of failing dominates the attempts.
 FAILURE_GUIDANCE = {
