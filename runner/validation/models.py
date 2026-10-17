@@ -76,6 +76,7 @@ class Validation(BaseModel):
             "findings": [finding.model_dump(exclude_none=True) for finding in self.findings],
             "oracle_submission_id": self.oracle_submission_id,
             "nop_submission_id": self.nop_submission_id,
+            "gates_submission_id": self.gates_submission_id,
             "note": self.note,
             "error": self.error,
             "created_at": self.created_at.isoformat(),
