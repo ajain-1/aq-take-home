@@ -6,7 +6,7 @@
   "passed": true,
   "counts": {
     "error": 0,
-    "warning": 1,
+    "warning": 0,
     "info": 0
   },
   "stages_run": [
@@ -15,37 +15,7 @@
     "oracle",
     "nop"
   ],
-  "findings": [
-    {
-      "check": "unstated_test_literals",
-      "stage": "static",
-      "severity": "warning",
-      "message": "tests require text the instruction never states and the task never shows (test_analysis_report_content: 'Estimated total savings:', 'LOG FILE ANALYSIS', 'LOG ROTATION ANALYSIS REPORT', 'SYSTEM OVERVIEW', 'Total log size:'; test_savings_calculation: 'Potential space reduction:'; test_issue_identification: 'HIGH', 'Large file', 'MEDIUM'; test_recommendations_quality: 'RECOMMENDATIONS:', 'monitor'); state the expected format in the instruction or relax the tests",
-      "details": {
-        "literals": {
-          "test_analysis_report_content": [
-            "Estimated total savings:",
-            "LOG FILE ANALYSIS",
-            "LOG ROTATION ANALYSIS REPORT",
-            "SYSTEM OVERVIEW",
-            "Total log size:"
-          ],
-          "test_savings_calculation": [
-            "Potential space reduction:"
-          ],
-          "test_issue_identification": [
-            "HIGH",
-            "Large file",
-            "MEDIUM"
-          ],
-          "test_recommendations_quality": [
-            "RECOMMENDATIONS:",
-            "monitor"
-          ]
-        }
-      }
-    }
-  ],
+  "findings": [],
   "oracle_submission_id": "0817f204c11b",
   "nop_submission_id": "c04b283dbdff",
   "note": null,
