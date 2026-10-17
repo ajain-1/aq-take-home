@@ -31,8 +31,8 @@ class SubmissionService:
         )
 
     def submit(self, archive: bytes, n_attempts: int | None, agent: str | None) -> Submission:
-        n_attempts = n_attempts or self._settings.default_attempts
-        agent = agent or self._settings.agent
+        n_attempts = self._settings.default_attempts if n_attempts is None else n_attempts
+        agent = self._settings.agent if agent is None else agent
         if not 1 <= n_attempts <= self._settings.max_attempts:
             raise SubmissionRejected(f"n_attempts must be between 1 and {self._settings.max_attempts}")
         if agent not in SUPPORTED_AGENTS:
