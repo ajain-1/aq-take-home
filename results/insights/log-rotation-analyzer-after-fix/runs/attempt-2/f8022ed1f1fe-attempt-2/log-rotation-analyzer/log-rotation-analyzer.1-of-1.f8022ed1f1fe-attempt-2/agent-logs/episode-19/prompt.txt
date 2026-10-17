@@ -1,0 +1,40 @@
+    compress
+    delaycompress
+    postrotate
+/var/log/samples/debug.log {
+    rotate 7
+    compress
+    delaycompress
+root@35c890c98987:/app# echo '=== Verification ===' && ls -la /app/analysis_report.txt /app/optimized_logrotate.conf /app/rotation_summary.csv; tmux wait -S don
+e
+=== Verification ===
+-rw-r--r-- 1 root root 3495 Oct 17 03:15 /app/analysis_report.txt
+-rw-r--r-- 1 root root 1707 Oct 17 03:15 /app/optimized_logrotate.conf
+-rw-r--r-- 1 root root  324 Oct 17 03:15 /app/rotation_summary.csv
+root@35c890c98987:/app# echo '=== CSV Check ===' && cat /app/rotation_summary.csv && echo '' && echo '=== Report Sections Check ===' && grep -E '^(LOG ROTATION|
+SYSTEM OVERVIEW|LOG FILE ANALYSIS|SUMMARY|RECOMMENDATIONS:)' /app/analysis_report.txt; tmux wait -S done
+=== CSV Check ===
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.248,0,weekly,0.149
+/var/log/samples/system.log,0.000,0,weekly,0.010
+/var/log/samples/access.log,0.154,0,daily,0.092
+/var/log/samples/error.log,0.228,0,daily,0.137
+/var/log/samples/debug.log,0.052,0,daily,0.031
+
+=== Report Sections Check ===
+LOG ROTATION ANALYSIS REPORT
+SYSTEM OVERVIEW
+LOG FILE ANALYSIS
+SUMMARY
+RECOMMENDATIONS:
+root@35c890c98987:/app# echo '=== Report Issues Check ===' && grep -E 'ISSUE \((HIGH|MEDIUM|LOW)\)' /app/analysis_report.txt; tmux wait -S done
+=== Report Issues Check ===
+  ISSUE (MEDIUM): Rotated files are not compressed - wasting disk space
+  ISSUE (HIGH): Monthly rotation too infrequent for 45.7 MB/day growth rate
+  ISSUE (HIGH): Critical log lacks rotation configuration - risk of disk exhaustion
+  ISSUE (MEDIUM): Log file lacks rotation configuration
+root@35c890c98987:/app# grep -E '(Total log size|Estimated total savings|Potential space reduction)' /app/analysis_report.txt; tmux wait -S done
+Total log size: 0.72 MB
+  Estimated total savings: 685.93 MB
+  Potential space reduction: 65%
+root@35c890c98987:/app#

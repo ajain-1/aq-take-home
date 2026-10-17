@@ -1,0 +1,40 @@
+        /usr/bin/killall -HUP nginx 2>/dev/null || true
+    endscript
+}
+
+# Error Log - Critical importance, moderate growth, long retention
+/var/log/samples/error.log {
+    daily
+    rotate 60
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 50M
+    postrotate
+        /usr/bin/killall -HUP nginx 2>/dev/null || true
+    endscript
+}
+
+# Debug Log - Low importance, moderate growth, short retention
+/var/log/samples/debug.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 30M
+}
+root@35c890c98987:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.248,0,weekly,0.149
+/var/log/samples/system.log,0.000,0,weekly,0.010
+/var/log/samples/access.log,0.154,0,daily,0.092
+/var/log/samples/error.log,0.228,0,daily,0.137
+/var/log/samples/debug.log,0.052,0,daily,0.031
+root@35c890c98987:/app#

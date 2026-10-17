@@ -1,0 +1,40 @@
+  Size: 259893          Blocks: 512        IO Block: 4096   regular file
+Device: 0,216   Inode: 134996      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.143238001 +0000
+Modify: 2026-10-17 01:55:07.525016012 +0000
+Change: 2026-10-17 01:55:07.525016012 +0000
+ Birth: 2026-10-17 01:55:05.335016011 +0000
+  File: /var/log/samples/debug.log
+  Size: 54292           Blocks: 112        IO Block: 4096   regular file
+Device: 0,216   Inode: 149061      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.143238001 +0000
+Modify: 2026-10-17 01:55:13.337238000 +0000
+Change: 2026-10-17 01:55:13.337238000 +0000
+ Birth: 2026-10-17 01:55:12.696238000 +0000
+  File: /var/log/samples/error.log
+  Size: 239071          Blocks: 472        IO Block: 4096   regular file
+Device: 0,216   Inode: 142281      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.144238001 +0000
+Modify: 2026-10-17 01:55:12.695238000 +0000
+Change: 2026-10-17 01:55:12.695238000 +0000
+ Birth: 2026-10-17 01:55:09.648016013 +0000
+  File: /var/log/samples/system.log
+  Size: 219             Blocks: 8          IO Block: 4096   regular file
+Device: 0,216   Inode: 139360      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.144238001 +0000
+Modify: 2026-10-17 01:55:07.528016012 +0000
+Change: 2026-10-17 01:55:07.528016012 +0000
+ Birth: 2026-10-17 01:55:07.526016012 +0000
+  File: /var/log/samples/system.log.1.gz
+  Size: 551             Blocks: 8          IO Block: 4096   regular file
+Device: 0,216   Inode: 139382      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.144238001 +0000
+Modify: 2026-10-17 01:55:07.615016012 +0000
+Change: 2026-10-17 01:55:07.616016012 +0000
+ Birth: 2026-10-17 01:55:07.616016012 +0000
+root@63f40e5a4436:/app#

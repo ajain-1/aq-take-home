@@ -1,0 +1,40 @@
+Total log size: 1 MB
+Estimated total savings: 432 MB
+Potential space reduction: 80%
+root@741fe3493729:/app# grep -E '^(LOG ROTATION ANALYSIS REPORT|SYSTEM OVERVIEW|LOG FILE ANALYSIS|SUMMARY|RECOMMENDATIONS:)' /app/analysis_report.txt; tmux wait
+ -S done
+LOG ROTATION ANALYSIS REPORT
+SYSTEM OVERVIEW
+LOG FILE ANALYSIS
+SUMMARY
+RECOMMENDATIONS:
+root@741fe3493729:/app# grep -E '(rotate|compress)' /app/optimized_logrotate.conf; tmux wait -S done
+# Optimized Logrotate Configuration
+# Addresses: disk space issues, inconsistent rotation, missing compression
+    rotate 30
+    compress
+    delaycompress
+    postrotate
+    rotate 90
+    compress
+    delaycompress
+    rotate 14
+    compress
+    delaycompress
+    postrotate
+    rotate 60
+    compress
+    delaycompress
+    postrotate
+    rotate 7
+    compress
+root@741fe3493729:/app# ls -la /app/; tmux wait -S done
+total 36
+drwxr-xr-x 1 root root 4096 Oct 17 03:15 .
+drwxr-xr-x 1 root root 4096 Oct 17 03:14 ..
+-rw-r--r-- 1 root root 5790 Oct 17 03:15 analysis_report.txt
+-rwxr-xr-x 1 root root 6285 Oct 17 01:53 generate-samples.sh
+-rw-r--r-- 1 root root 1704 Oct 17 01:55 log_metadata.json
+-rw-r--r-- 1 root root 1910 Oct 17 03:15 optimized_logrotate.conf
+-rw-r--r-- 1 root root  316 Oct 17 03:15 rotation_summary.csv
+root@741fe3493729:/app#

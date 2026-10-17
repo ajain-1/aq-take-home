@@ -1,0 +1,40 @@
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    maxsize 20M
+    copytruncate
+}
+
+# Debug Log - Low importance, short retention
+# Growth rate: 5.3 MB/day, Retention: 7 days
+/var/log/samples/debug.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    maxsize 15M
+    copytruncate
+}
+root@63f40e5a4436:/app# echo "=== rotation_summary.csv ==="
+=== rotation_summary.csv ===
+root@63f40e5a4436:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/access.log,0.15,0,daily,0.05
+/var/log/samples/app.log,0.24,0,daily,0.08
+/var/log/samples/system.log,0.00,0,daily,0.00
+/var/log/samples/error.log,0.22,0,daily,0.07
+/var/log/samples/debug.log,0.05,0,daily,0.02
+root@63f40e5a4436:/app# echo "=== Checking report sections ==="
+=== Checking report sections ===
+root@63f40e5a4436:/app# grep -E "^(LOG ROTATION|SYSTEM OVERVIEW|LOG FILE ANALYSIS|SUMMARY|RECOMMENDATIONS)" /app/analysis_report.txt; tmux wait -S done
+LOG ROTATION ANALYSIS REPORT
+SYSTEM OVERVIEW
+LOG FILE ANALYSIS
+SUMMARY
+RECOMMENDATIONS:
+root@63f40e5a4436:/app#

@@ -1,0 +1,40 @@
+>       - Ensure compression is applied to all rotated files
+>
+> 2. SHORT-TERM ACTIONS (Medium Priority):
+>    a) Adjust app.log rotation
+>       - Rotation frequency: daily (changed from weekly)
+>       - Maintain 30-day retention (30 rotations)
+>       - Keep compression enabled
+>
+>    b) Configure rotation for debug.log
+>       - Rotation frequency: daily
+>       - Retention: 7 days (low importance)
+>       - Enable compression
+>       - Consider more aggressive rotation due to low importance
+>
+> 3. CONFIGURATION IMPROVEMENTS:
+>    a) Increase system.log rotation count
+>       - Change rotate from 4 to 13 for weekly rotation
+>       - Or switch to daily with rotate 90 for exact compliance
+>
+>    b) Add size-based rotation triggers
+>       - maxsize 100M for high-growth logs
+>       - Prevents runaway file growth between scheduled rotations
+>
+> 4. MONITORING RECOMMENDATIONS:
+>    a) Set up disk usage alerts at 70% and 85% thresholds
+>    b) Monitor log growth rates weekly
+>    c) Review rotation effectiveness monthly
+>    d) Schedule rotations outside peak traffic hours (avoid 09:00-11:00, 14:00-16:00, 20:00-22:00)
+>
+> 5. COMPLIANCE NOTES (PCI-DSS, SOX):
+>    a) Maintain error.log for 60 days minimum
+>    b) Maintain system.log for 90 days minimum
+>    c) Ensure logs are not modified after rotation (use copytruncate carefully)
+>    d) Consider log shipping to central archive for long-term retention
+>
+> ================================================================================
+> END OF REPORT
+> ================================================================================
+> EOF
+root@8a26108f0519:/app#

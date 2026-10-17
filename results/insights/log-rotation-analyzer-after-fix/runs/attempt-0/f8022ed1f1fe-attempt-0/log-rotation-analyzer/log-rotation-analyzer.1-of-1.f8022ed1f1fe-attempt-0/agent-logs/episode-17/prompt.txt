@@ -1,0 +1,40 @@
+=================
+
+1. /var/log/samples/app.log
+   Current Size: 0.25 MB
+   Growth Rate: 15.2 MB/day
+   Retention Requirement: 30 days
+   Current Rotation: Weekly with 4 copies
+   Days Since Last Rotation: 0
+   ISSUE (HIGH): Large file exceeds 10MB threshold projected within 1 day. Weekly rotation is insufficient for 15.2 MB/day growth rate. At current rate, file wi
+ll reach 106.4 MB before next rotation.
+
+2. /var/log/samples/access.log
+   Current Size: 0.15 MB
+   Growth Rate: 45.7 MB/day
+   Retention Requirement: 14 days
+   Current Rotation: Monthly with 2 copies
+   Days Since Last Rotation: 0
+   ISSUE (HIGH): Large file exceeds 10MB threshold projected within hours. Monthly rotation is critically insufficient for 45.7 MB/day growth rate. File will re
+ach 1.37 GB before next rotation causing severe disk space issues.
+
+3. /var/log/samples/error.log
+   Current Size: 0.23 MB
+   Growth Rate: 8.9 MB/day
+   Retention Requirement: 60 days
+   Current Rotation: NONE CONFIGURED
+   Days Since Last Rotation: Never rotated
+   ISSUE (HIGH): Critical error log has no rotation configuration. File will grow unbounded. At 8.9 MB/day, will consume 534 MB in 60 days without rotation.
+
+4. /var/log/samples/debug.log
+   Current Size: 0.05 MB
+   Growth Rate: 5.3 MB/day
+   Retention Requirement: 7 days
+   Current Rotation: NONE CONFIGURED
+   Days Since Last Rotation: Never rotated
+   ISSUE (MEDIUM): Debug log has no rotation configuration. Low importance but still growing at 5.3 MB/day.
+
+5. /var/log/samples/system.log
+   Current Size: 0.0002 MB
+   Growth Rate: 2.1 MB/day
+root@3e09ffd123d3:/app#

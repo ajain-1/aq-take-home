@@ -1,0 +1,40 @@
+>     rotate 60
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     maxsize 50M
+>     dateext
+>     dateformat -%Y%m%d
+>     postrotate
+>         /usr/bin/systemctl reload web-server 2>/dev/null || true
+>     endscript
+> }
+>
+> # Debug Log - Low importance, NO previous rotation config!
+> # New configuration - aggressive rotation, short retention
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     maxsize 25M
+>     dateext
+>     dateformat -%Y%m%d
+>     # Debug logs can be truncated if empty for extended period
+>     ifempty
+> }
+> EOF
+root@8a26108f0519:/app# cat > /app/rotation_summary.csv << 'EOF'
+> log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+> /var/log/samples/app.log,0.25,0,daily,0.05
+> /var/log/samples/system.log,0.00,0,daily,0.00
+> /var/log/samples/access.log,0.16,0,daily,0.08
+> /var/log/samples/error.log,0.23,0,daily,0.05
+> /var/log/samples/debug.log,0.05,0,daily,0.02
+> EOF
+root@8a26108f0519:/app#

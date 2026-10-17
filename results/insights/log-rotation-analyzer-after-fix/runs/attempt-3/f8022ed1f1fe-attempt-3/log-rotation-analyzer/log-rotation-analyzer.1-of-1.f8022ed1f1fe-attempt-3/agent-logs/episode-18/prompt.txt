@@ -1,0 +1,40 @@
+    rotate 7
+    compress
+root@741fe3493729:/app# ls -la /app/; tmux wait -S done
+total 36
+drwxr-xr-x 1 root root 4096 Oct 17 03:15 .
+drwxr-xr-x 1 root root 4096 Oct 17 03:14 ..
+-rw-r--r-- 1 root root 5790 Oct 17 03:15 analysis_report.txt
+-rwxr-xr-x 1 root root 6285 Oct 17 01:53 generate-samples.sh
+-rw-r--r-- 1 root root 1704 Oct 17 01:55 log_metadata.json
+-rw-r--r-- 1 root root 1910 Oct 17 03:15 optimized_logrotate.conf
+-rw-r--r-- 1 root root  316 Oct 17 03:15 rotation_summary.csv
+root@741fe3493729:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.25,0,daily,0.15
+/var/log/samples/system.log,0.0002,0,daily,0.0001
+/var/log/samples/access.log,0.15,0,daily,0.10
+/var/log/samples/error.log,0.23,0,daily,0.14
+/var/log/samples/debug.log,0.05,0,daily,0.03
+root@741fe3493729:/app# head -20 /app/analysis_report.txt; tmux wait -S done
+LOG ROTATION ANALYSIS REPORT
+================================================================================
+Generated: $(date)
+Analysis Scope: /var/log/samples/
+
+SYSTEM OVERVIEW
+================================================================================
+Total Available Disk Space: 50 GB
+Log Partition Usage: 78% (HIGH - requires immediate attention)
+Backup Frequency: Daily
+Compliance Requirements: PCI-DSS, SOX
+Peak Traffic Hours: 09:00-11:00, 14:00-16:00, 20:00-22:00
+
+Current Log Files Analyzed:
+- app.log: 0.25 MB (application logs, high importance)
+- system.log: 0.0002 MB (system logs, critical importance)
+- access.log: 0.15 MB (access logs, medium importance)
+- error.log: 0.23 MB (error logs, critical importance)
+- debug.log: 0.05 MB (debug logs, low importance)
+
+root@741fe3493729:/app#

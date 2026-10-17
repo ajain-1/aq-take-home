@@ -1,0 +1,17 @@
+{
+    "state_analysis": "All three required files have been created with the correct format:\n1. analysis_report.txt - Has LOG ROTATION ANALYSIS REPORT title, SYSTEM OVERVIEW, LOG FILE ANALYSIS with ISSUE (HIGH/MEDIUM/LOW) markers, SUMMARY with 'Total log size', 'Estimated total savings', 'Potential space reduction', and RECOMMENDATIONS with rotation frequency, compression, retention, and monitoring sections.\n2. optimized_logrotate.conf - Has proper logrotate blocks for access.log, app.log, error.log, debug.log, and system.log with rotate and compress directives.\n3. rotation_summary.csv - Has the correct header and data rows.\n\nLet me do a final verification that all files are complete.",
+    "explanation": "Final verification that all files are complete and properly formatted.",
+    "commands": [
+        {
+            "keystrokes": "wc -l /app/analysis_report.txt /app/optimized_logrotate.conf /app/rotation_summary.csv\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "tail -20 /app/optimized_logrotate.conf\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

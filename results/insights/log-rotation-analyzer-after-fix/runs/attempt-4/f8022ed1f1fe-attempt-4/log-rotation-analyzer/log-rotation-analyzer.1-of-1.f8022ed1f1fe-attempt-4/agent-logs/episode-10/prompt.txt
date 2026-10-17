@@ -1,0 +1,40 @@
+   Current Schedule: monthly
+   Retention Requirement: 14 days
+   ISSUE (HIGH): Large file exceeds 10MB threshold - monthly rotation inadequate for high-growth log
+   ISSUE (HIGH): Rotation schedule (monthly) inconsistent with growth rate (45.7 MB/day)
+
+3. /var/log/samples/access.log.1
+   Current Size: 12 MB
+   ISSUE (MEDIUM): Uncompressed rotated log file wasting disk space - should be compressed
+
+4. /var/log/samples/error.log
+   Current Size: 5.2 MB
+   Growth Rate: 8.9 MB/day
+   Days Since Rotation: 7
+   Current Schedule: NONE
+   Retention Requirement: 60 days
+   ISSUE (HIGH): Critical error log has no rotation configuration
+   ISSUE (HIGH): Missing compression on old logs
+
+5. /var/log/samples/debug.log
+   Current Size: 8.5 MB
+   Growth Rate: 5.3 MB/day
+   Days Since Rotation: 5
+   Current Schedule: NONE
+   Retention Requirement: 7 days
+   ISSUE (MEDIUM): Debug log has no rotation configuration
+   ISSUE (LOW): Low-importance log retained longer than necessary
+
+6. /var/log/samples/system.log
+   Current Size: 0.2 MB
+   Growth Rate: 2.1 MB/day
+   Days Since Rotation: 1
+   Current Schedule: weekly
+   Retention Requirement: 90 days
+   Status: OK - properly configured with compression
+
+SUMMARY
+-------
+Total log size: 66 MB
+Files analyzed: 6
+root@bdbf79dfea60:/app#

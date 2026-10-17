@@ -1,0 +1,40 @@
+/var/log/samples/app.log {
+    daily
+    rotate 30
+    compress
+    compresscmd /bin/gzip
+    compressoptions -9
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    maxsize 50M
+    postrotate
+        /usr/bin/systemctl reload web-server 2>/dev/null || true
+    endscript
+root@3e09ffd123d3:/app# echo '=== Files Created ===' && ls -la /app/*.txt /app/*.conf /app/*.csv && echo '' && echo '=== Report Sections ===' && grep -E '^(LOG
+ROTATION|SYSTEM OVERVIEW|LOG FILE ANALYSIS|SUMMARY|RECOMMENDATIONS:)' /app/analysis_report.txt && echo '' && echo '=== CSV Header ===' && head -1 /app/rotation_
+summary.csv && echo '' && echo '=== Logrotate Blocks ===' && grep -E '^/var/log/samples/' /app/optimized_logrotate.conf; tmux wait -S done
+=== Files Created ===
+-rw-r--r-- 1 root root 5260 Oct 17 03:14 /app/analysis_report.txt
+-rw-r--r-- 1 root root 1859 Oct 17 03:14 /app/optimized_logrotate.conf
+-rw-r--r-- 1 root root  317 Oct 17 03:15 /app/rotation_summary.csv
+
+=== Report Sections ===
+LOG ROTATION ANALYSIS REPORT
+SYSTEM OVERVIEW
+LOG FILE ANALYSIS
+SUMMARY
+RECOMMENDATIONS:
+
+=== CSV Header ===
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+
+=== Logrotate Blocks ===
+/var/log/samples/app.log {
+/var/log/samples/access.log {
+/var/log/samples/error.log {
+/var/log/samples/system.log {
+/var/log/samples/debug.log {
+root@3e09ffd123d3:/app#

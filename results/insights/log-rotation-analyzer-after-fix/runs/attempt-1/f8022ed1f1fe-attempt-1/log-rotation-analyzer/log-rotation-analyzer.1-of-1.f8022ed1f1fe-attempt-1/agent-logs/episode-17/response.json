@@ -1,0 +1,17 @@
+{
+    "state_analysis": "I see the output is truncated. Let me check if RECOMMENDATIONS section was captured and verify the full content of the files.",
+    "explanation": "Checking the RECOMMENDATIONS section in the report.",
+    "commands": [
+        {
+            "keystrokes": "grep 'RECOMMENDATIONS:' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "grep -c 'ISSUE' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

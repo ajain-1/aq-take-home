@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The 'Potential space reduction: 26%' line is present. Now let me verify the RECOMMENDATIONS section has the required content.",
+    "explanation": "Checking the RECOMMENDATIONS section to ensure it has specific actions for rotation frequency, compression, retention, and monitoring.",
+    "commands": [
+        {
+            "keystrokes": "grep -A25 'RECOMMENDATIONS:' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

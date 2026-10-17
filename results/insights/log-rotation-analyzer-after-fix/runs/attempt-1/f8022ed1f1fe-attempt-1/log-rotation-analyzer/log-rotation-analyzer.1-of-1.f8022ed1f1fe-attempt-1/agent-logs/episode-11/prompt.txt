@@ -1,0 +1,40 @@
+>     # Debug logs can be more aggressively rotated
+> }
+> """
+>
+> with open('/app/optimized_logrotate.conf', 'w') as f:
+>     f.write(logrotate_conf)
+>
+> print("Created optimized_logrotate.conf")
+>
+> # Generate rotation_summary.csv
+> csv_content = "log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb\n"
+>
+> schedule_map = {
+>     'access.log': 'daily',
+>     'app.log': 'daily',
+>     'system.log': 'weekly',
+>     'error.log': 'daily',
+>     'debug.log': 'daily'
+> }
+>
+> for log in logs_data:
+>     basename = os.path.basename(log['path'])
+>     schedule = schedule_map.get(basename, 'weekly')
+>     # Estimated savings from compression (85% of current size)
+>     savings = log['size_mb'] * 0.85
+>     csv_content += f"{log['path']},{log['size_mb']:.2f},{log['days_since_rotation']},{schedule},{savings:.2f}\n"
+>
+> with open('/app/rotation_summary.csv', 'w') as f:
+>     f.write(csv_content)
+>
+> print("Created rotation_summary.csv")
+> print("\nAll files generated successfully!")
+> EOF
+root@2ee005a0b04f:/app# python3 /app/create_analysis.py; tmux wait -S done
+Created analysis_report.txt
+Created optimized_logrotate.conf
+Created rotation_summary.csv
+
+All files generated successfully!
+root@2ee005a0b04f:/app#

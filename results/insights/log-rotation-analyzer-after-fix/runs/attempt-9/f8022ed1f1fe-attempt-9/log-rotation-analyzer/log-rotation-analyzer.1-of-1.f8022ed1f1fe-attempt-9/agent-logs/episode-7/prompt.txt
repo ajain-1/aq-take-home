@@ -1,0 +1,40 @@
+>
+> 5. COMPLIANCE:
+>    - Ensure PCI-DSS and SOX requirements are met with proper retention
+>    - Maintain audit trail for system and error logs
+>    - Implement log integrity verification
+> SUMMARY_END
+>
+> echo "Analysis report generated: /app/analysis_report.txt"
+> EOF
+root@63f40e5a4436:/app# chmod +x /app/analyze_logs.sh; tmux wait -S done
+root@63f40e5a4436:/app# # Get file sizes
+root@63f40e5a4436:/app# ACCESS_SIZE=$(stat -c%s /var/log/samples/access.log 2>/dev/null || echo 0)
+root@63f40e5a4436:/app# APP_SIZE=$(stat -c%s /var/log/samples/app.log 2>/dev/null || echo 0)
+root@63f40e5a4436:/app# SYSTEM_SIZE=$(stat -c%s /var/log/samples/system.log 2>/dev/null || echo 0)
+root@63f40e5a4436:/app# ERROR_SIZE=$(stat -c%s /var/log/samples/error.log 2>/dev/null || echo 0)
+root@63f40e5a4436:/app# DEBUG_SIZE=$(stat -c%s /var/log/samples/debug.log 2>/dev/null || echo 0)
+root@63f40e5a4436:/app#
+root@63f40e5a4436:/app# # Convert to MB
+root@63f40e5a4436:/app# ACCESS_MB=$(echo "scale=2; $ACCESS_SIZE / 1048576" | bc)
+root@63f40e5a4436:/app# APP_MB=$(echo "scale=2; $APP_SIZE / 1048576" | bc)
+root@63f40e5a4436:/app# SYSTEM_MB=$(echo "scale=2; $SYSTEM_SIZE / 1048576" | bc)
+root@63f40e5a4436:/app# ERROR_MB=$(echo "scale=2; $ERROR_SIZE / 1048576" | bc)
+root@63f40e5a4436:/app# DEBUG_MB=$(echo "scale=2; $DEBUG_SIZE / 1048576" | bc)
+root@63f40e5a4436:/app#
+root@63f40e5a4436:/app# TOTAL_MB=$(echo "scale=2; $ACCESS_MB + $APP_MB + $SYSTEM_MB + $ERROR_MB + $DEBUG_MB" | bc)
+root@63f40e5a4436:/app# SAVINGS_MB=$(echo "scale=2; $TOTAL_MB * 0.35" | bc)
+root@63f40e5a4436:/app#
+root@63f40e5a4436:/app# echo "ACCESS_MB=$ACCESS_MB APP_MB=$APP_MB SYSTEM_MB=$SYSTEM_MB ERROR_MB=$ERROR_MB DEBUG_MB=$DEBUG_MB TOTAL=$TOTAL_MB SAVINGS=$SAVINGS_MB
+"; tmux wait -S done
+ACCESS_MB=.15 APP_MB=.24 SYSTEM_MB=0 ERROR_MB=.22 DEBUG_MB=.05 TOTAL=.66 SAVINGS=.23
+root@63f40e5a4436:/app# ls -lh /var/log/samples/; tmux wait -S done
+total 756K
+-rw-r--r-- 1 root root 158K Oct 17 01:55 access.log
+-rw-r--r-- 1 root root  40K Oct 17 01:55 access.log.old
+-rw-r--r-- 1 root root 254K Oct 17 01:55 app.log
+-rw-r--r-- 1 root root  54K Oct 17 01:55 debug.log
+-rw-r--r-- 1 root root 234K Oct 17 01:55 error.log
+-rw-r--r-- 1 root root  219 Oct 17 01:55 system.log
+-rw-r--r-- 1 root root  551 Oct 17 01:55 system.log.1.gz
+root@63f40e5a4436:/app#

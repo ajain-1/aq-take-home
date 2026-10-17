@@ -1,0 +1,40 @@
+>     dateformat -%Y%m%d
+>     sharedscripts
+>     postrotate
+>         /usr/bin/killall -USR1 nginx 2>/dev/null || true
+>     endscript
+> }
+>
+> # Error Log - Critical importance, 8.9 MB/day growth, 60 day retention
+> # NOTE: Previously had NO rotation configuration - CRITICAL FIX
+> /var/log/samples/error.log {
+>     daily
+>     rotate 60
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     maxsize 50M
+>     dateext
+>     dateformat -%Y%m%d
+>     postrotate
+>         /usr/bin/killall -HUP web-server 2>/dev/null || true
+>     endscript
+> }
+>
+> # Debug Log - Low importance, 5.3 MB/day growth, 7 day retention
+> # NOTE: Previously had NO rotation configuration
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     maxsize 25M
+>     dateext
+>     dateformat -%Y%m%d
+> }
+> EOF
+root@741fe3493729:/app#

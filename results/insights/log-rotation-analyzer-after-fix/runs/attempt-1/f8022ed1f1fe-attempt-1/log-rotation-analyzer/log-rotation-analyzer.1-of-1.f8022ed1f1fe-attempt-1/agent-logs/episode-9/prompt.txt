@@ -1,0 +1,40 @@
+      "importance": "low",
+      "growth_rate_mb_per_day": 5.3,
+      "retention_requirement_days": 7,
+      "application": "web-server",
+      "owner": "www-data"
+    }
+  ],
+  "system_info": {
+    "available_disk_gb": 50,
+    "log_partition_usage_percent": 78,
+    "backup_frequency": "daily",
+    "compliance_requirements": [
+      "PCI-DSS",
+      "SOX"
+    ],
+    "peak_traffic_hours": [
+      "09:00-11:00",
+      "14:00-16:00",
+      "20:00-22:00"
+    ]
+  },
+  "current_issues": [
+    "High disk usage on log partition",
+    "Inconsistent rotation schedules",
+    "Missing compression on some logs",
+    "Some critical logs lack rotation configuration"
+  ]
+}
+root@2ee005a0b04f:/app# python3 -c "import json; data=json.load(open('/app/log_metadata.json')); [print(f) for f in data.get('log_files', [])]"; tmux wait -S do
+ne
+root@2ee005a0b04f:/app# python3 -c "import json; data=json.load(open('/app/log_metadata.json')); print(data.keys())"; tmux wait -S done
+dict_keys(['logs', 'system_info', 'current_issues'])
+root@2ee005a0b04f:/app# python3 -c "import json; data=json.load(open('/app/log_metadata.json')); [print(l['path'], l.get('growth_rate_mb_per_day'), l.get('reten
+tion_requirement_days'), l.get('importance')) for l in data['logs']]"; tmux wait -S done
+/var/log/samples/app.log 15.2 30 high
+/var/log/samples/system.log 2.1 90 critical
+/var/log/samples/access.log 45.7 14 medium
+/var/log/samples/error.log 8.9 60 critical
+/var/log/samples/debug.log 5.3 7 low
+root@2ee005a0b04f:/app#

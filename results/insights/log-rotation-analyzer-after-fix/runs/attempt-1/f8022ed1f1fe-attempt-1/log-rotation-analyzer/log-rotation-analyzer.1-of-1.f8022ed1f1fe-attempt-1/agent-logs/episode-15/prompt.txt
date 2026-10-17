@@ -1,0 +1,40 @@
+    dateext
+    maxsize 100M
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true
+    endscript
+}
+
+/var/log/samples/error.log {
+    daily
+    rotate 60
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 50M
+}
+
+/var/log/samples/debug.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 20M
+    # Debug logs can be more aggressively rotated
+}
+root@2ee005a0b04f:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.25,0,daily,0.21
+/var/log/samples/system.log,0.00,0,weekly,0.00
+/var/log/samples/access.log,0.15,0,daily,0.13
+/var/log/samples/error.log,0.23,0,daily,0.19
+/var/log/samples/debug.log,0.05,0,daily,0.04
+root@2ee005a0b04f:/app#

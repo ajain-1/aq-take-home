@@ -1,0 +1,17 @@
+{
+    "state_analysis": "The files are created but I need to verify the analysis report has the SUMMARY and RECOMMENDATIONS sections properly formatted. Let me check those sections specifically.",
+    "explanation": "Verify the SUMMARY and RECOMMENDATIONS sections of the analysis report are properly formatted.",
+    "commands": [
+        {
+            "keystrokes": "grep -A 20 'SUMMARY' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "grep -A 30 'RECOMMENDATIONS:' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

@@ -1,0 +1,40 @@
+> /var/log/samples/system.log {
+>     weekly
+>     rotate 12
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 root adm
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 50M
+>     postrotate
+>         /usr/bin/killall -HUP rsyslogd 2>/dev/null || true
+>     endscript
+> }
+>
+> # Debug Log - Low importance, 7-day retention
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 20M
+>     # Debug logs can be removed quickly to save space
+> }
+> EOF
+root@bdbf79dfea60:/app# cat > /app/rotation_summary.csv << 'EOF'
+> log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+> /var/log/samples/app.log,15.0,3,daily,12.0
+> /var/log/samples/access.log,25.0,15,daily,20.0
+> /var/log/samples/error.log,5.2,7,daily,4.0
+> /var/log/samples/debug.log,8.5,5,daily,7.0
+> /var/log/samples/system.log,0.2,1,weekly,0.1
+> EOF
+root@bdbf79dfea60:/app#

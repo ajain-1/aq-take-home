@@ -1,0 +1,40 @@
+> /var/log/samples/error.log {
+>     daily
+>     rotate 60
+>     compress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     maxsize 50M
+> }
+>
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     maxsize 20M
+> }
+> """
+>
+> with open('/app/optimized_logrotate.conf', 'w') as f:
+>     f.write(logrotate_conf)
+>
+> # Generate rotation_summary.csv
+> with open('/app/rotation_summary.csv', 'w') as f:
+>     f.write('log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb\n')
+>     for row in csv_rows:
+>         f.write(f"{row['log_path']},{row['current_size_mb']},{row['days_since_rotation']},{row['recommended_schedule']},{row['estimated_savings_mb']}\n")
+>
+> print("Analysis complete. Generated files:")
+> print("- /app/analysis_report.txt")
+> print("- /app/optimized_logrotate.conf")
+> print("- /app/rotation_summary.csv")
+> ENDSCRIPT; tmux wait -S done
+> ; tmux wait -S done
+> ^C
+root@947f0d620c99:/app#

@@ -1,0 +1,40 @@
+  "logs": [
+    {
+      "path": "/var/log/samples/app.log",
+      "type": "application",
+      "importance": "high",
+      "growth_rate_mb_per_day": 15.2,
+      "retention_requirement_days": 30,
+      "application": "web-server",
+      "owner": "www-data"
+    },
+    {
+      "path": "/var/log/samples/system.log",
+      "type": "system",
+      "importance": "critical",
+      "growth_rate_mb_per_day": 2.1,
+      "retention_requirement_days": 90,
+      "application": "systemd",
+      "owner": "root"
+    },
+    {
+      "path": "/var/log/samples/access.log",
+      "type": "access",
+      "importance": "medium",
+      "growth_rate_mb_per_day": 45.7,
+      "retention_requirement_days": 14,
+      "application": "nginx",
+      "owner": "www-data"
+    },
+    {
+      "path": "/var/log/samples/error.log",
+      "type": "error",
+      "importance": "critical",
+      "growth_rate_mb_per_day": 8.9,
+      "retention_requirement_days": 60,
+      "application": "web-server",
+      "owner": "www-data"
+    },
+    {
+      "path": "/var/log/samples/debug.log",
+root@8a26108f0519:/app#

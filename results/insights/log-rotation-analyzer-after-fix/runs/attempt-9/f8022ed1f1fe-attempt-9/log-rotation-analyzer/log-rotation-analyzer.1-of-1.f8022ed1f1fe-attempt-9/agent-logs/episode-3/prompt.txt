@@ -1,0 +1,40 @@
+203.0.113.45 - - [17/Oct/2026:00:32:07 +0000] "DELETE /health HTTP/1.1" 404 2055
+192.168.1.10 - - [17/Oct/2026:00:31:07 +0000] "GET /metrics HTTP/1.1" 500 4573
+10.0.0.5 - - [17/Oct/2026:00:30:07 +0000] "POST /api/users HTTP/1.1" 200 1345
+172.16.0.100 - - [17/Oct/2026:00:29:07 +0000] "PUT /api/orders HTTP/1.1" 201 2178
+203.0.113.45 - - [17/Oct/2026:00:28:07 +0000] "DELETE /api/products HTTP/1.1" 400 3517
+192.168.1.10 - - [17/Oct/2026:00:27:07 +0000] "GET /health HTTP/1.1" 404 3286
+10.0.0.5 - - [17/Oct/2026:00:26:07 +0000] "POST /metrics HTTP/1.1" 500 4349
+172.16.0.100 - - [17/Oct/2026:00:25:07 +0000] "PUT /api/users HTTP/1.1" 200 1767
+203.0.113.45 - - [17/Oct/2026:00:24:07 +0000] "DELETE /api/orders HTTP/1.1" 201 2782
+192.168.1.10 - - [17/Oct/2026:00:23:07 +0000] "GET /api/products HTTP/1.1" 400 2412
+10.0.0.5 - - [17/Oct/2026:00:22:07 +0000] "POST /health HTTP/1.1" 404 4564
+172.16.0.100 - - [17/Oct/2026:00:21:07 +0000] "PUT /metrics HTTP/1.1" 500 4521
+203.0.113.45 - - [17/Oct/2026:00:20:07 +0000] "DELETE /api/users HTTP/1.1" 200 4344
+192.168.1.10 - - [17/Oct/2026:00:19:07 +0000] "GET /api/orders HTTP/1.1" 201 4218
+10.0.0.5 - - [17/Oct/2026:00:18:07 +0000] "POST /api/products HTTP/1.1" 400 3964
+172.16.0.100 - - [17/Oct/2026:00:17:07 +0000] "PUT /health HTTP/1.1" 404 2562
+203.0.113.45 - - [17/Oct/2026:00:16:07 +0000] "DELETE /metrics HTTP/1.1" 500 2377
+192.168.1.10 - - [17/Oct/2026:00:15:07 +0000] "GET /api/users HTTP/1.1" 200 5000
+root@63f40e5a4436:/app# cat /proc/meminfo | head -20; tmux wait -S done
+MemTotal:        8025428 kB
+MemFree:          851556 kB
+MemAvailable:    3605112 kB
+Buffers:          687828 kB
+Cached:          1878356 kB
+SwapCached:            4 kB
+Active:          4568220 kB
+Inactive:        1953060 kB
+Active(anon):    3795820 kB
+Inactive(anon):   161536 kB
+Active(file):     772400 kB
+Inactive(file):  1791524 kB
+Unevictable:         168 kB
+Mlocked:               0 kB
+SwapTotal:       1048572 kB
+SwapFree:        1046656 kB
+Zswap:                 0 kB
+Zswapped:              0 kB
+Dirty:             11592 kB
+Writeback:           104 kB
+root@63f40e5a4436:/app#

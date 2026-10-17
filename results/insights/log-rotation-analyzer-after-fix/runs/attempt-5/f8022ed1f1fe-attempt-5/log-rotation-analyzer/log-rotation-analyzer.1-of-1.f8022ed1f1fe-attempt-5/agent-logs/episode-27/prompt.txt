@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='head -20 /app/analysis_report.txt\n' is_blocking=True timeout_sec=5.0
+
+The previous command timed out after 5.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+    compress
+    delaycompress
+    missingok
+}
+
+/var/log/samples/debug.log {
+    daily
+    rotate 7
+    compress
+    missingok
+}
+root@e93d067d0a20:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/access.log,0.15,0,daily,0.11
+/var/log/samples/app.log,0.25,0,weekly,0.05
+/var/log/samples/debug.log,0.05,0,daily,0.01
+/var/log/samples/error.log,0.23,0,weekly,0.05
+/var/log/samples/system.log,0.00,0,weekly,0.00
+root@e93d067d0a20:/app# head -20 /app/analysis_report.txt; tmux wait -S done
+LOG ROTATION ANALYSIS REPORT
+========================================
+
+SYSTEM OVERVIEW
+---------------
+Disk Partition Usage: 78%
+Available Disk Space: 50 GB
+Compliance Requirements: PCI-DSS, SOX
+Backup Frequency: daily
+Peak Traffic Hours: 09:00-11:00, 14:00-16:00, 20:00-22:00
+
+LOG FILE ANALYSIS
+-----------------
+
+File: /var/log/samples/access.log
+  Size: 0.15 MB, Days since rotation: 0
+  Type: access, Importance: medium
+  ISSUE (MEDIUM): Rotation schedule too infrequent for retention requirement
+
+File: /var/log/samples/app.log
+root@e93d067d0a20:/app#
+

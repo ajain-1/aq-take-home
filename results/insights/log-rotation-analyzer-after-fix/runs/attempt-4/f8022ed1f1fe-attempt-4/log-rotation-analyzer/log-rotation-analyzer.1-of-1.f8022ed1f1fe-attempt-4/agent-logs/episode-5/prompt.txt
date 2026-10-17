@@ -1,0 +1,40 @@
+> 1. access.log rotation frequency too low for growth rate
+> 2. error.log and debug.log lack rotation configuration
+> 3. Uncompressed rotated files (access.log.1)
+> 4. Inconsistent retention policies
+>
+> RECOMMENDATIONS:
+> ----------------
+> 1. ROTATION FREQUENCY:
+>    - app.log: Change from weekly to daily rotation (12.5 MB/day growth)
+>    - access.log: Change from monthly to daily rotation (45.7 MB/day growth)
+>    - error.log: Add daily rotation configuration
+>    - debug.log: Add daily rotation configuration
+>    - system.log: Keep weekly rotation (low growth rate)
+>
+> 2. COMPRESSION:
+>    - Enable compression on ALL rotated logs
+>    - Use delaycompress for active logs to allow debugging
+>    - Compress existing uncompressed rotated files immediately
+>    - Expected compression ratio: 10:1 for text logs
+>
+> 3. RETENTION:
+>    - app.log: Retain 30 rotated files (30 days as required)
+>    - access.log: Retain 14 rotated files (14 days as required)
+>    - error.log: Retain 60 rotated files (60 days for compliance)
+>    - debug.log: Retain 7 rotated files (7 days sufficient for debugging)
+>    - system.log: Retain 12 rotated files (90 days with weekly rotation)
+>
+> 4. MONITORING:
+>    - Set up disk usage alerts at 70% and 85% thresholds
+>    - Monitor log growth rates weekly
+>    - Schedule rotation during off-peak hours (avoid 09:00-11:00, 14:00-16:00, 20:00-22:00)
+>    - Implement log shipping to centralized logging for compliance
+>
+> 5. COMPLIANCE NOTES (PCI-DSS, SOX):
+>    - Maintain error.log for 60+ days for audit trails
+>    - Ensure access.log retention meets 14-day minimum
+>    - Implement secure log deletion after retention period
+>
+> EOF
+root@bdbf79dfea60:/app#

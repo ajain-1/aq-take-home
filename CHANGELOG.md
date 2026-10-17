@@ -34,6 +34,7 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
 - `tasks/log-rotation-analyzer/generate-samples.sh`: The sample logs and logrotate configs were written to `/app/sample_logs` and `/app/sample_configs`, while the instruction points the agent at `/var/log/samples/` and `/etc/logrotate.d/samples/`, which were left empty. The script now writes there; `log_metadata.json` stays in `/app`.
 - `tasks/log-rotation-analyzer/task.yaml`: The tests read `analysis_report.txt`, `optimized_logrotate.conf` and `rotation_summary.csv` from the working directory, but the instruction never said where to write them. It now says `/app`.
   - **Report format.** The tests also require exact text the instruction never stated: the title `LOG ROTATION ANALYSIS REPORT`, the section headings `SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `SUMMARY` and `RECOMMENDATIONS:`, `ISSUE (HIGH|MEDIUM|LOW)` markers, and the `Total log size:`, `Estimated total savings:` and `Potential space reduction: N%` lines. Stretch goal D's insight report found this (`results/insights/log-rotation-analyzer/insights.md`): 0/5 terminus-1 attempts resolved, with four tests failing in every attempt on exactly these strings. The instruction now states the format, the CSV header and the config expectations; the tests are unchanged. The oracle still passes 7/7 and nop fails 7/7 (`results/task-verification/log-rotation-analyzer.*.log`). The insight runs predate this fix.
+  - **Result after the fix:** 10/10 terminus-1 attempts resolved, all 7/7 tests (`results/insights/log-rotation-analyzer-after-fix/`). Both B's rule and D's report now classify the task as `too_easy`. The 0/5 before the fix measured the under-specified instruction, not the agent.
 - `tasks/csv-to-json-cli-fix`: Checked; no changes needed.
 
 #### Design decisions
@@ -118,6 +119,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
     - the task's spec: difficulty, category, resources, timeouts, and the instruction (collapsible);
     - aggregates across all its runs;
     - a **per-test grid** (rows are tests, columns are attempts across runs, oldest first), so a test that fails in every column stands out;
+    - **Caveat:** a task's aggregates group runs by task ID, so runs of an edited task (e.g. `log-rotation-analyzer` before and after its instruction fix) are combined. Grouping by a hash of the task's contents would separate versions.
     - failure categories, the latest validation report (C), D's insight findings with their verified evidence, and the list of runs.
   - **Run page** (`#/runs/{id}`): one outcome badge (Passed, Partially passed, Failed, Running, Queued or Error).
     - **While running:** a phase stepper and one card per attempt, with the pod state as grey detail.
@@ -259,6 +261,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
   - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files. This finding led to fixing the task's instruction (see the tasks section); the committed runs predate that fix.
   - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and gives `undetermined` for learnability (8 passes are needed to call it too easy) rather than declaring it too easy.
   - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `undetermined` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
+  - **`log-rotation-analyzer` after its instruction fix, 10 attempts: 10/10 resolved** (`results/insights/log-rotation-analyzer-after-fix/`), verdict `too_easy`. This was run specifically to get mixed results for divergence detection, but the fixed task turned out too easy for Opus 4.5. Divergence detection therefore still has no real-run evidence; a weaker model would be the cheap way to get a mixed sample.
 
 #### How trust is enforced
 - Every finding carries evidence IDs. Each item is either a verbatim quote, with its source path relative to the submission and, where relevant, line, attempt and episode, or an absence claim scoped to exactly what it is about (`task.yaml#instruction`).

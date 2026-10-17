@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The analysis report looks good with proper LOG FILE ANALYSIS section and ISSUE markers. Let me verify the SUMMARY and RECOMMENDATIONS sections are present.",
+    "explanation": "Let me check the SUMMARY and RECOMMENDATIONS sections of the report.",
+    "commands": [
+        {
+            "keystrokes": "grep -A5 'SUMMARY' /app/analysis_report.txt && echo '---' && grep -A20 'RECOMMENDATIONS:' /app/analysis_report.txt | head -25\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

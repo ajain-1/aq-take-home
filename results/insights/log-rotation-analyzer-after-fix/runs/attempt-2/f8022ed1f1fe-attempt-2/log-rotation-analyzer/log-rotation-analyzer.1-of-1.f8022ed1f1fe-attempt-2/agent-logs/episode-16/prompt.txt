@@ -1,0 +1,40 @@
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 50M
+    postrotate
+        /usr/bin/killall -HUP rsyslogd 2>/dev/null || true
+    endscript
+}
+
+# System Log - Critical importance, low growth, long retention
+/var/log/samples/system.log {
+    weekly
+    rotate 13
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    dateext
+    maxsize 20M
+    postrotate
+        /usr/bin/killall -HUP rsyslogd 2>/dev/null || true
+    endscript
+}
+
+# Access Log - Medium importance, very high growth, needs daily rotation
+/var/log/samples/access.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 100M
+    sharedscripts
+    postrotate
+        /usr/bin/killall -HUP nginx 2>/dev/null || true
+root@35c890c98987:/app#

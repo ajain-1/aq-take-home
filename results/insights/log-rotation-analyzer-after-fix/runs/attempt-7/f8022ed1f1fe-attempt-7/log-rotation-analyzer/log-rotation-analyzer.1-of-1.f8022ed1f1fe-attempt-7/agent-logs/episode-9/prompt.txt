@@ -1,0 +1,40 @@
+> }
+>
+> /var/log/samples/access.log {
+>     daily
+>     rotate 14
+>     compress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     maxsize 100M
+>     sharedscripts
+>     postrotate
+>         [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true
+>     endscript
+> }
+>
+> /var/log/samples/error.log {
+>     daily
+>     rotate 60
+>     compress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     maxsize 50M
+> }
+>
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     maxsize 20M
+> }
+> EOF
+root@947f0d620c99:/app#

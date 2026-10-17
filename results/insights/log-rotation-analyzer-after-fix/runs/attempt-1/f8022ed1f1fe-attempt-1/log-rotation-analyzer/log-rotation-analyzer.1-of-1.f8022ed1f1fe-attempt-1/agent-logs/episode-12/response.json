@@ -1,0 +1,12 @@
+{
+    "state_analysis": "I can see the end of the report. Let me verify the beginning of the report to ensure all required sections are present, and then check the other two files.",
+    "explanation": "Checking the beginning of the analysis report and the other generated files.",
+    "commands": [
+        {
+            "keystrokes": "head -60 /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

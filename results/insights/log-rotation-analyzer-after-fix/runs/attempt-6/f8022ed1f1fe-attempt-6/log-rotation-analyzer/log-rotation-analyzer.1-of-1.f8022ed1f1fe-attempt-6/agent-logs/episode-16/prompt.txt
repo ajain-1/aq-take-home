@@ -1,0 +1,40 @@
+    postrotate
+    rotate 14
+    compress
+    delaycompress
+    postrotate
+    rotate 60
+    compress
+    delaycompress
+    postrotate
+    rotate 7
+    compress
+root@8a26108f0519:/app# echo '=== Checking all files exist ===' && ls -la /app/*.txt /app/*.conf /app/*.csv; tmux wait -S done
+=== Checking all files exist ===
+-rw-r--r-- 1 root root 6692 Oct 17 03:17 /app/analysis_report.txt
+-rw-r--r-- 1 root root 2431 Oct 17 03:18 /app/optimized_logrotate.conf
+-rw-r--r-- 1 root root  312 Oct 17 03:18 /app/rotation_summary.csv
+root@8a26108f0519:/app# echo '=== CSV file check ===' && cat /app/rotation_summary.csv; tmux wait -S done
+=== CSV file check ===
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.25,0,daily,0.05
+/var/log/samples/system.log,0.00,0,daily,0.00
+/var/log/samples/access.log,0.16,0,daily,0.08
+/var/log/samples/error.log,0.23,0,daily,0.05
+/var/log/samples/debug.log,0.05,0,daily,0.02
+root@8a26108f0519:/app# echo '=== Report sections check ===' && grep -c 'ISSUE' /app/analysis_report.txt && echo 'Issues found in report'; tmux wait -S done
+=== Report sections check ===
+6
+Issues found in report
+root@8a26108f0519:/app# grep -E '^/var/log|^}' /app/optimized_logrotate.conf; tmux wait -S done
+/var/log/samples/app.log {
+}
+/var/log/samples/system.log {
+}
+/var/log/samples/access.log {
+}
+/var/log/samples/error.log {
+}
+/var/log/samples/debug.log {
+}
+root@8a26108f0519:/app#

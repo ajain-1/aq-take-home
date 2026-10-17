@@ -1,0 +1,12 @@
+{
+    "state_analysis": "All three required files have been created and the report has all the required sections in the correct order. However, I need to verify the SUMMARY section has the exact required format with 'Total log size: <N> MB', 'Estimated total savings: <N> MB', and 'Potential space reduction: <P>%'. Let me check and fix if needed.",
+    "explanation": "Checking the SUMMARY section format to ensure it matches the exact requirements.",
+    "commands": [
+        {
+            "keystrokes": "grep -A 15 \"^SUMMARY\" /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

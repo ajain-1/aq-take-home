@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The heredoc is still processing. I see it's showing the content and waiting. Let me send an Enter to complete it.",
+    "explanation": "Send Enter to complete the heredoc command.",
+    "commands": [
+        {
+            "keystrokes": "\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

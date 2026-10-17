@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The rotation_summary.csv and optimized_logrotate.conf look good. Let me verify the SUMMARY section in the report is properly formatted with the required lines.",
+    "explanation": "Checking the SUMMARY section format in the analysis report.",
+    "commands": [
+        {
+            "keystrokes": "grep -E 'SUMMARY|Total log size|Estimated total savings|Potential space reduction' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

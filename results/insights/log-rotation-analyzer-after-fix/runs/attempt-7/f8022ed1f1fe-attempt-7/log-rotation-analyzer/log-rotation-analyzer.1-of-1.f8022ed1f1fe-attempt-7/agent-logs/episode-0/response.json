@@ -1,0 +1,22 @@
+{
+    "state_analysis": "The terminal is at a fresh bash prompt in the /app directory. No commands have been executed yet.",
+    "explanation": "First, I need to explore the available data: sample log files in /var/log/samples/, logrotate configurations in /etc/logrotate.d/samples/, system information, and the log_metadata.json file. Let me start by examining these resources.",
+    "commands": [
+        {
+            "keystrokes": "ls -la /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "ls -la /etc/logrotate.d/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "cat log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

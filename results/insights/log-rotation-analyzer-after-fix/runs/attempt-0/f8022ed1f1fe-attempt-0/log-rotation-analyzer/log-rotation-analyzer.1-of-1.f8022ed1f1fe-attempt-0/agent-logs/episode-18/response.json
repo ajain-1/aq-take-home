@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The SUMMARY and RECOMMENDATIONS sections are present. Let me verify the 'Estimated total savings' and 'Potential space reduction' lines are in the SUMMARY section as required.",
+    "explanation": "Let me check for the specific required lines in the SUMMARY section.",
+    "commands": [
+        {
+            "keystrokes": "grep -E '(Estimated total savings|Potential space reduction)' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}
