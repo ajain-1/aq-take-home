@@ -24,7 +24,7 @@ instruction: |-
   A log file metadata database in log_metadata.json
 
   Requirements
-  Your solution should create:
+  Your solution should create the following files in /app (the working directory):
 
   analysis_report.txt - A human-readable report containing:
 
