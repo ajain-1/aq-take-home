@@ -1,0 +1,12 @@
+{
+    "state_analysis": "I can see most of the file but not the beginning (lines 1-4). Let me see the complete file from the start.",
+    "explanation": "View the complete file from the beginning to see the includes and main function declaration.",
+    "commands": [
+        {
+            "keystrokes": "head -50 /app/buggy.cpp\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

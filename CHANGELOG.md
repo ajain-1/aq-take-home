@@ -91,7 +91,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - Evidence committed in `results/insights/`:
   - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files.
   - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and still gives `insufficient_evidence` for learnability (interval 57–100%) rather than declaring it too easy.
-  - A third task (`broken-coordinate-transform`, 5 attempts) was run to look for mixed results; see its report if present.
+  - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `insufficient_evidence` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
 
 #### How trust is enforced
 - Every finding carries evidence IDs. Each item is either a verbatim quote, with its source path relative to the submission and, where relevant, line, attempt and episode, or an absence claim scoped to exactly what it is about (`task.yaml#instruction`).

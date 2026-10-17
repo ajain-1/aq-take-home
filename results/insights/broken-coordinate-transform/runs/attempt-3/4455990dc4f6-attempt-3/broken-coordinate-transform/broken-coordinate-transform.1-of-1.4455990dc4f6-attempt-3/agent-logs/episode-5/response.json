@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The code compiled successfully without errors. Now I need to test it with sample inputs to verify it works correctly.",
+    "explanation": "Test the program with a simple 2x2 matrix multiplication to verify correctness.",
+    "commands": [
+        {
+            "keystrokes": "echo '2 2 2 2 1 2 3 4 5 6 7 8' | /app/buggy\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

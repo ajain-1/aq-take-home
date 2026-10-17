@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='tee buggy.cpp > /dev/null << \'ENDOFFILE\'\n#include <iostream>\nusing namespace std;\n\nint main() {\n    int r1, c1, r2, c2;\n    cin >> r1 >> c1;\n    cin >> r2 >> c2;\n\n    if (c1 != r2) {\n        cout << "Matrix multiplication not possible" << endl;\n        return 0;\n    }\n\n    int A[r1][c1], B[r2][c2], C[r1][c2];\n\n    for(int i=0; i<r1; i++) {\n        for(int j=0; j<c1; j++) {\n            cin >> A[i][j];\n        }\n    }\n\n    for(int i=0; i<r2; i++) {\n        for(int j=0; j<c2; j++) {\n            cin >> B[i][j];\n        }\n    }\n\n    for(int i=0; i<r1; i++) {\n        for(int j=0; j<c2; j++) {\n            C[i][j] = 0;\n            for(int k=0; k<c1; k++) {\n                C[i][j] += A[i][k] * B[k][j];\n            }\n        }\n    }\n\n    for(int i=0; i<r1; i++) {\n        for(int j=0; j<c2; j++) {\n            if (j > 0) cout << " ";\n            cout << C[i][j];\n        }\n        cout << endl;\n    }\n\n    return 0;\n}\nENDOFFILE\n' is_blocking=True timeout_sec=10.0
+
+The previous command timed out after 10.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+>     if (c1 != r2) {
+>         cout << "Matrix multiplication not possible" << endl;
+>         return 0;
+>     }
+>
+>     int A[r1][c1], B[r2][c2], C[r1][c2];
+>
+>     for(int i=0; i<r1; i++) {
+>         for(int j=0; j<c1; j++) {
+>             cin >> A[i][j];
+>         }
+>     }
+>
+>     for(int i=0; i<r2; i++) {
+>         for(int j=0; j<c2; j++) {
+>             cin >> B[i][j];
+>         }
+>     }
+>
+>     for(int i=0; i<r1; i++) {
+>         for(int j=0; j<c2; j++) {
+>             C[i][j] = 0;
+>             for(int k=0; k<c1; k++) {
+>                 C[i][j] += A[i][k] * B[k][j];
+>             }
+>         }
+>     }
+>
+>     for(int i=0; i<r1; i++) {
+>         for(int j=0; j<c2; j++) {
+>             if (j > 0) cout << " ";
+>             cout << C[i][j];
+>         }
+>         cout << endl;
+>     }
+>
+>     return 0;
+> }
+> ENDOFFILE; tmux wait -S done
+>
+

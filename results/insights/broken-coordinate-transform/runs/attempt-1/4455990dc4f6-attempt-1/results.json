@@ -1,0 +1,40 @@
+{
+    "id": "6413625e-fcdc-4147-ae29-1528f3539b61",
+    "results": [
+        {
+            "id": "7a8fbe79-d933-448d-9833-b478db4d9ce7",
+            "trial_name": "broken-coordinate-transform.1-of-1.4455990dc4f6-attempt-1",
+            "task_id": "broken-coordinate-transform",
+            "instruction": "Our robotics team uses `/app/buggy.cpp` for coordinate transformations between reference frames. The transformation matrices get multiplied but the code has bugs throughout.\n\nFix all the bugs directly in buggy.cpp. Input format from stdin:\n  Two integers: rows cols of transformation matrix A\n  Two integers: rows cols of transformation matrix B\n  All elements of matrix A (row by row)\n  All elements of matrix B (row by row)\n\nThe program needs to check if the transformation chain is valid (cols of A must equal rows of B for multiplication). Print \"Matrix multiplication not possible\" if invalid. Otherwise compute the combined transformation and print only the result matrix: one row per line, elements separated by a single space, with no prompts, headers, or trailing whitespace.",
+            "is_resolved": true,
+            "failure_mode": "unset",
+            "parser_results": {
+                "test_exists_and_compiles": "passed",
+                "test_normal_multiplication": "passed",
+                "test_invalid_dimensions": "passed",
+                "test_single_element": "passed",
+                "test_negative_numbers": "passed",
+                "test_matrices_with_zeros": "passed",
+                "test_larger_matrix": "passed",
+                "test_row_times_column": "passed"
+            },
+            "recording_path": "4455990dc4f6-attempt-1/broken-coordinate-transform/broken-coordinate-transform.1-of-1.4455990dc4f6-attempt-1/sessions/agent.cast",
+            "total_input_tokens": 41924,
+            "total_output_tokens": 2031,
+            "trial_started_at": "2026-10-17T02:20:12.874754+00:00",
+            "trial_ended_at": "2026-10-17T02:21:54.290873+00:00",
+            "agent_started_at": "2026-10-17T02:20:19.044310+00:00",
+            "agent_ended_at": "2026-10-17T02:21:10.428880+00:00",
+            "test_started_at": "2026-10-17T02:21:13.891558+00:00",
+            "test_ended_at": "2026-10-17T02:21:43.082859+00:00"
+        }
+    ],
+    "pass_at_k": {},
+    "n_resolved": 1,
+    "n_unresolved": 0,
+    "resolved_ids": [
+        "broken-coordinate-transform"
+    ],
+    "unresolved_ids": [],
+    "accuracy": 1.0
+}
