@@ -31,6 +31,11 @@ class Phase(StrEnum):
     DONE = "done"
 
 
+class Strategy(StrEnum):
+    FIXED = "fixed"
+    ADAPTIVE = "adaptive"
+
+
 class AttemptState(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
@@ -53,10 +58,25 @@ class AttemptProgress(BaseModel):
         return max(len(self.pods) - 1, 0)
 
 
+class Wave(BaseModel):
+    """A batch of attempts launched together as one Indexed Job."""
+
+    index: int
+    offset: int
+    size: int
+    launched_at: datetime | None = None
+    done: bool = False
+
+
 class Progress(BaseModel):
     phase: Phase = Phase.QUEUED
     attempts_total: int
     attempts: list[AttemptProgress] = []
+    waves: list[Wave] = []
+
+    @property
+    def attempts_launched(self) -> int:
+        return sum(wave.size for wave in self.waves)
 
     def count(self, state: AttemptState) -> int:
         return sum(1 for attempt in self.attempts if attempt.state == state)
@@ -77,6 +97,8 @@ class Submission(BaseModel):
     task_id: str | None = None
     status: Status = Status.QUEUED
     n_attempts: int
+    strategy: Strategy = Strategy.FIXED
+    confidence: float = 1.0
     agent: str
     model: str | None
     progress: Progress
@@ -90,11 +112,21 @@ class Submission(BaseModel):
     finished_at: datetime | None = None
 
     @classmethod
-    def create(cls, submission_id: str, n_attempts: int, agent: str, model: str | None) -> "Submission":
+    def create(
+        cls,
+        submission_id: str,
+        n_attempts: int,
+        agent: str,
+        model: str | None,
+        strategy: Strategy = Strategy.FIXED,
+        confidence: float = 1.0,
+    ) -> "Submission":
         return cls(
             id=submission_id,
             n_attempts=n_attempts,
+            strategy=strategy,
+            confidence=confidence,
             agent=agent,
             model=model,
-            progress=Progress(attempts_total=n_attempts),
+            progress=Progress(attempts_total=n_attempts if strategy == Strategy.FIXED else 0),
         )

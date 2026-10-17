@@ -72,6 +72,8 @@ def submit_task(
     file: Annotated[UploadFile, File()],
     n_attempts: Annotated[int | None, Form()] = None,
     agent: Annotated[str | None, Form()] = None,
+    strategy: Annotated[str | None, Form()] = None,
+    confidence: Annotated[float | None, Form()] = None,
     validation_gate: Annotated[
         validation.ValidationGate, Form(alias="validation")
     ] = validation.ValidationGate.NONE,
@@ -87,16 +89,18 @@ def submit_task(
         - task.yaml
         - [task-specific files]
 
-    Optional form fields: `n_attempts` (parallel agent runs), `agent`
-    (terminus-1, or oracle/nop for infrastructure checks), and `validation`
-    (none; static: reject on static errors; full: also run oracle/nop checks
-    before any agent and fail the submission if they find errors).
+    Optional form fields: `n_attempts` (parallel agent runs) and `agent`
+    (terminus-1, or oracle/nop for infrastructure checks). `strategy=adaptive`
+    runs attempts in waves and stops once the 10-run learnability class is
+    decided; `confidence` < 1.0 allows earlier, probabilistic stopping.
+    `validation=static` rejects tasks with static quality errors; `validation=full`
+    also runs oracle/nop checks before any agent and fails the submission on errors.
     """
     archive = file.file.read(context.settings.max_upload_bytes + 1)
     try:
         gate = context.validations.check_gate(archive, validation_gate)
         pending_gate = context.validations.pending_gate_id(gate)
-        submission = context.service.submit(archive, n_attempts, agent, pending_gate)
+        submission = context.service.submit(archive, n_attempts, agent, strategy, confidence, pending_gate)
         context.validations.mark_gating(submission)
     except validation.ValidationRejected as e:
         raise HTTPException(status_code=422, detail=e.report or str(e)) from None
@@ -107,6 +111,8 @@ def submit_task(
         "task_id": submission.task_id,
         "status": submission.status,
         "n_attempts": submission.n_attempts,
+        "strategy": submission.strategy,
+        "confidence": submission.confidence,
         "agent": submission.agent,
         "validation_id": submission.validation_id,
         "status_url": f"/status/{submission.id}",
@@ -126,6 +132,8 @@ def get_status(context: Context, submission_id: str):
         "agent": submission.agent,
         "model": submission.model,
         "n_attempts": submission.n_attempts,
+        "strategy": submission.strategy,
+        "confidence": submission.confidence,
         "error": submission.error,
         "created_at": submission.created_at,
         "started_at": submission.started_at,
@@ -140,6 +148,7 @@ def get_status(context: Context, submission_id: str):
                 {**attempt.model_dump(), "pod": attempt.pod, "retries": attempt.retries}
                 for attempt in progress.attempts
             ],
+            "waves": [wave.model_dump() for wave in progress.waves],
         },
     }
 
