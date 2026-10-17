@@ -57,6 +57,9 @@ class Settings:
     # Docker Desktop's daemon sees the macOS filesystem under /host_mnt; pods bind
     # host paths through it when starting sibling task containers.
     host_path_prefix: str = "/host_mnt"
+    harness_memory_limit: str = "2Gi"
+    # A prebuilt Job pod image; when unset it is built locally from runner/Dockerfile.
+    runner_image: str | None = None
     llm_secret_name: str = "aq-llm-credentials"
     llm_secret_keys: tuple[str, ...] = field(default=("OPENROUTER_API_KEY",))
 
@@ -83,6 +86,8 @@ class Settings:
             retries_per_attempt=int(_env("AQ_RETRIES_PER_ATTEMPT", str(defaults.retries_per_attempt))),
             poll_interval_sec=float(_env("AQ_POLL_INTERVAL_SEC", str(defaults.poll_interval_sec))),
             host_path_prefix=_env("AQ_HOST_PATH_PREFIX", defaults.host_path_prefix),
+            harness_memory_limit=_env("AQ_HARNESS_MEMORY_LIMIT", defaults.harness_memory_limit),
+            runner_image=os.environ.get("AQ_RUNNER_IMAGE") or None,
         )
 
     def requires_model(self, agent: str) -> bool:

@@ -20,7 +20,6 @@ FATAL_WAITING_REASONS = {
     "CreateContainerConfigError",
     "CreateContainerError",
 }
-HARNESS_MEMORY_LIMIT = "2Gi"
 DOCKER_SOCKET = "/var/run/docker.sock"
 
 
@@ -86,7 +85,7 @@ def build_job_manifest(
         "env": [{"name": k, "value": v} for k, v in env.items()] + secret_env,
         "resources": {
             "requests": {"cpu": resources.cpu_request, "memory": resources.memory_request},
-            "limits": {"memory": HARNESS_MEMORY_LIMIT},
+            "limits": {"memory": settings.harness_memory_limit},
         },
         "volumeMounts": [
             {"name": "docker-socket", "mountPath": DOCKER_SOCKET},
