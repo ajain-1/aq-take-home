@@ -40,9 +40,16 @@ class AttemptState(StrEnum):
 class AttemptProgress(BaseModel):
     index: int
     state: AttemptState = AttemptState.PENDING
-    pod: str | None = None
-    retries: int = 0
+    pods: list[str] = []
     reason: str | None = None
+
+    @property
+    def pod(self) -> str | None:
+        return self.pods[-1] if self.pods else None
+
+    @property
+    def retries(self) -> int:
+        return max(len(self.pods) - 1, 0)
 
 
 class Progress(BaseModel):
@@ -77,4 +84,15 @@ class Submission(BaseModel):
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     started_at: datetime | None = None
+    launched_at: datetime | None = None
     finished_at: datetime | None = None
+
+    @classmethod
+    def create(cls, submission_id: str, n_attempts: int, agent: str, model: str | None) -> "Submission":
+        return cls(
+            id=submission_id,
+            n_attempts=n_attempts,
+            agent=agent,
+            model=model,
+            progress=Progress(attempts_total=n_attempts),
+        )

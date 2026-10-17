@@ -17,15 +17,14 @@ from pathlib import Path
 from typing import Any
 
 from runner import bundle, docker_ops, results
-from runner.config import RESOURCE_CLASSES, Settings, settings as default_settings
+from runner.config import RESOURCE_CLASSES, Settings
 from runner.k8s import JobSnapshot, KubeClient, build_job_manifest, job_deadline_sec, job_name
-from runner.models import AttemptProgress, Phase, Progress, Status, Submission, TaskSpec, utcnow
-from runner.store import SubmissionStore
+from runner.models import AttemptProgress, Phase, Status, Submission, TaskSpec, utcnow
+from runner.store import SubmissionNotFound, SubmissionStore
 
 logger = logging.getLogger(__name__)
 
 WAIT_GRACE_SEC = 120
-MODEL_FREE_AGENTS = {"oracle", "nop"}
 
 
 class ExecutionError(RuntimeError):
@@ -69,7 +68,7 @@ def task_image_tag(submission_id: str) -> str:
 
 
 class TaskRunner:
-    def __init__(self, store: SubmissionStore, kube: KubeClient, settings: Settings = default_settings):
+    def __init__(self, store: SubmissionStore, kube: KubeClient, settings: Settings):
         self._store = store
         self._kube = kube
         self._settings = settings
@@ -270,24 +269,16 @@ def run_task(zip_path: str, submission_id: str) -> dict:
         zip_path: Absolute path to the task ZIP file
         submission_id: Unique submission identifier
     """
-    store = SubmissionStore(default_settings.db_path)
-    runner = TaskRunner(store, KubeClient(default_settings.namespace))
+    settings = Settings.from_env()
+    store = SubmissionStore(settings.db_path)
+    runner = TaskRunner(store, KubeClient(settings.namespace), settings)
     paths = runner.paths(submission_id)
     paths.root.mkdir(parents=True, exist_ok=True)
     if Path(zip_path).resolve() != paths.upload.resolve():
         shutil.copyfile(zip_path, paths.upload)
     try:
         store.get(submission_id)
-    except KeyError:
-        store.save(new_submission(submission_id, default_settings.default_attempts, default_settings.agent, default_settings))
+    except SubmissionNotFound:
+        model = settings.model if settings.requires_model(settings.agent) else None
+        store.save(Submission.create(submission_id, settings.default_attempts, settings.agent, model))
     return runner.run(submission_id) or {}
-
-
-def new_submission(submission_id: str, n_attempts: int, agent: str, settings: Settings) -> Submission:
-    return Submission(
-        id=submission_id,
-        n_attempts=n_attempts,
-        agent=agent,
-        model=None if agent in MODEL_FREE_AGENTS else settings.model,
-        progress=Progress(attempts_total=n_attempts),
-    )

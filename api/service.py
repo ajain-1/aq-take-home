@@ -7,14 +7,12 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from runner import bundle
-from runner.config import Settings
+from runner.config import AGENTS, Settings
 from runner.models import Submission
-from runner.run_task import TaskRunner, new_submission
+from runner.run_task import TaskRunner
 from runner.store import SubmissionStore
 
 logger = logging.getLogger(__name__)
-
-SUPPORTED_AGENTS = ("terminus-1", "oracle", "nop")
 
 
 class SubmissionRejected(ValueError):
@@ -35,12 +33,13 @@ class SubmissionService:
         agent = agent or self._settings.agent
         if not 1 <= n_attempts <= self._settings.max_attempts:
             raise SubmissionRejected(f"n_attempts must be between 1 and {self._settings.max_attempts}")
-        if agent not in SUPPORTED_AGENTS:
-            raise SubmissionRejected(f"agent must be one of {', '.join(SUPPORTED_AGENTS)}")
+        if agent not in AGENTS:
+            raise SubmissionRejected(f"agent must be one of {', '.join(AGENTS)}")
         if len(archive) > self._settings.max_upload_bytes:
             raise SubmissionRejected(f"upload exceeds {self._settings.max_upload_bytes} bytes")
 
-        submission = new_submission(uuid.uuid4().hex[:12], n_attempts, agent, self._settings)
+        model = self._settings.model if self._settings.requires_model(agent) else None
+        submission = Submission.create(uuid.uuid4().hex[:12], n_attempts, agent, model)
         paths = self._runner.paths(submission.id)
         paths.root.mkdir(parents=True)
         paths.upload.write_bytes(archive)
