@@ -20,14 +20,16 @@ TASKS=(
 echo "Submitting ${#TASKS[@]} tasks to $API_URL ..."
 echo ""
 
-declare -A SUBMISSION_IDS
+SUBMISSION_IDS=()
 
-for task in "${TASKS[@]}"; do
+for i in "${!TASKS[@]}"; do
+    task=${TASKS[$i]}
+    SUBMISSION_IDS[$i]=""
     echo "--- Submitting: $task ---"
     RESULT=$(bash scripts/submit_task.sh "$task" 2>&1)
     SID=$(echo "$RESULT" | grep "Submission ID:" | awk '{print $NF}')
     if [ -n "$SID" ]; then
-        SUBMISSION_IDS[$task]=$SID
+        SUBMISSION_IDS[$i]=$SID
         echo "  -> $SID"
     else
         echo "  -> FAILED to submit"
@@ -39,8 +41,9 @@ done
 echo "All tasks submitted. Polling for results..."
 echo ""
 
-for task in "${TASKS[@]}"; do
-    SID=${SUBMISSION_IDS[$task]}
+for i in "${!TASKS[@]}"; do
+    task=${TASKS[$i]}
+    SID=${SUBMISSION_IDS[$i]}
     if [ -z "$SID" ]; then
         echo "[$task] SKIPPED (no submission ID)"
         continue
@@ -48,8 +51,13 @@ for task in "${TASKS[@]}"; do
 
     echo "[$task] Waiting..."
     while true; do
-        STATUS=$(curl -s "${API_URL}/status/${SID}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null)
-        if [ "$STATUS" = "completed" ] || [ "$STATUS" = "failed" ]; then
+        STATUS=$(curl -s "${API_URL}/status/${SID}" | python3 -c "import sys,json
+try:
+    b = json.load(sys.stdin)
+except Exception:
+    b = {}
+print(b.get('status') or ('not_found' if 'detail' in b else 'unknown'))" 2>/dev/null)
+        if [ "$STATUS" = "completed" ] || [ "$STATUS" = "failed" ] || [ "$STATUS" = "not_found" ]; then
             break
         fi
         sleep 3

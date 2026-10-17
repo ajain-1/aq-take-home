@@ -31,7 +31,7 @@ RESPONSE=$(curl -s -w "\n%{http_code}" \
     "${API_URL}/submit")
 
 HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-BODY=$(echo "$RESPONSE" | head -n -1)
+BODY=$(echo "$RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" -ge 400 ]; then
     echo "Error (HTTP $HTTP_CODE): $BODY"

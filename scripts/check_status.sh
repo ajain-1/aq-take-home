@@ -23,11 +23,16 @@ if [ "$POLL" = "--poll" ]; then
     echo "Polling status for $SUBMISSION_ID ..."
     while true; do
         STATUS_BODY=$(fetch_status)
-        STATUS=$(echo "$STATUS_BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null)
+        STATUS=$(echo "$STATUS_BODY" | python3 -c "import sys,json
+try:
+    b = json.load(sys.stdin)
+except Exception:
+    b = {}
+print(b.get('status') or ('not_found' if 'detail' in b else 'unknown'))" 2>/dev/null)
 
         echo "  Status: $STATUS"
 
-        if [ "$STATUS" = "completed" ] || [ "$STATUS" = "failed" ]; then
+        if [ "$STATUS" = "completed" ] || [ "$STATUS" = "failed" ] || [ "$STATUS" = "not_found" ]; then
             break
         fi
         sleep 2
