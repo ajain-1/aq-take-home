@@ -24,7 +24,7 @@ SYSTEM_ROOTS = {
 FILE_EXTENSIONS = (
     "txt|json|csv|conf|py|cpp|hpp|cc|c|h|java|xml|jar|html|log|yaml|yml|md|sh|toml|ini|cfg|js|ts|go|rs|so"
 )
-FILENAME = re.compile(rf"(?<![\w.-])(?:[\w.-]+/)*([\w.-]*[\w-]\.(?:{FILE_EXTENSIONS}))(?![\w.-])")
+FILENAME = re.compile(rf"(?<![\w.-])(?:[\w.-]+/)*([\w.-]*[\w-]\.(?:{FILE_EXTENSIONS}))(?![\w-]|\.\w)")
 ABSOLUTE_PATH_LITERAL = re.compile(r"""["'](/[\w.\-/]+)["']""")
 FILE_ACCESS_LITERAL = re.compile(
     r"""(?:Path|open|exists|isfile|isdir|read_json|read_text|access)\(\s*["']([^"']+)["']"""
