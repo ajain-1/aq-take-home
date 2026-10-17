@@ -231,9 +231,8 @@ def _attempts_from_pods(pods: list, n_attempts: int) -> list[AttemptProgress]:
             attempts.append(AttemptProgress(index=index))
             continue
         state, reason = _pod_state(tries[-1])
-        attempts.append(
-            AttemptProgress(index=index, state=state, pods=[pod.metadata.name for pod in tries], reason=reason)
-        )
+        pod_names = [pod.metadata.name for pod in tries]
+        attempts.append(AttemptProgress(index=index, state=state, pods=pod_names, reason=reason))
     return attempts
 
 

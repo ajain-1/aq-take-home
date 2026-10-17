@@ -135,7 +135,11 @@ def get_results(context: Context, submission_id: str):
     if not submission.status.is_terminal:
         return JSONResponse(
             status_code=409,
-            content={"submission_id": submission.id, "status": submission.status, "detail": "results not ready"},
+            content={
+                "submission_id": submission.id,
+                "status": submission.status,
+                "detail": "results not ready",
+            },
         )
     if submission.results is None:
         return {

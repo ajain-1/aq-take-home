@@ -136,12 +136,16 @@ class TaskRunner:
         timeout = self._settings.build_timeout_sec
         with self._build_slots:
             self._raise_if_stopping()
-            runner_image = self._settings.runner_image or docker_ops.ensure_runner_image(paths.build_log, timeout)
+            runner_image = self._settings.runner_image
+            if runner_image is None:
+                runner_image = docker_ops.ensure_runner_image(paths.build_log, timeout)
             if not docker_ops.image_exists(tag):
                 docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, timeout)
         return runner_image
 
-    def _launch(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths, runner_image: str) -> None:
+    def _launch(
+        self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths, runner_image: str
+    ) -> None:
         self._set_phase(submission.id, Phase.LAUNCHING)
         credentials = {k: os.environ[k] for k in self._settings.llm_secret_keys if os.environ.get(k)}
         if credentials:
@@ -197,22 +201,23 @@ class TaskRunner:
         for index in range(submission.n_attempts):
             attempt_progress = progress.get(index, AttemptProgress(index=index))
             self._save_pod_logs(attempt_progress, paths.attempt(index))
+            attempt_dir = paths.attempt(index)
             attempts.append(
-                results.collect_attempt(paths.attempt(index), spec.task_id, attempt_progress, self._settings.data_dir)
+                results.collect_attempt(attempt_dir, spec.task_id, attempt_progress, self._settings.data_dir)
             )
 
         finished_at = utcnow()
+        started_at = submission.started_at
+        elapsed = round((finished_at - started_at).total_seconds(), 2) if started_at else None
         outcome = {
             "submission_id": submission.id,
             "task_id": spec.task_id,
             "agent": submission.agent,
             "model": submission.model,
             **results.aggregate(attempts),
-            "started_at": submission.started_at.isoformat() if submission.started_at else None,
+            "started_at": started_at.isoformat() if started_at else None,
             "finished_at": finished_at.isoformat(),
-            "execution_time_sec": (
-                round((finished_at - submission.started_at).total_seconds(), 2) if submission.started_at else None
-            ),
+            "execution_time_sec": elapsed,
             "attempts": attempts,
         }
         all_errored = outcome["summary"]["errored_attempts"] == len(attempts)
@@ -254,10 +259,11 @@ class TaskRunner:
 
     def _cleanup(self, submission_id: str) -> None:
         """Release cluster and Docker resources; safe to call repeatedly."""
+        image = task_image_tag(submission_id)
         for step in (
             lambda: self._kube.delete_job(job_name(submission_id)),
             lambda: docker_ops.remove_labelled_resources(f"aq.submission={submission_id}"),
-            lambda: docker_ops.remove_images(task_image_tag(submission_id), f"{task_image_tag(submission_id)}-base"),
+            lambda: docker_ops.remove_images(image, f"{image}-base"),
         ):
             try:
                 step()

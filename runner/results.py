@@ -43,7 +43,9 @@ def find_trial_dir(attempt_dir: Path, task_id: str) -> Path | None:
     return matches[-1].parent if matches else None
 
 
-def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, data_dir: Path) -> dict[str, Any]:
+def collect_attempt(
+    attempt_dir: Path, task_id: str, progress: AttemptProgress, data_dir: Path
+) -> dict[str, Any]:
     trial_dir = find_trial_dir(attempt_dir, task_id)
     if trial_dir is None:
         return {
@@ -86,6 +88,10 @@ def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, 
     }
 
 
+def _rate(numerator: int, denominator: int) -> float:
+    return round(numerator / denominator, 3) if denominator else 0.0
+
+
 def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     """Summarize N attempts. The task counts as passed only if every attempt resolved it;
     per-test pass counts show how consistently each test was satisfied."""
@@ -98,7 +104,7 @@ def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
 
     resolved = sum(1 for a in attempts if a["resolved"])
     tests = [
-        {"name": name, **counts, "pass_rate": round(counts["passed"] / (counts["passed"] + counts["failed"]), 3)}
+        {"name": name, **counts, "pass_rate": _rate(counts["passed"], counts["passed"] + counts["failed"])}
         for name, counts in per_test.items()
     ]
     return {
