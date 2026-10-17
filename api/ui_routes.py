@@ -110,4 +110,4 @@ def get_recording(context: Context, submission: SubmissionDep, attempt: int):
     recording = _trial_dir(context, submission, attempt) / RECORDING
     if not recording.is_file():
         raise HTTPException(status_code=404, detail="attempt has no recording")
-    return FileResponse(recording, media_type="application/x-asciicast")
+    return Response(trajectory.read_recording(recording), media_type="application/x-asciicast")
