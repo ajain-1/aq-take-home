@@ -2,11 +2,11 @@ import threading
 from dataclasses import replace
 
 import pytest
-from conftest import make_zip, task_zip
+from conftest import FakeKube, finished_snapshot, make_zip, task_zip
 
 from api.service import SubmissionRejected, SubmissionService
 from runner.models import Status, Submission
-from runner.run_task import SubmissionPaths
+from runner.run_task import TaskRunner
 from runner.store import SubmissionNotFound, SubmissionStore
 
 
@@ -24,14 +24,13 @@ def test_store_survives_reopen_and_tracks_unfinished(settings):
         reopened.get("missing")
 
 
-class RecordingRunner:
-    def __init__(self, settings):
-        self._settings = settings
+class RecordingRunner(TaskRunner):
+    """Real submission creation; execution is replaced by a blocking recorder."""
+
+    def __init__(self, store, settings):
+        super().__init__(store, FakeKube([finished_snapshot()]), settings)
         self.ran: list[str] = []
         self.release = threading.Event()
-
-    def paths(self, submission_id):
-        return SubmissionPaths(self._settings.submissions_dir / submission_id)
 
     def run(self, submission_id):
         self.ran.append(submission_id)
@@ -45,7 +44,7 @@ class RecordingRunner:
 def service(settings):
     settings = replace(settings, max_concurrent_submissions=1, max_upload_bytes=50_000)
     store = SubmissionStore(settings.db_path)
-    runner = RecordingRunner(settings)
+    runner = RecordingRunner(store, settings)
     yield SubmissionService(store, runner, settings), store, runner, settings
     runner.stop()
 
