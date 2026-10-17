@@ -135,9 +135,14 @@ class TaskRunner:
         tag = task_image_tag(submission.id)
         with self._build_slots:
             self._raise_if_stopping()
-            docker_ops.ensure_runner_image(paths.build_log, self._settings.build_timeout_sec)
+            self._runner_image(paths)
             if not docker_ops.image_exists(tag):
                 docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, self._settings.build_timeout_sec)
+
+    def _runner_image(self, paths: SubmissionPaths) -> str:
+        if self._settings.runner_image:
+            return self._settings.runner_image
+        return docker_ops.ensure_runner_image(paths.build_log, self._settings.build_timeout_sec)
 
     def _launch(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> None:
         self._set_phase(submission.id, Phase.LAUNCHING)
@@ -150,7 +155,7 @@ class TaskRunner:
             submission_id=submission.id,
             spec=spec,
             n_attempts=submission.n_attempts,
-            runner_image=docker_ops.ensure_runner_image(paths.build_log, self._settings.build_timeout_sec),
+            runner_image=self._runner_image(paths),
             task_root=paths.tasks,
             output_root=paths.runs,
             agent=submission.agent,

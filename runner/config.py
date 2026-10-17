@@ -50,6 +50,9 @@ class Settings:
     attempt_overhead_sec: int = int(os.environ.get("AQ_ATTEMPT_OVERHEAD_SEC", "600"))
     retries_per_attempt: int = int(os.environ.get("AQ_RETRIES_PER_ATTEMPT", "1"))
     poll_interval_sec: float = float(os.environ.get("AQ_POLL_INTERVAL_SEC", "5"))
+    harness_memory_limit: str = os.environ.get("AQ_HARNESS_MEMORY_LIMIT", "2Gi")
+    # A prebuilt Job pod image (e.g. from a registry); when unset it is built locally.
+    runner_image: str | None = os.environ.get("AQ_RUNNER_IMAGE") or None
     # Docker Desktop's daemon sees the macOS filesystem under /host_mnt; pods bind
     # host paths through it when starting sibling task containers.
     host_path_prefix: str = os.environ.get("AQ_HOST_PATH_PREFIX", "/host_mnt")
