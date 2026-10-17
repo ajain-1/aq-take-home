@@ -100,6 +100,19 @@ The first submission builds the Job pod image (a few minutes); later submissions
   - **Insights endpoint:** read-only; the LLM summary is opt-in, its model is a setting (`AQ_INSIGHTS_MODEL`), and failures are logged.
   - **Consistency:** every 422 has a string `detail` (plus `report` when there is one), insight categories are renamed to `no_results` / `task_container_oom`, and the remaining limits (`AQ_MAX_CONCURRENT_VALIDATIONS`) are settings.
 
+#### Robustness verification
+- **Unit tests:** 142 under `tests/`. They drive `TaskRunner` with a fake cluster client: fixed and adaptive waves, resume with launched and unlaunched waves, shutdown leaving the submission resumable, a run refused while the same submission is already executing, waves planned once under concurrent callers, deadline and vanished-Job attribution, corrupt per-attempt results, and failure cleanup. They also cover bundle security (traversal, symlinks, size and entry caps), store atomicity, Kubernetes pod-state parsing, the Job manifest, the validation gate paths (static reject, linked at creation, failed gate, reference runs not resumed twice) and the API routes.
+- **Live scenarios:** `tests/robustness/live_scenarios.py` runs against the real cluster with fixture tasks and the oracle/nop agents. The evidence is in `tests/robustness/live_results.json`.
+  - **Passed:** upload validation (11 malformed cases, all 422); the static and full validation gates, including an API SIGKILL mid-validation (reference runs re-attached and never run twice); parallel attempts with pod logs and full cleanup; agent timeout; task-container OOM, capped at 1 GB with no swap and flagged; build failure; killed pods retried with partial results and orphan removal; per-try pod deadlines; API restarts while running (SIGKILL), while building (SIGTERM) and after the Job vanished; a queued backlog surviving a restart; harness OOM retried; unstartable pods failing in seconds; build timeout; an adaptive restart mid-wave with every attempt run exactly once; and the key never written to disk.
+  - **Not re-run after the deadline rework:** the adaptive wave-1 pod crash, and the new queue cap (no fixture can be made unschedulable without starving the shared cluster). Both are covered by unit tests.
+- **Bugs fixed:**
+  - One transient apiserver error used to fail the submission and delete its Job.
+  - Attempts of a failed or vanished Job were reported as "pending". They now carry the Job's reason, scoped to their wave, while attempts that already failed keep their own pod reason.
+  - Kubernetes Job rejections are reported concisely.
+  - An explicit `n_attempts=0` or `agent=""` was silently replaced by the default.
+  - Two concurrent callers could each append a wave.
+  - The same submission could execute in two threads.
+
 #### End-to-end verification
 - All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`, one attempt each. Tests passed per task: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards. Evidence: each submission's `/results` JSON and the script output are in `results/e2e-all-tasks/`.
 - The committed real run is in `results/sample-run/` (csv-to-json-cli-fix: results, agent episodes, asciinema recording, tmux panes).

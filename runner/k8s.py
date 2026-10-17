@@ -1,11 +1,13 @@
 """Kubernetes Job management: one Indexed Job per wave of attempts, one index per attempt."""
 
+import json
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 
 from kubernetes import client, config
 from kubernetes.client.exceptions import ApiException
+from kubernetes.utils import parse_quantity
 
 from runner.config import ResourceClass, Settings
 from runner.models import AttemptProgress, AttemptState, TaskSpec, Wave
@@ -41,6 +43,13 @@ class JobSnapshot:
             (a.reason for a in self.attempts if a.reason and a.reason.split(":")[0] in FATAL_WAITING_REASONS),
             None,
         )
+
+
+def api_error_message(error: ApiException) -> str:
+    try:
+        return json.loads(error.body)["message"]
+    except (TypeError, ValueError, KeyError):
+        return f"{error.status} {error.reason}"
 
 
 def job_name(submission_id: str, wave: int) -> str:
@@ -91,13 +100,15 @@ def build_job_manifest(
     ]
     # Only this submission's directory is shared, at the same path as on the host.
     shared_dir = str(submission_root)
+    # Kubernetes rejects a request above the limit; the harness limit wins if they clash.
+    memory_request = min(resources.memory_request, settings.harness_memory_limit, key=parse_quantity)
     container = {
         "name": "trial",
         "image": runner_image,
         "imagePullPolicy": "Never",
         "env": [{"name": k, "value": v} for k, v in env.items()] + secret_env,
         "resources": {
-            "requests": {"cpu": resources.cpu_request, "memory": resources.memory_request},
+            "requests": {"cpu": resources.cpu_request, "memory": memory_request},
             "limits": {"memory": settings.harness_memory_limit},
         },
         "volumeMounts": [

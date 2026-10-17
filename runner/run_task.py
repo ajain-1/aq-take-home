@@ -18,10 +18,29 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from kubernetes.client.exceptions import ApiException
+
 from runner import bundle, docker_ops, learnability, results
 from runner.config import RESOURCE_CLASSES, Settings
-from runner.k8s import JobSnapshot, KubeClient, attempt_deadline_sec, build_job_manifest, job_name
-from runner.models import AttemptProgress, Phase, Status, Strategy, Submission, TaskSpec, Wave, utcnow
+from runner.k8s import (
+    JobSnapshot,
+    KubeClient,
+    api_error_message,
+    attempt_deadline_sec,
+    build_job_manifest,
+    job_name,
+)
+from runner.models import (
+    AttemptProgress,
+    AttemptState,
+    Phase,
+    Status,
+    Strategy,
+    Submission,
+    TaskSpec,
+    Wave,
+    utcnow,
+)
 from runner.paths import SubmissionPaths
 from runner.store import SubmissionNotFound, SubmissionStore
 
@@ -53,6 +72,8 @@ class TaskRunner:
         self._settings = settings
         self._build_slots = threading.Semaphore(settings.max_concurrent_builds)
         self._stopping = threading.Event()
+        self._in_flight: set[str] = set()
+        self._in_flight_lock = threading.Lock()
 
     def stop(self) -> None:
         self._stopping.set()
@@ -91,7 +112,22 @@ class TaskRunner:
         return SubmissionPaths(self._settings.submissions_dir / submission_id)
 
     def run(self, submission_id: str) -> dict[str, Any] | None:
-        """Execute (or resume) a submission and return its structured results."""
+        """Execute (or resume) a submission and return its structured results.
+
+        Returns None if the runner is shutting down, or if the submission is already
+        executing in another thread (it is never run twice concurrently)."""
+        with self._in_flight_lock:
+            if submission_id in self._in_flight:
+                logger.warning("submission %s is already running; not starting it twice", submission_id)
+                return None
+            self._in_flight.add(submission_id)
+        try:
+            return self._run(submission_id)
+        finally:
+            with self._in_flight_lock:
+                self._in_flight.discard(submission_id)
+
+    def _run(self, submission_id: str) -> dict[str, Any] | None:
         if (existing := self._store.get(submission_id)).status.is_terminal:
             return existing.results
         submission = self._store.update(submission_id, _mark_started)
@@ -158,36 +194,36 @@ class TaskRunner:
         return runner_image
 
     def _next_wave(self, submission_id: str, spec: TaskSpec, paths: SubmissionPaths) -> Wave | None:
-        """The wave to run next: an unfinished one being resumed, or a newly planned one."""
-        submission = self._store.get(submission_id)
-        waves = submission.progress.waves
-        if waves and not waves[-1].done:
-            return waves[-1]
+        """The wave to run next: an unfinished one being resumed, or a newly planned one.
+        Planning and recording happen in one store update, so a wave is planned once."""
+        chosen: list[Wave] = []
 
+        def plan(s: Submission) -> None:
+            waves = s.progress.waves
+            if waves and not waves[-1].done:
+                chosen.append(waves[-1])
+            elif size := self._wave_size(s, spec, paths):
+                wave = Wave(index=len(waves), offset=s.progress.attempts_launched, size=size)
+                waves.append(wave)
+                s.progress.attempts_total = wave.offset + size
+                chosen.append(wave)
+
+        self._store.update(submission_id, plan)
+        return chosen[0] if chosen else None
+
+    def _wave_size(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> int:
         launched = submission.progress.attempts_launched
         if submission.strategy == Strategy.FIXED:
-            size = 0 if waves else submission.n_attempts
-        else:
-            outcomes = [results.attempt_resolved(paths.attempt(i), spec.task_id) for i in range(launched)]
-            size = learnability.next_wave_size(
-                passes=outcomes.count(True),
-                failures=outcomes.count(False),
-                launched=launched,
-                max_launches=learnability.TARGET_RUNS + self._settings.adaptive_extra_launches,
-                max_wave=self._settings.adaptive_max_wave,
-                confidence=submission.confidence,
-            )
-        if size == 0:
-            return None
-
-        wave = Wave(index=len(waves), offset=launched, size=size)
-
-        def mutate(s: Submission) -> None:
-            s.progress.waves.append(wave)
-            s.progress.attempts_total = launched + size
-
-        self._store.update(submission_id, mutate)
-        return wave
+            return 0 if submission.progress.waves else submission.n_attempts
+        outcomes = [results.attempt_resolved(paths.attempt(i), spec.task_id) for i in range(launched)]
+        return learnability.next_wave_size(
+            passes=outcomes.count(True),
+            failures=outcomes.count(False),
+            launched=launched,
+            max_launches=learnability.TARGET_RUNS + self._settings.adaptive_extra_launches,
+            max_wave=self._settings.adaptive_max_wave,
+            confidence=submission.confidence,
+        )
 
     def _launch(
         self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths, runner_image: str, wave: Wave
@@ -211,7 +247,10 @@ class TaskRunner:
             resources=RESOURCE_CLASSES[spec.resource_class],
             settings=self._settings,
         )
-        self._kube.create_job(manifest)
+        try:
+            self._kube.create_job(manifest)
+        except ApiException as e:
+            raise ExecutionError(f"Kubernetes rejected the Job: {api_error_message(e)}") from e
         # Persisted so a resumed run re-attaches instead of re-running paid attempts,
         # even if the Job has since been garbage-collected.
         def mark_launched(s: Submission) -> None:
@@ -229,20 +268,23 @@ class TaskRunner:
         last_poll = time.monotonic()
 
         while True:
-            snapshot = self._kube.snapshot(name, wave)
-            self._record_attempts(submission.id, snapshot)
-            now = time.monotonic()
-            wave = self._advance_wave_clock(submission.id, wave.index, snapshot, now - last_poll)
-            last_poll = now
-            if not snapshot.exists or snapshot.finished:
-                return
-            if reason := snapshot.fatal_reason:
-                raise ExecutionError(f"attempt pods cannot start: {reason}")
-            if wave.queued_sec > self._settings.max_queue_sec:
-                waiting = next((a.reason for a in snapshot.attempts if a.reason), "no capacity")
-                raise ExecutionError(
-                    f"attempts waited over {self._settings.max_queue_sec}s for cluster capacity ({waiting})"
-                )
+            try:
+                snapshot = self._kube.snapshot(name, wave)
+            except Exception:
+                logger.warning("could not read job %s; will retry", name, exc_info=True)
+            else:
+                self._record_attempts(submission.id, snapshot, wave)
+                now = time.monotonic()
+                wave = self._advance_wave_clock(submission.id, wave.index, snapshot, now - last_poll)
+                last_poll = now
+                if not snapshot.exists or snapshot.finished:
+                    return
+                if reason := snapshot.fatal_reason:
+                    raise ExecutionError(f"attempt pods cannot start: {reason}")
+                if wave.queued_sec > self._settings.max_queue_sec:
+                    waiting = next((a.reason for a in snapshot.attempts if a.reason), "no capacity")
+                    limit = self._settings.max_queue_sec
+                    raise ExecutionError(f"attempts waited over {limit}s for cluster capacity ({waiting})")
             if wave.running_sec > running_budget + WAIT_GRACE_SEC:
                 logger.warning("submission %s exceeded its deadline; stopping job", submission.id)
                 self._kube.delete_job(name)
@@ -258,13 +300,23 @@ class TaskRunner:
 
         return self._store.update(submission_id, mutate).progress.waves[wave_index]
 
-    def _record_attempts(self, submission_id: str, snapshot: JobSnapshot) -> None:
-        if not snapshot.attempts:
+    def _record_attempts(self, submission_id: str, snapshot: JobSnapshot, wave: Wave) -> None:
+        """Pods vanish when a Job fails (e.g. DeadlineExceeded) and the Job itself can vanish,
+        so merge each attempt with what earlier snapshots saw and attribute the Job's failure
+        to this wave's attempts that had not already finished on their own."""
+        failure = snapshot.reason if snapshot.finished else None if snapshot.exists else "JobNotFound"
+        if not snapshot.attempts and not failure:
             return
+        latest = {a.index: a for a in snapshot.attempts}
 
         def mutate(s: Submission) -> None:
-            merged = {a.index: a for a in s.progress.attempts} | {a.index: a for a in snapshot.attempts}
-            s.progress.attempts = [merged[index] for index in sorted(merged)]
+            known = {a.index: a for a in s.progress.attempts}
+            for index in range(wave.offset, wave.offset + wave.size):
+                attempt = _merge_attempt(latest.get(index), known.get(index)) or AttemptProgress(index=index)
+                if failure and attempt.state not in (AttemptState.SUCCEEDED, AttemptState.FAILED):
+                    attempt.state, attempt.reason = AttemptState.FAILED, f"job failed: {failure}"
+                known[index] = attempt
+            s.progress.attempts = [known[index] for index in sorted(known)]
 
         self._store.update(submission_id, mutate)
 
@@ -366,6 +418,18 @@ class TaskRunner:
     def _raise_if_stopping(self) -> None:
         if self._stopping.is_set():
             raise Interrupted
+
+
+def _merge_attempt(
+    latest: AttemptProgress | None, previous: AttemptProgress | None
+) -> AttemptProgress | None:
+    """The newest view of an attempt, keeping every pod (try) earlier snapshots saw."""
+    if latest is None or previous is None:
+        return latest or previous
+    if not latest.pods:
+        return previous
+    latest.pods = previous.pods + [pod for pod in latest.pods if pod not in previous.pods]
+    return latest
 
 
 def _mark_started(submission: Submission) -> None:
