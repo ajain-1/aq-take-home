@@ -30,6 +30,21 @@ class Episode:
         return bool(self.response.get("is_task_complete"))
 
 
+def read_recording(path: Path) -> str:
+    """An asciinema v2 recording with any corrupt event lines dropped, so a player can
+    load it even if the file was damaged while being written."""
+    header, *lines = path.read_text(errors="replace").split("\n")
+    kept = []
+    for line in lines:
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(event, list) and len(event) == 3:
+            kept.append(line)
+    return "\n".join([header, *kept]) + "\n"
+
+
 def _read(path: Path) -> str:
     return path.read_text(errors="replace") if path.is_file() else ""
 
