@@ -13,6 +13,7 @@ Endpoints:
     GET  /status/{id}    - Check execution status
     GET  /results/{id}   - Get final test results
     GET  /health         - Health check
+    GET  /ui             - Web UI (see api/ui_routes.py for its read-only endpoints)
 """
 
 import logging
@@ -25,8 +26,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from api.service import SubmissionRejected, SubmissionService
+from api.ui_routes import STATIC_DIR, build_ui_router
 from runner import docker_ops
 from runner.config import settings
 from runner.k8s import KubeClient
@@ -49,6 +52,8 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="AQ Task Executor", lifespan=lifespan)
+app.include_router(build_ui_router(store, settings))
+app.mount("/ui/static", StaticFiles(directory=STATIC_DIR), name="ui-static")
 
 
 def _get_submission(submission_id: str) -> Submission:

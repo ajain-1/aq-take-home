@@ -89,3 +89,30 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - Replace the Docker socket with per-pod DinD/sysbox (or a remote BuildKit plus a registry) for real isolation, and use object storage instead of hostPath.
 - Move the worker pool out of the API process into a queue-driven controller, so API restarts and deploys don't pause monitoring.
 - Add per-submission cancellation (`DELETE /submissions/{id}`) and a cluster-wide attempt budget.
+
+## Stretch goal A: UI
+
+#### What I did
+- Added a web UI at `GET /ui`. It is plain HTML/CSS/JS in `api/static/` with no build step, served by the same FastAPI app.
+  - **Submit:** drag and drop (or choose) a task ZIP, pick the number of attempts and the agent, and submit. Validation errors from `/submit` (e.g. a malformed ZIP) are shown inline.
+  - **Watch it run:** the page polls `/status` every 2.5s and shows the status, phase, timestamps, and a chip per attempt with its pod state, retry count and failure reason. The submission list refreshes every 5s, and the URL hash makes a submission linkable.
+  - **Agent trajectory:** each LLM turn is shown with the agent's state analysis, plan, the exact keystrokes it sent (blocking/timeout), whether it marked the task complete, and the terminal output it saw afterwards. The initial prompt and the terminal after the agent and after the tests are collapsible. The trajectory works during a run, since agent logs are written as the agent goes.
+  - **Results:** resolved attempts, pass rate, and per-test pass counts across attempts, plus a tab per attempt with per-test pass/fail, timings, token usage and the pytest output.
+- Added read-only endpoints in `api/ui_routes.py`, kept out of `main.py`:
+  - `GET /submissions` lists the most recent submissions.
+  - `GET /submissions/{id}/attempts/{n}/episodes` returns the turn-by-turn trajectory (`agent-logs/episode-N/{prompt.txt,response.json}`) plus the tmux pane snapshots.
+
+#### Design decisions
+- **No frontend toolchain.** A single static page keeps the UI deployable with the API and reviewable in one sitting. All content goes through `textContent` (a tiny `h()` DOM helper), never `innerHTML`, so agent output and terminal text can't inject markup.
+- **Turns are paired with what the agent saw next.** terminus-1 feeds the terminal output after a turn's commands back as the next prompt, so the API attaches episode N+1's prompt to episode N as its "observation". That puts each action next to its effect.
+- **Safe paths.** Artifact paths are never taken from the request. The submission ID must exist in the store, the attempt index is an int bounded by `n_attempts`, and the trial directory is found by globbing inside that attempt's own directory.
+
+#### How I verified it
+- Developed the trajectory viewer against the committed real run (`results/sample-run`). Then did one real `terminus-1` run end to end through the UI in Chrome: uploaded `config-manifest-validator.zip` through the file input, submitted, watched the live status and live trajectory, and saw the final results (7/7 passed). I restarted the API mid-run; the submission resumed and finished.
+- Screenshots are in `docs/ui/`: `submitted-running.jpg`, `live-trajectory.jpg`, `completed-results.jpg`, `pytest-output.jpg`, `trajectory.jpg`.
+- Checked with curl that path-traversal attempts and an out-of-range attempt index return 404, and that a non-ZIP upload returns 422.
+
+#### Tradeoffs / what I'd do next
+- Polling rather than server-sent events or WebSockets: simpler and good enough at a 2.5s interval. SSE would cut latency and load.
+- No asciinema playback yet. The `.cast` recordings are already saved per trial, and embedding asciinema-player would let you replay the terminal.
+- No auth. The UI exposes everything the API does, which is fine for a local tool but not for a shared deployment.

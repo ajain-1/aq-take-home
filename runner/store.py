@@ -63,6 +63,13 @@ class SubmissionStore:
             ).fetchall()
         return [Submission.model_validate_json(row[0]) for row in rows]
 
+    def list_recent(self, limit: int) -> list[Submission]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT doc FROM submissions ORDER BY created_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        return [Submission.model_validate_json(row[0]) for row in rows]
+
     def count(self) -> int:
         with self._lock:
             return self._conn.execute("SELECT COUNT(*) FROM submissions").fetchone()[0]
