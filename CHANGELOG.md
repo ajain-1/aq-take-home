@@ -63,6 +63,15 @@ Every task was checked with plain Docker. Each one builds, its `solution.sh` pas
 - **Bounded concurrency.** A worker pool caps active submissions and a semaphore caps concurrent Docker builds. Pod resource requests let Kubernetes queue attempts rather than overcommit the node.
 - **Secrets.** The OpenRouter key is read from `.env` (gitignored) and reaches pods only through a Kubernetes Secret; it is never written to disk by the executor or logged.
 
+#### Running it
+```bash
+echo 'OPENROUTER_API_KEY=sk-or-...' > .env        # gitignored; synced to a K8s Secret
+python3.12 -m venv .venv && .venv/bin/pip install -r api/requirements.txt
+cd api && ../.venv/bin/uvicorn main:app --port 8000
+bash scripts/run_all.sh                           # API_URL=... to use another port
+```
+The first submission builds the Job pod image (a few minutes); later submissions reuse it. Per-submission artifacts live under `data/submissions/<id>/`.
+
 #### What I'd do next
 - Replace the Docker socket with per-pod DinD/sysbox (or a remote BuildKit plus a registry) for real isolation, and use object storage instead of hostPath.
 - Move the worker pool out of the API process into a queue-driven controller, so API restarts and deploys don't pause monitoring.
