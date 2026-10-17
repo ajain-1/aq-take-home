@@ -126,7 +126,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
 ## Stretch goal A: UI
 
 #### What I did
-- A web UI at `GET /ui`, organized around how you actually look at results: tasks first, then the runs of a task, then the attempts of a run. It is unbundled ES modules in `api/static/` (`api.js`, `router.js`, `components.js`, `views/*.js`) with a hash router, so every screen has its own link.
+- A web UI at `GET /ui`, organized around how you actually look at results: tasks first, then the runs of a task, then the attempts of a run. It is unbundled ES modules in `api/static/` (`app.js` entry point, `api.js`, `router.js`, `components.js`, `views/*.js`) with a hash router, so every screen has its own link.
   - **Dashboard** (`#/`): headline numbers (tasks, runs, agent attempts, overall resolve rate with a 95% interval, median attempt time, model spend and tokens), a "running now" strip with each active run's phase, a table with one row per task (resolve rate bar, learnability, runs, median attempt, last outcome), and a breakdown of why agent attempts fail.
   - **Task page** (`#/tasks/{id}`):
     - the task's spec: difficulty, category, resources, timeouts, and the instruction (collapsible);
