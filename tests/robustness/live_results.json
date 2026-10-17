@@ -219,10 +219,10 @@
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "cea5e7f4a0e7",
+      "submission": "047978e98842",
       "killed_pods": [
-        "aq-cea5e7f4a0e7-w0-1-bkv99",
-        "aq-cea5e7f4a0e7-w0-1-7qvjj"
+        "aq-047978e98842-w0-1-pfrzk",
+        "aq-047978e98842-w0-1-4md94"
       ],
       "orphan_removed_by_retry": true,
       "pod_try_logs": [
@@ -275,15 +275,15 @@
         "jobs": []
       }
     },
-    "duration_sec": 131
+    "duration_sec": 80
   },
   "job_deadline": {
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "f2590718387d",
-      "elapsed_sec": 106,
-      "job_deadline_sec": 100,
+      "submission": "51dc4a57966e",
+      "elapsed_sec": 131,
+      "pod_deadline_sec_per_try": 50,
       "results": {
         "status": "failed",
         "passed": false,
@@ -297,7 +297,7 @@
           "resolved_attempts": 0,
           "pass_rate": 0.0
         },
-        "error": "no attempt produced test results: job failed: DeadlineExceeded",
+        "error": "no attempt produced test results: DeadlineExceeded: Pod was active on the node longer than the specified deadline",
         "attempts": [
           {
             "attempt": 0,
@@ -305,8 +305,8 @@
             "resolved": false,
             "failure_mode": null,
             "infrastructure_issues": [],
-            "retries": 0,
-            "error": "job failed: DeadlineExceeded",
+            "retries": 1,
+            "error": "DeadlineExceeded: Pod was active on the node longer than the specified deadline",
             "passed_tests": 0,
             "total_tests": 0
           }
@@ -319,7 +319,7 @@
         "jobs": []
       }
     },
-    "duration_sec": 107
+    "duration_sec": 131
   },
   "restart_sigkill_while_running": {
     "group": "base",
@@ -412,7 +412,7 @@
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "0090405315f3",
+      "submission": "1f79346cbe53",
       "results": {
         "status": "failed",
         "passed": false,
@@ -448,7 +448,7 @@
         "jobs": []
       }
     },
-    "duration_sec": 4
+    "duration_sec": 7
   },
   "restart_with_queued_backlog": {
     "group": "single-worker",
@@ -534,7 +534,7 @@
     "group": "tiny-harness-memory",
     "result": "pass",
     "evidence": {
-      "submission": "45aa9442526f",
+      "submission": "d79d41e73c4a",
       "results": {
         "status": "failed",
         "passed": false,
@@ -570,7 +570,7 @@
         "jobs": []
       }
     },
-    "duration_sec": 18
+    "duration_sec": 19
   },
   "unstartable_pod_fails_fast": {
     "group": "broken-runner-image",
@@ -642,18 +642,18 @@
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "0f62b6ff9d79",
-      "validation": "c01fb434003a",
-      "restarted_while_running": "856947f3657d",
+      "submission": "84ce45de5c7d",
+      "validation": "728f489d8db9",
+      "restarted_while_running": "4c8e4aadb6a7",
       "reference_runs": {
-        "856947f3657d": {
+        "4c8e4aadb6a7": {
           "waves": 1,
           "pods": [
             1,
             1
           ]
         },
-        "cb93dc2f54b2": {
+        "7df9c785dc62": {
           "waves": 1,
           "pods": [
             1
@@ -695,19 +695,19 @@
         ]
       },
       "leftovers": {
-        "0f62b6ff9d79": {
+        "84ce45de5c7d": {
           "containers": [],
           "networks": [],
           "images": [],
           "jobs": []
         },
-        "856947f3657d": {
+        "4c8e4aadb6a7": {
           "containers": [],
           "networks": [],
           "images": [],
           "jobs": []
         },
-        "cb93dc2f54b2": {
+        "7df9c785dc62": {
           "containers": [],
           "networks": [],
           "images": [],
@@ -715,7 +715,7 @@
         }
       }
     },
-    "duration_sec": 58
+    "duration_sec": 70
   },
   "adaptive_restart_mid_wave": {
     "group": "adaptive",
