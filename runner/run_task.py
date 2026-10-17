@@ -153,6 +153,7 @@ class TaskRunner:
             spec=spec,
             n_attempts=submission.n_attempts,
             runner_image=runner_image,
+            submission_root=paths.root,
             task_root=paths.tasks,
             output_root=paths.runs,
             agent=submission.agent,

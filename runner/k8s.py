@@ -53,6 +53,7 @@ def build_job_manifest(
     spec: TaskSpec,
     n_attempts: int,
     runner_image: str,
+    submission_root: Path,
     task_root: Path,
     output_root: Path,
     agent: str,
@@ -77,7 +78,8 @@ def build_job_manifest(
         }
         for key in settings.llm_secret_keys
     ]
-    data_dir = str(settings.data_dir)
+    # Only this submission's directory is shared, at the same path as on the host.
+    shared_dir = str(submission_root)
     container = {
         "name": "trial",
         "image": runner_image,
@@ -89,7 +91,7 @@ def build_job_manifest(
         },
         "volumeMounts": [
             {"name": "docker-socket", "mountPath": DOCKER_SOCKET},
-            {"name": "data", "mountPath": data_dir},
+            {"name": "submission", "mountPath": shared_dir},
         ],
     }
     return {
@@ -112,7 +114,7 @@ def build_job_manifest(
                     "containers": [container],
                     "volumes": [
                         {"name": "docker-socket", "hostPath": {"path": DOCKER_SOCKET, "type": "Socket"}},
-                        {"name": "data", "hostPath": {"path": data_dir, "type": "DirectoryOrCreate"}},
+                        {"name": "submission", "hostPath": {"path": shared_dir, "type": "DirectoryOrCreate"}},
                     ],
                 },
             },
