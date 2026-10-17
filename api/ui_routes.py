@@ -3,7 +3,8 @@
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from api.context import Context, SubmissionDep
 from runner import catalog, trajectory
@@ -13,8 +14,17 @@ from runner.paths import SubmissionPaths
 STATIC_DIR = Path(__file__).parent / "static"
 PANES = ("pre-agent", "post-agent", "post-test")
 RECORDING = Path("sessions") / "agent.cast"
+# The UI is unbundled ES modules, so browsers must revalidate them or keep running stale code.
+REVALIDATE = {"Cache-Control": "no-cache"}
 
 router = APIRouter()
+
+
+class UIStaticFiles(StaticFiles):
+    def file_response(self, *args, **kwargs) -> Response:
+        response = super().file_response(*args, **kwargs)
+        response.headers.update(REVALIDATE)
+        return response
 
 
 def _read_text(path: Path) -> str | None:
@@ -50,7 +60,7 @@ def _trial_dir(context: Context, submission: Submission, attempt: int) -> Path:
 
 @router.get("/ui", include_in_schema=False)
 def ui():
-    return FileResponse(STATIC_DIR / "index.html")
+    return FileResponse(STATIC_DIR / "index.html", headers=REVALIDATE)
 
 
 @router.get("/dashboard")

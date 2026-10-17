@@ -27,7 +27,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 from api import insights_routes, ui_routes, validation_routes
 from api.context import AppContext, Context, SubmissionDep, configure_logging, unprocessable
@@ -52,7 +51,7 @@ app = FastAPI(title="AQ Task Executor", lifespan=lifespan)
 app.include_router(ui_routes.router)
 app.include_router(insights_routes.router)
 app.include_router(validation_routes.router)
-app.mount("/ui/static", StaticFiles(directory=ui_routes.STATIC_DIR), name="ui-static")
+app.mount("/ui/static", ui_routes.UIStaticFiles(directory=ui_routes.STATIC_DIR), name="ui-static")
 
 
 @app.post("/submit", status_code=202)
