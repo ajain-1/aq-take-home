@@ -52,9 +52,9 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
   - extraction is skipped if already done;
   - an image that already exists is not rebuilt;
   - Job creation adopts an existing Job on HTTP 409;
-  - waiting simply re-attaches to the running Job.
+  - waiting simply re-attaches to the unfinished wave's Job.
 
-  On shutdown, in-flight submissions are left resumable rather than marked failed.
+  On shutdown, in-flight submissions are left resumable rather than marked failed. A submission never runs in two threads at once (`TaskRunner.run` refuses a submission that is already running), and waves are planned inside one store update, so a wave is never added twice.
 - **Failure isolation.**
   - A failing test is a normal result, not an infrastructure failure.
   - Infrastructure failures of a single attempt (e.g. an OOM-killed or evicted pod) are retried once via `backoffLimitPerIndex` without touching the other attempts.
@@ -68,7 +68,7 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
   - **Executor backstop:** it charges only time while attempts are actually running, persisted per wave so it survives restarts. Past every try's budget plus a grace period, it deletes the Job.
   - **Queue cap:** a wave whose attempts only wait for capacity fails after `AQ_MAX_QUEUE_SEC` (default 1 hour) with a clear "waited for cluster capacity" error, and `/status` shows queued attempts as `Unschedulable` with the scheduler's message.
   - **Verified live:** on an N=10 run, 7 attempts queued as `Unschedulable: Insufficient memory` while the wave clock charged only running time.
-- **Cleanup always runs** after a terminal outcome: the Job is deleted, then labelled task containers and networks (which can be orphaned when a pod is killed before compose teardown), then the task images. `ttlSecondsAfterFinished` is a fallback. Each pod log is saved next to its attempt before the Job is deleted.
+- **Cleanup always runs.** Each wave's Job is deleted once its attempts finish, after every try's pod log is saved next to its attempt. After a terminal outcome, the executor removes any remaining Jobs of the submission, then labelled task containers and networks (which can be orphaned when a pod is killed before compose teardown), then the task images. `ttlSecondsAfterFinished` (24h) is a fallback.
 - **Bounded concurrency.** A worker pool caps active submissions and a semaphore caps concurrent Docker builds. Pod resource requests let Kubernetes queue attempts rather than overcommit the node.
 - **Secrets.** The OpenRouter key is read from `.env` (gitignored) and reaches pods only through a Kubernetes Secret; it is never written to disk by the executor or logged.
 
