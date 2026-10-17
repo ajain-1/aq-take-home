@@ -7,16 +7,7 @@ instruction: |-
     All elements of matrix A (row by row)
     All elements of matrix B (row by row)
   
-  The program needs to check if the transformation chain is valid (cols of A must equal rows of B for multiplication). Print "Matrix multiplication not possible" if invalid. Otherwise compute the combined transformation and output it using the same format already in buggy.cpp.
-  Our robotics team uses `/app/buggy.cpp` for coordinate transformations between reference frames. The transformation matrices get multiplied but the code has bugs throughout.
-
-  Fix all the bugs directly in buggy.cpp. Input format from stdin:
-    Two integers: rows cols of transformation matrix A
-    Two integers: rows cols of transformation matrix B
-    All elements of matrix A (row by row)
-    All elements of matrix B (row by row)
-
-  The program needs to check if the transformation chain is valid (cols of A must equal rows of B for multiplication). Print "Matrix multiplication not possible" if invalid. Otherwise compute the combined transformation and output it using the same format already in buggy.cpp.
+  The program needs to check if the transformation chain is valid (cols of A must equal rows of B for multiplication). Print "Matrix multiplication not possible" if invalid. Otherwise compute the combined transformation and print only the result matrix: one row per line, elements separated by a single space, with no prompts, headers, or trailing whitespace.
 difficulty: medium
 category: software-engineering
 tags:
