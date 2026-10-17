@@ -112,7 +112,7 @@ def build_job_manifest(
                     "containers": [container],
                     "volumes": [
                         {"name": "docker-socket", "hostPath": {"path": DOCKER_SOCKET, "type": "Socket"}},
-                        {"name": "data", "hostPath": {"path": data_dir, "type": "Directory"}},
+                        {"name": "data", "hostPath": {"path": data_dir, "type": "DirectoryOrCreate"}},
                     ],
                 },
             },
