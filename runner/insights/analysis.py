@@ -17,7 +17,8 @@ LIMITATIONS = [
     "Pass-rate intervals are 95% Wilson intervals; with few attempts they are wide and verdicts say so.",
     "Attempt classification is rule-based on recorded artifacts; it does not infer the agent's intent.",
     "Hidden-requirement detection is lexical: a test literal counts as stated only if it appears "
-    "(case-insensitively) in task.yaml, and as discoverable only if the agent saw it in terminal output.",
+    "(case-insensitively) in the instruction, and as discoverable only if the environment showed it to an "
+    "agent before that agent typed it; tests that accept any of several alternatives may be over-reported.",
 ]
 
 
@@ -90,7 +91,8 @@ class Analyzer:
 
     def _attempt_category(self, attempt: Attempt) -> tuple[str, list[str]]:
         if attempt.status != "completed":
-            return "infrastructure_error", [self.ledger.quote("results.json", attempt.error or "", attempt=attempt.index)]
+            category = "infrastructure_error" if attempt.status == "error" else attempt.status
+            return category, [self.ledger.quote("results.json", attempt.error or attempt.status, attempt=attempt.index)]
         trial_results = f"{attempt.trial_source}/results.json"
         mode = attempt.failure_mode or ""
         if attempt.resolved:
@@ -148,12 +150,16 @@ class Analyzer:
             return {}
         return required_literals((self.s.root / self.s.tests_source).read_text())
 
-    def _seen_by_agent(self, literal: str) -> tuple[Attempt, Any] | None:
+    def _discoverable(self, literal: str) -> bool:
+        """True if the environment showed the agent this text before it typed it itself;
+        echoes of the agent's own output do not count."""
         for attempt in self.s.attempts:
             for episode in attempt.episodes:
                 if literal in episode.prompt:
-                    return attempt, episode
-        return None
+                    return True
+                if any(literal in k for k in episode.keystrokes):
+                    break
+        return False
 
     def _hidden_requirements(self) -> None:
         instruction = self.s.instruction.lower()
@@ -162,7 +168,7 @@ class Analyzer:
             if not failed:
                 continue
             unstated = [lit for lit in literals if lit.literal.lower() not in instruction]
-            hidden = [lit for lit in unstated if self._seen_by_agent(lit.literal) is None]
+            hidden = [lit for lit in unstated if not self._discoverable(lit.literal)]
             if not hidden:
                 continue
             evidence = []
