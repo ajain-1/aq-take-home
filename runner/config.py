@@ -50,6 +50,12 @@ class Settings:
     attempt_overhead_sec: int = int(os.environ.get("AQ_ATTEMPT_OVERHEAD_SEC", "600"))
     retries_per_attempt: int = int(os.environ.get("AQ_RETRIES_PER_ATTEMPT", "1"))
     poll_interval_sec: float = float(os.environ.get("AQ_POLL_INTERVAL_SEC", "5"))
+    adaptive_max_wave: int = int(os.environ.get("AQ_ADAPTIVE_MAX_WAVE", "10"))
+    adaptive_extra_launches: int = int(os.environ.get("AQ_ADAPTIVE_EXTRA_LAUNCHES", "3"))
+    # Claude Opus 4.5 list price; token counts come from terminal-bench's tokenizer
+    # estimates and ignore prompt caching, so dollar figures are approximate.
+    price_input_per_mtok: float = float(os.environ.get("AQ_PRICE_INPUT_PER_MTOK", "5.0"))
+    price_output_per_mtok: float = float(os.environ.get("AQ_PRICE_OUTPUT_PER_MTOK", "25.0"))
     # Docker Desktop's daemon sees the macOS filesystem under /host_mnt; pods bind
     # host paths through it when starting sibling task containers.
     host_path_prefix: str = os.environ.get("AQ_HOST_PATH_PREFIX", "/host_mnt")
