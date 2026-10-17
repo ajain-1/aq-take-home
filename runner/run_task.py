@@ -89,7 +89,8 @@ class TaskRunner:
         try:
             spec = self._prepare(submission, paths)
             self._build(submission, spec, paths)
-            self._launch(submission, spec, paths)
+            if submission.launched_at is None:
+                self._launch(submission, spec, paths)
             self._wait(submission, spec)
             outcome = self._collect(submission, spec, paths)
         except Interrupted:
@@ -158,6 +159,9 @@ class TaskRunner:
             settings=self._settings,
         )
         self._kube.create_job(manifest)
+        # Once launched, a resumed submission never recreates its Job: if the Job vanished
+        # while the API was down, attempts are collected as-is rather than re-run (and re-billed).
+        self._store.update(submission.id, lambda s: setattr(s, "launched_at", utcnow()))
 
     def _wait(self, submission: Submission, spec: TaskSpec) -> None:
         self._set_phase(submission.id, Phase.RUNNING_ATTEMPTS)

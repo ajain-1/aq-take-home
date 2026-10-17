@@ -77,4 +77,5 @@ class Submission(BaseModel):
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     started_at: datetime | None = None
+    launched_at: datetime | None = None
     finished_at: datetime | None = None
