@@ -196,9 +196,7 @@ class TaskRunner:
         attempts = []
         for index in range(submission.n_attempts):
             attempt_progress = progress.get(index, AttemptProgress(index=index))
-            if attempt_progress.pod and (log := self._kube.pod_log(attempt_progress.pod)):
-                paths.attempt(index).mkdir(parents=True, exist_ok=True)
-                (paths.attempt(index) / "pod.log").write_text(log)
+            self._save_pod_logs(attempt_progress, paths.attempt(index))
             attempts.append(
                 results.collect_attempt(paths.attempt(index), spec.task_id, attempt_progress, self._settings.data_dir)
             )
@@ -217,7 +215,7 @@ class TaskRunner:
             ),
             "attempts": attempts,
         }
-        all_errored = outcome["summary"]["completed_attempts"] == 0
+        all_errored = outcome["summary"]["errored_attempts"] == len(attempts)
         status = Status.FAILED if all_errored else Status.COMPLETED
         outcome["status"] = status.value
         paths.results.write_text(json.dumps(outcome, indent=2))
@@ -234,6 +232,13 @@ class TaskRunner:
 
         self._store.update(submission.id, mutate)
         return outcome
+
+    def _save_pod_logs(self, attempt: AttemptProgress, attempt_dir: Path) -> None:
+        """Keep the logs of every try, including retried pods, before the Job is deleted."""
+        for try_number, pod in enumerate(attempt.pods):
+            if log := self._kube.pod_log(pod):
+                attempt_dir.mkdir(parents=True, exist_ok=True)
+                (attempt_dir / f"pod-try-{try_number}.log").write_text(log)
 
     def _fail(self, submission_id: str, error: str) -> dict[str, Any]:
         logger.warning("submission %s failed: %s", submission_id, error)
