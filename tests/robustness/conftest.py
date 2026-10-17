@@ -43,7 +43,7 @@ def make_zip(entries: dict[str, str], symlinks: dict[str, str] | None = None) ->
             archive.writestr(name, content)
         for name, target in (symlinks or {}).items():
             info = zipfile.ZipInfo(name)
-            info.external_attr = (0o120777 << 16)
+            info.external_attr = 0o120777 << 16
             archive.writestr(info, target)
     return buffer.getvalue()
 

@@ -59,7 +59,10 @@ def test_not_a_zip(tmp_path):
         (lambda files: files.update({"task.yaml": "instruction: [unclosed"}), "not valid YAML"),
         (lambda files: files.update({"task.yaml": "- a list"}), "must be a mapping"),
         (lambda files: files.update({"task.yaml": "difficulty: easy"}), "task.yaml is invalid"),
-        (lambda files: files.update({"task.yaml": "instruction: x\nresource_class: huge"}), "unknown resource_class"),
+        (
+            lambda files: files.update({"task.yaml": "instruction: x\nresource_class: huge"}),
+            "unknown resource_class",
+        ),
     ],
 )
 def test_invalid_task_contents_are_rejected(tmp_path, mutate, message):

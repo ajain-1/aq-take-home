@@ -4,7 +4,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OK_TEST = 'def test_output_written():\n    assert Path("/app/out.txt").read_text().strip() == "ok"'
-OOM_TEST = 'def test_allocation_was_oom_killed():\n    assert Path("/app/alloc_exit.txt").read_text().strip() == "137"'
+OOM_TEST = (
+    "def test_allocation_was_oom_killed():\n"
+    '    assert Path("/app/alloc_exit.txt").read_text().strip() == "137"'
+)
 
 # name: (agent timeout, test timeout, solution, test, extra Dockerfile lines)
 FIXTURES = {
@@ -31,7 +34,9 @@ def main() -> None:
         (task_dir / "Dockerfile").write_text(
             f"FROM python:3.12-slim\nRUN pip install --no-cache-dir pytest==8.3.3\nWORKDIR /app\n{extra}"
         )
-        (task_dir / "run-tests.sh").write_text("#!/bin/bash\npython -m pytest $TEST_DIR/test_outputs.py -rA\n")
+        (task_dir / "run-tests.sh").write_text(
+            "#!/bin/bash\npython -m pytest $TEST_DIR/test_outputs.py -rA\n"
+        )
         (task_dir / "solution.sh").write_text(f"#!/bin/bash\n{solution}\n")
         (task_dir / "tests" / "test_outputs.py").write_text(f"from pathlib import Path\n\n\n{test}\n")
         for script in ("run-tests.sh", "solution.sh"):

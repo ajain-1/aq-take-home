@@ -7,8 +7,8 @@ from conftest import FakeKube, finished_snapshot, running_snapshot, task_zip
 
 from runner import docker_ops, run_task
 from runner.k8s import JobSnapshot
-from runner.models import AttemptProgress, Status, utcnow
-from runner.run_task import TaskRunner, new_submission
+from runner.models import AttemptProgress, Status, Submission, utcnow
+from runner.run_task import TaskRunner
 from runner.store import SubmissionStore
 
 
@@ -36,12 +36,14 @@ class Harness:
         monkeypatch.setattr(docker_ops, "ensure_runner_image", lambda log_path, timeout: "aq-runner:test")
         monkeypatch.setattr(docker_ops, "image_exists", lambda tag: False)
         monkeypatch.setattr(docker_ops, "build_task_image", fake_build)
-        monkeypatch.setattr(docker_ops, "remove_labelled_resources", lambda label: self.removed.append(("labels", label)))
+        monkeypatch.setattr(
+            docker_ops, "remove_labelled_resources", lambda label: self.removed.append(("labels", label))
+        )
         monkeypatch.setattr(docker_ops, "remove_images", lambda *tags: self.removed.append(("images", tags)))
         monkeypatch.setattr(run_task, "WAIT_GRACE_SEC", 0)
 
     def submit(self, submission_id="sub1", n_attempts=1, archive=None, **task_kwargs):
-        submission = new_submission(submission_id, n_attempts, "oracle", self.settings)
+        submission = Submission.create(submission_id, n_attempts, "oracle", None)
         paths = self.runner.paths(submission_id)
         paths.root.mkdir(parents=True)
         paths.upload.write_bytes(archive if archive is not None else task_zip(**task_kwargs))
@@ -52,7 +54,9 @@ class Harness:
         trial_dir = self.runner.paths(submission_id).attempt(attempt) / "run" / "tiny-task" / "trial"
         trial_dir.mkdir(parents=True)
         trial_dir.joinpath("results.json").write_text(
-            json.dumps({"parser_results": {"test_ok": "passed" if resolved else "failed"}, "is_resolved": resolved})
+            json.dumps(
+                {"parser_results": {"test_ok": "passed" if resolved else "failed"}, "is_resolved": resolved}
+            )
         )
 
 
@@ -73,14 +77,18 @@ def test_happy_path_completes_and_cleans_up(harness):
 
 
 def test_transient_kubernetes_errors_do_not_fail_the_submission(harness):
-    h = harness([RuntimeError("apiserver blip"), RuntimeError("again"), running_snapshot(), finished_snapshot()])
+    h = harness(
+        [RuntimeError("apiserver blip"), RuntimeError("again"), running_snapshot(), finished_snapshot()]
+    )
     h.submit()
     h.write_trial_result()
     assert h.runner.run("sub1")["status"] == "completed"
 
 
 def test_unstartable_pods_fail_fast(harness):
-    stuck = JobSnapshot(exists=True, attempts=[AttemptProgress(index=0, reason="ErrImageNeverPull: not present")])
+    stuck = JobSnapshot(
+        exists=True, attempts=[AttemptProgress(index=0, reason="ErrImageNeverPull: not present")]
+    )
     h = harness([stuck])
     h.submit()
     outcome = h.runner.run("sub1")
@@ -89,18 +97,45 @@ def test_unstartable_pods_fail_fast(harness):
 
 
 def test_job_deadline_is_attributed_to_attempts_whose_pods_vanished(harness):
-    running = JobSnapshot(exists=True, attempts=[AttemptProgress(index=0, state="running", pod="aq-sub1-0-abc")])
-    deadline = JobSnapshot(exists=True, finished=True, reason="DeadlineExceeded", attempts=[AttemptProgress(index=0)])
+    running = JobSnapshot(
+        exists=True, attempts=[AttemptProgress(index=0, state="running", pods=["aq-sub1-0-abc"])]
+    )
+    deadline = JobSnapshot(
+        exists=True, finished=True, reason="DeadlineExceeded", attempts=[AttemptProgress(index=0)]
+    )
     h = harness([running, deadline])
     h.submit()
     outcome = h.runner.run("sub1")
     attempt = outcome and h.store.get("sub1").progress.attempts[0]
-    assert (attempt.pod, attempt.state, attempt.reason) == ("aq-sub1-0-abc", "failed", "job failed: DeadlineExceeded")
+    assert (attempt.pod, attempt.state, attempt.reason) == (
+        "aq-sub1-0-abc",
+        "failed",
+        "job failed: DeadlineExceeded",
+    )
     assert outcome["attempts"][0]["error"] == "job failed: DeadlineExceeded"
 
 
+def test_retried_pods_are_remembered_and_all_their_logs_saved(harness):
+    first = JobSnapshot(exists=True, attempts=[AttemptProgress(index=0, state="running", pods=["p0"])])
+    retried = JobSnapshot(exists=True, attempts=[AttemptProgress(index=0, state="running", pods=["p1"])])
+    gone = JobSnapshot(
+        exists=True, finished=True, reason="DeadlineExceeded", attempts=[AttemptProgress(index=0)]
+    )
+    h = harness([first, retried, gone])
+    h.kube.pod_log = lambda pod: f"log of {pod}"
+    h.submit()
+    outcome = h.runner.run("sub1")
+    attempt = h.store.get("sub1").progress.attempts[0]
+    assert (attempt.pods, attempt.retries) == (["p0", "p1"], 1)
+    assert outcome["attempts"][0]["retries"] == 1
+    attempt_dir = h.runner.paths("sub1").attempt(0)
+    assert [p.read_text() for p in sorted(attempt_dir.glob("pod-try-*.log"))] == ["log of p0", "log of p1"]
+
+
 def test_vanished_job_is_reported_as_such(harness):
-    running = JobSnapshot(exists=True, attempts=[AttemptProgress(index=0, state="running", pod="aq-sub1-0-abc")])
+    running = JobSnapshot(
+        exists=True, attempts=[AttemptProgress(index=0, state="running", pods=["aq-sub1-0-abc"])]
+    )
     h = harness([running, JobSnapshot(exists=False)])
     h.submit()
     outcome = h.runner.run("sub1")

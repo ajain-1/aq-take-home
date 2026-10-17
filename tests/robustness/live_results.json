@@ -1,0 +1,518 @@
+{
+  "validation_rejections": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "cases": {
+        "path_traversal": {
+          "http_status": 422,
+          "detail": "unsafe path in ZIP: ../../escape.txt"
+        },
+        "symlink": {
+          "http_status": 422,
+          "detail": "symlinks are not allowed: rb-ok/link"
+        },
+        "missing_files": {
+          "http_status": 422,
+          "detail": "task is missing required files: run-tests.sh"
+        },
+        "bad_yaml": {
+          "http_status": 422,
+          "detail": "task.yaml is not valid YAML: while parsing a flow sequence\n  in \"<unicode string>\", line 1, column 14:\n    instruction: [unclosed\n                 ^\nexpected ',"
+        },
+        "unknown_resource_class": {
+          "http_status": 422,
+          "detail": "unknown resource_class 'huge'; expected one of small, medium, large"
+        },
+        "not_a_zip": {
+          "http_status": 422,
+          "detail": "not a valid ZIP file: File is not a zip file"
+        },
+        "oversized_upload": {
+          "http_status": 422,
+          "detail": "upload exceeds 1000000 bytes"
+        },
+        "zero_attempts": {
+          "http_status": 422,
+          "detail": "n_attempts must be between 1 and 10"
+        },
+        "too_many_attempts": {
+          "http_status": 422,
+          "detail": "n_attempts must be between 1 and 10"
+        },
+        "non_integer_attempts": {
+          "http_status": 422,
+          "detail": "[{'type': 'int_parsing', 'loc': ['body', 'n_attempts'], 'msg': 'Input should be a valid integer, unable to parse string as an integer', 'input': 'abc'}]"
+        },
+        "unknown_agent": {
+          "http_status": 422,
+          "detail": "agent must be one of terminus-1, oracle, nop"
+        }
+      },
+      "submissions_tracked_before_after": [
+        0,
+        0
+      ]
+    },
+    "duration_sec": 0
+  },
+  "happy_parallel_attempts": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "75a5ecc00ebc",
+      "results": {
+        "status": "completed",
+        "passed": true,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 2,
+          "completed_attempts": 2,
+          "errored_attempts": 0,
+          "resolved_attempts": 2,
+          "pass_rate": 1.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "unset",
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 1,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "unset",
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          }
+        ]
+      },
+      "pod_logs": [
+        "data/submissions/75a5ecc00ebc/runs/attempt-0/pod.log",
+        "data/submissions/75a5ecc00ebc/runs/attempt-1/pod.log"
+      ],
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 91
+  },
+  "agent_timeout": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "d9d0c37a7fe8",
+      "results": {
+        "status": "completed",
+        "passed": false,
+        "passed_tests": 0,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 1,
+          "errored_attempts": 0,
+          "resolved_attempts": 0,
+          "pass_rate": 0.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": false,
+            "failure_mode": "agent_timeout",
+            "retries": 0,
+            "error": null,
+            "passed_tests": 0,
+            "total_tests": 1
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 119
+  },
+  "task_container_oom": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "99d9c311873c",
+      "task_container_memory_bytes_and_nanocpus": "1073741824 1000000000",
+      "results": {
+        "status": "completed",
+        "passed": true,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 1,
+          "errored_attempts": 0,
+          "resolved_attempts": 1,
+          "pass_rate": 1.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "unset",
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 81
+  },
+  "build_failure": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "02d954f01420",
+      "error": "docker build failed:\n#7 ERROR: process \"/bin/sh -c echo \\\"intentional build failure\\\" && exit 3\" did not complete successfully: exit code: 3\n------\n > [4/4] RUN echo \"intentional build failure\" && exit 3:\n0.117 intentional build failure\n------\nDockerfile:4\n--------------------\n   2 |     RUN pip install --no-cache-dir pytest==8.3.3\n   3 |     WORKDIR /app\n   4 | >>> RUN echo \"intentional build failure\" && exit 3\n   5 |     \n--------------------\nERROR: failed to solve: process \"/bin/sh -c echo \\\"intentional build failure\\\" && exit 3\" did not complete successfully: exit code: 3\n\nView build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/kz6nmb9fl2zv63avrr3kdzclw",
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 6
+  },
+  "crash_retry_partial_orphans": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "393924bd0867",
+      "killed_pods": [
+        "aq-393924bd0867-1-fqwpd",
+        "aq-393924bd0867-1-f9w2m"
+      ],
+      "orphan_removed_by_retry": true,
+      "results": {
+        "status": "completed",
+        "passed": false,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 2,
+          "completed_attempts": 1,
+          "errored_attempts": 1,
+          "resolved_attempts": 1,
+          "pass_rate": 0.5
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "unset",
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 1,
+            "status": "error",
+            "resolved": false,
+            "failure_mode": null,
+            "retries": 1,
+            "error": "Error (exit code 137)",
+            "passed_tests": 0,
+            "total_tests": 0
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 82
+  },
+  "job_deadline": {
+    "group": "base",
+    "result": "fail",
+    "error": "ScenarioFailed: deadline reason surfaced: no attempt produced test results: attempt produced no results (pod state: pending)",
+    "trace": "Traceback (most recent call last):\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 425, in run_scenario\n    evidence = scenario(api) if takes_api else scenario()\n                                               ^^^^^^^^^^\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 264, in job_deadline\n    check(\"DeadlineExceeded\" in (results[\"error\"] or \"\"), f\"deadline reason surfaced: {results['error']}\")\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 48, in check\n    raise ScenarioFailed(message)\nScenarioFailed: deadline reason surfaced: no attempt produced test results: attempt produced no results (pod state: pending)\n",
+    "duration_sec": 137
+  },
+  "restart_sigkill_while_running": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "01d38d5467c0",
+      "pod": "aq-01d38d5467c0-0-6qj2j",
+      "resumed_logged": true,
+      "results": {
+        "status": "completed",
+        "passed": true,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 1,
+          "errored_attempts": 0,
+          "resolved_attempts": 1,
+          "pass_rate": 1.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "unset",
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 79
+  },
+  "restart_sigterm_while_building": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "281f052e8c2e",
+      "graceful_shutdown_sec": 0,
+      "results": {
+        "status": "completed",
+        "passed": true,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 1,
+          "errored_attempts": 0,
+          "resolved_attempts": 1,
+          "pass_rate": 1.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "unset",
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 73
+  },
+  "restart_after_job_vanished": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "5870233c024a",
+      "results": {
+        "status": "failed",
+        "passed": false,
+        "passed_tests": 0,
+        "total_tests": 0,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 0,
+          "errored_attempts": 1,
+          "resolved_attempts": 0,
+          "pass_rate": 0.0
+        },
+        "error": "no attempt produced test results: attempt produced no results (pod state: running)",
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "error",
+            "resolved": false,
+            "failure_mode": null,
+            "retries": 0,
+            "error": "attempt produced no results (pod state: running)",
+            "passed_tests": 0,
+            "total_tests": 0
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 6
+  },
+  "restart_with_queued_backlog": {
+    "group": "single-worker",
+    "result": "pass",
+    "evidence": {
+      "second_status_while_first_running": "queued",
+      "results": {
+        "087f952595be": {
+          "status": "completed",
+          "passed": true,
+          "passed_tests": 1,
+          "total_tests": 1,
+          "summary": {
+            "n_attempts": 1,
+            "completed_attempts": 1,
+            "errored_attempts": 0,
+            "resolved_attempts": 1,
+            "pass_rate": 1.0
+          },
+          "error": null,
+          "attempts": [
+            {
+              "attempt": 0,
+              "status": "completed",
+              "resolved": true,
+              "failure_mode": "unset",
+              "retries": 0,
+              "error": null,
+              "passed_tests": 1,
+              "total_tests": 1
+            }
+          ]
+        },
+        "4c400e5a7262": {
+          "status": "completed",
+          "passed": true,
+          "passed_tests": 1,
+          "total_tests": 1,
+          "summary": {
+            "n_attempts": 1,
+            "completed_attempts": 1,
+            "errored_attempts": 0,
+            "resolved_attempts": 1,
+            "pass_rate": 1.0
+          },
+          "error": null,
+          "attempts": [
+            {
+              "attempt": 0,
+              "status": "completed",
+              "resolved": true,
+              "failure_mode": "unset",
+              "retries": 0,
+              "error": null,
+              "passed_tests": 1,
+              "total_tests": 1
+            }
+          ]
+        }
+      },
+      "leftovers": {
+        "087f952595be": {
+          "containers": [],
+          "networks": [],
+          "images": [],
+          "jobs": []
+        },
+        "4c400e5a7262": {
+          "containers": [],
+          "networks": [],
+          "images": [],
+          "jobs": []
+        }
+      }
+    },
+    "duration_sec": 110
+  },
+  "harness_oom_retry": {
+    "group": "tiny-harness-memory",
+    "result": "fail",
+    "error": "IndexError: list index out of range",
+    "trace": "Traceback (most recent call last):\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 425, in run_scenario\n    evidence = scenario(api) if takes_api else scenario()\n                                               ^^^^^^^^^^\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 371, in harness_oom_retry\n    attempt = results[\"attempts\"][0]\n              ~~~~~~~~~~~~~~~~~~~^^^\nIndexError: list index out of range\n",
+    "duration_sec": 2
+  },
+  "unstartable_pod_fails_fast": {
+    "group": "broken-runner-image",
+    "result": "pass",
+    "evidence": {
+      "submission": "ae780571e217",
+      "elapsed_sec": 4,
+      "error": "attempt pods cannot start: ErrImageNeverPull: Container image \"aq-runner:does-not-exist\" is not present with pull policy of Never",
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 5
+  },
+  "build_timeout": {
+    "group": "broken-runner-image",
+    "result": "pass",
+    "evidence": {
+      "submission": "ebb45a69c145",
+      "elapsed_sec": 16,
+      "error": "docker build timed out after 15s",
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 17
+  },
+  "secret_not_leaked": {
+    "group": "final",
+    "result": "pass",
+    "evidence": {
+      "files_containing_key": [],
+      "scanned": "data"
+    },
+    "duration_sec": 0
+  }
+}

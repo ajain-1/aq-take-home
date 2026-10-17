@@ -5,15 +5,15 @@ import pytest
 from conftest import make_zip, task_zip
 
 from api.service import SubmissionRejected, SubmissionService
-from runner.models import Status
-from runner.run_task import SubmissionPaths, new_submission
+from runner.models import Status, Submission
+from runner.run_task import SubmissionPaths
 from runner.store import SubmissionNotFound, SubmissionStore
 
 
 def test_store_survives_reopen_and_tracks_unfinished(settings):
     store = SubmissionStore(settings.db_path)
     for submission_id in ("a", "b"):
-        store.save(new_submission(submission_id, 1, "oracle", settings))
+        store.save(Submission.create(submission_id, 1, "oracle", None))
     store.update("a", lambda s: setattr(s, "status", Status.COMPLETED))
 
     reopened = SubmissionStore(settings.db_path)

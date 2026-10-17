@@ -17,7 +17,9 @@ def _write_trial(attempt_dir, task_id, parser_results, resolved):
 
 def test_partial_results_when_one_attempt_crashed(tmp_path):
     _write_trial(tmp_path / "attempt-0", "t", {"test_a": "passed", "test_b": "passed"}, True)
-    crashed = AttemptProgress(index=1, state=AttemptState.FAILED, retries=1, reason="OOMKilled (exit code 137)")
+    crashed = AttemptProgress(
+        index=1, state=AttemptState.FAILED, pods=["p0", "p1"], reason="OOMKilled (exit code 137)"
+    )
     attempts = [
         results.collect_attempt(tmp_path / "attempt-0", "t", AttemptProgress(index=0), tmp_path),
         results.collect_attempt(tmp_path / "attempt-1", "t", crashed, tmp_path),
@@ -26,23 +28,47 @@ def test_partial_results_when_one_attempt_crashed(tmp_path):
     assert attempts[0]["status"] == "completed"
     assert attempts[0]["pytest_output"].startswith("==== test session starts")
     assert attempts[1] == {
-        "attempt": 1, "status": "error", "resolved": False, "error": "OOMKilled (exit code 137)",
-        "retries": 1, "tests": [], "passed_tests": 0, "total_tests": 0,
+        "attempt": 1,
+        "status": "error",
+        "resolved": False,
+        "error": "OOMKilled (exit code 137)",
+        "retries": 1,
+        "infrastructure_issues": [],
+        "tests": [],
+        "passed_tests": 0,
+        "total_tests": 0,
     }
 
     summary = results.aggregate(attempts)
     assert summary["passed"] is False
     assert summary["summary"] == {
-        "n_attempts": 2, "completed_attempts": 1, "errored_attempts": 1, "resolved_attempts": 1, "pass_rate": 0.5,
+        "n_attempts": 2,
+        "completed_attempts": 1,
+        "tests_not_run_attempts": 0,
+        "errored_attempts": 1,
+        "resolved_attempts": 1,
+        "pass_rate": 0.5,
     }
     assert (summary["passed_tests"], summary["total_tests"]) == (2, 2)
+
+
+def test_task_container_oom_is_flagged_as_infrastructure_issue(tmp_path):
+    _write_trial(tmp_path / "attempt-0", "t", {"test_a": "failed"}, False)
+    (tmp_path / "attempt-0" / results.TASK_CONTAINER_EVENTS_FILE).write_text(
+        json.dumps({"status": "oom", "Action": "oom"}) + "\n" + json.dumps({"Action": "die"}) + "\n"
+    )
+    attempt = results.collect_attempt(tmp_path / "attempt-0", "t", AttemptProgress(index=0), tmp_path)
+    assert attempt["infrastructure_issues"] == [
+        "task container was OOM-killed (exceeded its resource_class memory limit)"
+    ]
 
 
 def test_per_test_pass_rates_across_attempts(tmp_path):
     _write_trial(tmp_path / "attempt-0", "t", {"test_a": "passed", "test_b": "failed"}, False)
     _write_trial(tmp_path / "attempt-1", "t", {"test_a": "passed", "test_b": "passed"}, True)
     attempts = [
-        results.collect_attempt(tmp_path / f"attempt-{i}", "t", AttemptProgress(index=i), tmp_path) for i in range(2)
+        results.collect_attempt(tmp_path / f"attempt-{i}", "t", AttemptProgress(index=i), tmp_path)
+        for i in range(2)
     ]
     summary = results.aggregate(attempts)
     rates = {test["name"]: test["pass_rate"] for test in summary["tests"]}
@@ -53,8 +79,17 @@ def test_per_test_pass_rates_across_attempts(tmp_path):
 def test_manifest_derives_limits_and_never_inlines_secrets(settings, tmp_path):
     spec = TaskSpec(task_id="t", instruction="x", max_agent_timeout_sec=100, max_test_timeout_sec=20)
     manifest = build_job_manifest(
-        submission_id="abc", spec=spec, n_attempts=3, runner_image="aq-runner:x", task_root=tmp_path,
-        output_root=tmp_path, agent="terminus-1", model="m", resources=RESOURCE_CLASSES["large"], settings=settings,
+        submission_id="abc",
+        spec=spec,
+        n_attempts=3,
+        runner_image="aq-runner:x",
+        submission_root=tmp_path,
+        task_root=tmp_path,
+        output_root=tmp_path,
+        agent="terminus-1",
+        model="m",
+        resources=RESOURCE_CLASSES["large"],
+        settings=settings,
     )
     job = manifest["spec"]
     container = job["template"]["spec"]["containers"][0]
@@ -64,8 +99,18 @@ def test_manifest_derives_limits_and_never_inlines_secrets(settings, tmp_path):
     assert container["resources"]["requests"] == {"cpu": "1", "memory": "2Gi"}
     assert container["resources"]["limits"] == {"memory": settings.harness_memory_limit}
     secret_env = [e for e in container["env"] if e["name"] == "OPENROUTER_API_KEY"]
-    assert secret_env == [{"name": "OPENROUTER_API_KEY", "valueFrom": {"secretKeyRef": {
-        "name": settings.llm_secret_name, "key": "OPENROUTER_API_KEY", "optional": True}}}]
+    assert secret_env == [
+        {
+            "name": "OPENROUTER_API_KEY",
+            "valueFrom": {
+                "secretKeyRef": {
+                    "name": settings.llm_secret_name,
+                    "key": "OPENROUTER_API_KEY",
+                    "optional": True,
+                }
+            },
+        }
+    ]
 
 
 def test_memory_request_never_exceeds_harness_limit(settings, tmp_path):
@@ -73,8 +118,16 @@ def test_memory_request_never_exceeds_harness_limit(settings, tmp_path):
 
     spec = TaskSpec(task_id="t", instruction="x")
     manifest = build_job_manifest(
-        submission_id="abc", spec=spec, n_attempts=1, runner_image="aq-runner:x", task_root=tmp_path,
-        output_root=tmp_path, agent="oracle", model=None, resources=RESOURCE_CLASSES["large"],
+        submission_id="abc",
+        spec=spec,
+        n_attempts=1,
+        runner_image="aq-runner:x",
+        submission_root=tmp_path,
+        task_root=tmp_path,
+        output_root=tmp_path,
+        agent="oracle",
+        model=None,
+        resources=RESOURCE_CLASSES["large"],
         settings=replace(settings, harness_memory_limit="48Mi"),
     )
     resources = manifest["spec"]["template"]["spec"]["containers"][0]["resources"]
@@ -95,8 +148,11 @@ class _Obj:
 
 def test_oom_killed_pod_reason_is_surfaced():
     terminated = _Obj(reason="OOMKilled", exit_code=137)
-    pod = _Obj(status=_Obj(
-        phase="Failed", reason=None,
-        container_statuses=[_Obj(state=_Obj(terminated=terminated, waiting=None))],
-    ))
+    pod = _Obj(
+        status=_Obj(
+            phase="Failed",
+            reason=None,
+            container_statuses=[_Obj(state=_Obj(terminated=terminated, waiting=None))],
+        )
+    )
     assert _pod_state(pod) == (AttemptState.FAILED, "OOMKilled (exit code 137)")

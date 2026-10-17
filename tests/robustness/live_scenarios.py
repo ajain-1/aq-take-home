@@ -78,7 +78,10 @@ class Api:
         log = self.log_path.open("a")
         self.process = subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "api.main:app", "--port", str(PORT)],
-            cwd=ROOT, env=self.env, stdout=log, stderr=subprocess.STDOUT,
+            cwd=ROOT,
+            env=self.env,
+            stdout=log,
+            stderr=subprocess.STDOUT,
         )
         wait_for(lambda: get("/health")[0] == 200, 60, "API to become healthy")
 
@@ -140,7 +143,12 @@ def status(submission_id: str) -> dict:
 
 
 def wait_terminal(submission_id: str, timeout: float = 600) -> dict:
-    wait_for(lambda: status(submission_id).get("status") in ("completed", "failed"), timeout, f"{submission_id} to finish", 2)
+    wait_for(
+        lambda: status(submission_id).get("status") in ("completed", "failed"),
+        timeout,
+        f"{submission_id} to finish",
+        2,
+    )
     return get(f"/results/{submission_id}")[1]
 
 
@@ -160,7 +168,15 @@ def assert_cleaned_up(submission_id: str) -> dict:
 
 
 def task_container(submission_id: str, attempt: int) -> str | None:
-    ids = sh("docker", "ps", "-q", "--filter", f"label=aq.submission={submission_id}", "--filter", f"label=aq.attempt={attempt}")
+    ids = sh(
+        "docker",
+        "ps",
+        "-q",
+        "--filter",
+        f"label=aq.submission={submission_id}",
+        "--filter",
+        f"label=aq.attempt={attempt}",
+    )
     return ids.split()[0] if ids else None
 
 
@@ -170,7 +186,11 @@ def attempt_pod(submission_id: str, attempt: int) -> dict | None:
 
 
 def kill_pod_container(pod_name: str) -> str:
-    container = wait_for(lambda: sh("docker", "ps", "-q", "--filter", f"name=k8s_trial_{pod_name}_"), 30, f"container of {pod_name}")
+    container = wait_for(
+        lambda: sh("docker", "ps", "-q", "--filter", f"name=k8s_trial_{pod_name}_"),
+        30,
+        f"container of {pod_name}",
+    )
     sh("docker", "kill", container)
     return container
 
@@ -181,7 +201,20 @@ def summarize(results: dict) -> dict:
         for key in ("status", "passed", "passed_tests", "total_tests", "summary", "error")
     } | {
         "attempts": [
-            {k: a.get(k) for k in ("attempt", "status", "resolved", "failure_mode", "retries", "error", "passed_tests", "total_tests")}
+            {
+                k: a.get(k)
+                for k in (
+                    "attempt",
+                    "status",
+                    "resolved",
+                    "failure_mode",
+                    "infrastructure_issues",
+                    "retries",
+                    "error",
+                    "passed_tests",
+                    "total_tests",
+                )
+            }
             for a in results.get("attempts", [])
         ]
     }
@@ -194,10 +227,14 @@ def happy_parallel_attempts() -> dict:
     sid = submit("rb-ok", n_attempts=2)
     results = wait_terminal(sid)
     check(results["status"] == "completed" and results["passed"], "both attempts should pass")
-    logs = [DATA_DIR / "submissions" / sid / "runs" / f"attempt-{i}" / "pod.log" for i in range(2)]
+    logs = [DATA_DIR / "submissions" / sid / "runs" / f"attempt-{i}" / "pod-try-0.log" for i in range(2)]
     check(all(log.exists() and log.stat().st_size > 0 for log in logs), "pod logs captured for every attempt")
-    return {"submission": sid, "results": summarize(results), "pod_logs": [str(l.relative_to(ROOT)) for l in logs],
-            "leftovers": assert_cleaned_up(sid)}
+    return {
+        "submission": sid,
+        "results": summarize(results),
+        "pod_logs": [str(log.relative_to(ROOT)) for log in logs],
+        "leftovers": assert_cleaned_up(sid),
+    }
 
 
 def agent_timeout() -> dict:
@@ -205,25 +242,39 @@ def agent_timeout() -> dict:
     results = wait_terminal(sid)
     attempt = results["attempts"][0]
     check(results["status"] == "completed", "an agent timeout is a normal (unresolved) result")
-    check(attempt["failure_mode"] == "agent_timeout" and not attempt["resolved"], f"expected agent_timeout, got {attempt}")
+    check(
+        attempt["failure_mode"] == "agent_timeout" and not attempt["resolved"],
+        f"expected agent_timeout, got {attempt}",
+    )
     return {"submission": sid, "results": summarize(results), "leftovers": assert_cleaned_up(sid)}
 
 
 def task_container_oom() -> dict:
     sid = submit("rb-oom")
     container = wait_for(lambda: task_container(sid, 0), 300, "task container")
-    memory = sh("docker", "inspect", "--format", "{{.HostConfig.Memory}} {{.HostConfig.NanoCpus}}", container)
+    limits = "{{.HostConfig.Memory}} {{.HostConfig.MemorySwap}} {{.HostConfig.NanoCpus}}"
+    memory = sh("docker", "inspect", "--format", limits, container)
     results = wait_terminal(sid)
-    check(memory == f"{1024**3} {10**9}", f"task container should be capped at 1g / 1 CPU, got {memory}")
-    check(results["passed"], "allocation beyond the limit should be OOM-killed (exit 137) inside the container")
-    return {"submission": sid, "task_container_memory_bytes_and_nanocpus": memory, "results": summarize(results),
-            "leftovers": assert_cleaned_up(sid)}
+    check(memory == f"{1024**3} {1024**3} {10**9}", f"task container capped at 1g, no swap, 1 CPU: {memory}")
+    check(
+        results["passed"], "allocation beyond the limit should be OOM-killed (exit 137) inside the container"
+    )
+    issues = results["attempts"][0]["infrastructure_issues"]
+    check(any("OOM-killed" in issue for issue in issues), f"OOM flagged as an infrastructure issue: {issues}")
+    return {
+        "submission": sid,
+        "task_container_memory_bytes_and_nanocpus": memory,
+        "results": summarize(results),
+        "leftovers": assert_cleaned_up(sid),
+    }
 
 
 def build_failure() -> dict:
     sid = submit("rb-build-fail")
     results = wait_terminal(sid)
-    check(results["status"] == "failed" and "docker build failed" in (results["error"] or ""), f"got {results}")
+    check(
+        results["status"] == "failed" and "docker build failed" in (results["error"] or ""), f"got {results}"
+    )
     check(not status(sid)["progress"]["attempts"], "no attempts should be launched after a failed build")
     return {"submission": sid, "error": results["error"], "leftovers": assert_cleaned_up(sid)}
 
@@ -236,8 +287,10 @@ def crash_retry_partial_orphans() -> dict:
     kill_pod_container(first_pod)
 
     retry = wait_for(lambda: (p := attempt_pod(sid, 1)) and p["pod"] != first_pod and p, 120, "retry pod")
-    second_task_container = wait_for(
-        lambda: (c := task_container(sid, 1)) and c != first_task_container and c, 300, "retried task container"
+    wait_for(
+        lambda: (c := task_container(sid, 1)) and c != first_task_container and c,
+        300,
+        "retried task container",
     )
     orphan_removed_by_retry = sh("docker", "ps", "-aq", "--filter", f"id={first_task_container}") == ""
     kill_pod_container(retry["pod"])
@@ -245,14 +298,32 @@ def crash_retry_partial_orphans() -> dict:
     results = wait_terminal(sid)
     attempts = {a["attempt"]: a for a in results["attempts"]}
     check(results["status"] == "completed", "one surviving attempt keeps the submission completed")
-    check(attempts[0]["status"] == "completed" and attempts[0]["resolved"], "attempt 0 unaffected by attempt 1 crashes")
-    check(attempts[1]["status"] == "error" and attempts[1]["retries"] == 1, f"attempt 1 retried once then errored: {attempts[1]}")
+    check(
+        attempts[0]["status"] == "completed" and attempts[0]["resolved"],
+        "attempt 0 unaffected by attempt 1 crashes",
+    )
+    check(
+        attempts[1]["status"] == "error" and attempts[1]["retries"] == 1,
+        f"attempt 1 retried once then errored: {attempts[1]}",
+    )
     check("exit code 137" in attempts[1]["error"], "crash reason surfaced")
     check(orphan_removed_by_retry, "retried pod removes the orphaned task container of the killed try")
+    attempt_dir = DATA_DIR / "submissions" / sid / "runs" / "attempt-1"
+    try_logs = sorted(path.name for path in attempt_dir.glob("pod-try-*.log"))
+    check(try_logs == ["pod-try-0.log", "pod-try-1.log"], f"logs of both killed tries kept: {try_logs}")
     secret = secret_value()
-    check(bool(secret) and secret not in manifest and "secretKeyRef" in manifest, "Job manifest references, never embeds, the key")
-    return {"submission": sid, "killed_pods": [first_pod, retry["pod"]], "orphan_removed_by_retry": orphan_removed_by_retry,
-            "results": summarize(results), "leftovers": assert_cleaned_up(sid)}
+    check(
+        bool(secret) and secret not in manifest and "secretKeyRef" in manifest,
+        "Job manifest references, never embeds, the key",
+    )
+    return {
+        "submission": sid,
+        "killed_pods": [first_pod, retry["pod"]],
+        "orphan_removed_by_retry": orphan_removed_by_retry,
+        "pod_try_logs": try_logs,
+        "results": summarize(results),
+        "leftovers": assert_cleaned_up(sid),
+    }
 
 
 def job_deadline() -> dict:
@@ -262,8 +333,13 @@ def job_deadline() -> dict:
     elapsed = round(time.monotonic() - started)
     check(results["status"] == "failed", "a hung attempt produces no results")
     check("DeadlineExceeded" in (results["error"] or ""), f"deadline reason surfaced: {results['error']}")
-    return {"submission": sid, "elapsed_sec": elapsed, "job_deadline_sec": (10 + 10 + 30) * 2,
-            "results": summarize(results), "leftovers": assert_cleaned_up(sid)}
+    return {
+        "submission": sid,
+        "elapsed_sec": elapsed,
+        "job_deadline_sec": (10 + 10 + 30) * 2,
+        "results": summarize(results),
+        "leftovers": assert_cleaned_up(sid),
+    }
 
 
 def validation_rejections() -> dict:
@@ -280,7 +356,11 @@ def validation_rejections() -> dict:
                 archive.writestr(info, "/etc/passwd")
         return path
 
-    good = {f"rb-ok/{p.relative_to(FIXTURES / 'rb-ok')}": p.read_text() for p in (FIXTURES / "rb-ok").rglob("*") if p.is_file()}
+    good = {
+        f"rb-ok/{p.relative_to(FIXTURES / 'rb-ok')}": p.read_text()
+        for p in (FIXTURES / "rb-ok").rglob("*")
+        if p.is_file()
+    }
     oversized = tmp / "oversized.zip"
     oversized.write_bytes(os.urandom(1_100_000))
     cases = {
@@ -288,7 +368,10 @@ def validation_rejections() -> dict:
         "symlink": (zip_of(good, symlink="rb-ok/link"), {}),
         "missing_files": (zip_of({k: v for k, v in good.items() if not k.endswith("run-tests.sh")}), {}),
         "bad_yaml": (zip_of({**good, "rb-ok/task.yaml": "instruction: [unclosed"}), {}),
-        "unknown_resource_class": (zip_of({**good, "rb-ok/task.yaml": "instruction: x\nresource_class: huge"}), {}),
+        "unknown_resource_class": (
+            zip_of({**good, "rb-ok/task.yaml": "instruction: x\nresource_class: huge"}),
+            {},
+        ),
         "not_a_zip": (tmp / "plain.txt", {}),
         "oversized_upload": (oversized, {}),
         "zero_attempts": (zip_of(good), {"n_attempts": 0}),
@@ -303,7 +386,9 @@ def validation_rejections() -> dict:
         code, body = post(path, **fields)
         observed[name] = {"http_status": code, "detail": str(body.get("detail"))[:160]}
     after = get("/health")[1]["submissions_tracked"]
-    check(all(o["http_status"] == 422 for o in observed.values()), f"every case rejected with 422: {observed}")
+    check(
+        all(o["http_status"] == 422 for o in observed.values()), f"every case rejected with 422: {observed}"
+    )
     check(before == after, "rejected uploads are not tracked")
     check(not (DATA_DIR / "escape.txt").exists() and not (ROOT / "escape.txt").exists(), "nothing escaped")
     return {"cases": observed, "submissions_tracked_before_after": [before, after]}
@@ -311,7 +396,9 @@ def validation_rejections() -> dict:
 
 def restart_sigkill_while_running(api: Api) -> dict:
     sid = submit("rb-slow")
-    pod = wait_for(lambda: (p := attempt_pod(sid, 0)) and p["state"] == "running" and p, 300, "attempt running")
+    pod = wait_for(
+        lambda: (p := attempt_pod(sid, 0)) and p["state"] == "running" and p, 300, "attempt running"
+    )
     api.stop(signal.SIGKILL)
     api.start()
     results = wait_terminal(sid)
@@ -319,8 +406,13 @@ def restart_sigkill_while_running(api: Api) -> dict:
     check(results["attempts"][0]["retries"] == 0, "the running attempt was adopted, not restarted")
     resumed = "resuming submission " + sid in api.log_path.read_text()
     check(resumed, "API logged the resume")
-    return {"submission": sid, "pod": pod["pod"], "resumed_logged": resumed, "results": summarize(results),
-            "leftovers": assert_cleaned_up(sid)}
+    return {
+        "submission": sid,
+        "pod": pod["pod"],
+        "resumed_logged": resumed,
+        "results": summarize(results),
+        "leftovers": assert_cleaned_up(sid),
+    }
 
 
 def restart_sigterm_while_building(api: Api) -> dict:
@@ -331,9 +423,15 @@ def restart_sigterm_while_building(api: Api) -> dict:
     shutdown_sec = round(time.monotonic() - shutdown_started)
     api.start()
     results = wait_terminal(sid)
-    check(results["status"] == "completed" and results["passed"], "submission completes after graceful restart")
-    return {"submission": sid, "graceful_shutdown_sec": shutdown_sec, "results": summarize(results),
-            "leftovers": assert_cleaned_up(sid)}
+    check(
+        results["status"] == "completed" and results["passed"], "submission completes after graceful restart"
+    )
+    return {
+        "submission": sid,
+        "graceful_shutdown_sec": shutdown_sec,
+        "results": summarize(results),
+        "leftovers": assert_cleaned_up(sid),
+    }
 
 
 def restart_after_job_vanished(api: Api) -> dict:
@@ -345,7 +443,10 @@ def restart_after_job_vanished(api: Api) -> dict:
     results = wait_terminal(sid)
     recreated = sh("kubectl", "get", "jobs", "-l", f"aq/submission={sid}", "-o", "name")
     check(not recreated, "a vanished Job must not be relaunched on resume")
-    check(results["status"] == "failed" and results["attempts"][0]["status"] == "error", f"got {summarize(results)}")
+    check(
+        results["status"] == "failed" and results["attempts"][0]["error"] == "job failed: JobNotFound",
+        f"got {summarize(results)}",
+    )
     return {"submission": sid, "results": summarize(results), "leftovers": assert_cleaned_up(sid)}
 
 
@@ -359,10 +460,14 @@ def restart_with_queued_backlog(api: Api) -> dict:
     api.stop(signal.SIGKILL)
     api.start()
     outcomes = {sid: wait_terminal(sid) for sid in (first, second)}
-    check(all(r["status"] == "completed" and r["passed"] for r in outcomes.values()), "both resume and complete")
-    return {"second_status_while_first_running": second_while_first_runs,
-            "results": {sid: summarize(r) for sid, r in outcomes.items()},
-            "leftovers": {sid: assert_cleaned_up(sid) for sid in outcomes}}
+    check(
+        all(r["status"] == "completed" and r["passed"] for r in outcomes.values()), "both resume and complete"
+    )
+    return {
+        "second_status_while_first_running": second_while_first_runs,
+        "results": {sid: summarize(r) for sid, r in outcomes.items()},
+        "leftovers": {sid: assert_cleaned_up(sid) for sid in outcomes},
+    }
 
 
 def harness_oom_retry() -> dict:
@@ -370,7 +475,10 @@ def harness_oom_retry() -> dict:
     results = wait_terminal(sid)
     attempt = results["attempts"][0]
     check(results["status"] == "failed", "an attempt OOM-killed on every try produces no results")
-    check("OOMKilled" in (attempt.get("error") or "") and attempt["retries"] == 1, f"OOM surfaced after one retry: {attempt}")
+    check(
+        "OOMKilled" in (attempt.get("error") or "") and attempt["retries"] == 1,
+        f"OOM surfaced after one retry: {attempt}",
+    )
     return {"submission": sid, "results": summarize(results), "leftovers": assert_cleaned_up(sid)}
 
 
@@ -379,9 +487,17 @@ def unstartable_pod_fails_fast() -> dict:
     started = time.monotonic()
     results = wait_terminal(sid, timeout=180)
     elapsed = round(time.monotonic() - started)
-    check(results["status"] == "failed" and "ErrImageNeverPull" in (results["error"] or ""), f"got {results.get('error')}")
+    check(
+        results["status"] == "failed" and "ErrImageNeverPull" in (results["error"] or ""),
+        f"got {results.get('error')}",
+    )
     check(elapsed < 120, f"should fail well before the Job deadline, took {elapsed}s")
-    return {"submission": sid, "elapsed_sec": elapsed, "error": results["error"], "leftovers": assert_cleaned_up(sid)}
+    return {
+        "submission": sid,
+        "elapsed_sec": elapsed,
+        "error": results["error"],
+        "leftovers": assert_cleaned_up(sid),
+    }
 
 
 def build_timeout() -> dict:
@@ -389,31 +505,50 @@ def build_timeout() -> dict:
     started = time.monotonic()
     results = wait_terminal(sid, timeout=180)
     elapsed = round(time.monotonic() - started)
-    check(results["status"] == "failed" and "timed out after 15s" in (results["error"] or ""), f"got {results.get('error')}")
-    return {"submission": sid, "elapsed_sec": elapsed, "error": results["error"], "leftovers": assert_cleaned_up(sid)}
+    check(
+        results["status"] == "failed" and "timed out after 15s" in (results["error"] or ""),
+        f"got {results.get('error')}",
+    )
+    return {
+        "submission": sid,
+        "elapsed_sec": elapsed,
+        "error": results["error"],
+        "leftovers": assert_cleaned_up(sid),
+    }
 
 
 def secret_not_leaked() -> dict:
     secret = secret_value()
     check(bool(secret), "a key must be configured to check for leaks")
     hits = sh("grep", "-rl", secret, str(DATA_DIR))
-    return {"files_containing_key": hits.split()} if hits else {"files_containing_key": [], "scanned": str(DATA_DIR.relative_to(ROOT))}
+    return (
+        {"files_containing_key": hits.split()}
+        if hits
+        else {"files_containing_key": [], "scanned": str(DATA_DIR.relative_to(ROOT))}
+    )
 
 
 # Each group runs against an API with its own settings; scenarios within a batch run concurrently.
 GROUPS = [
-    ("base", {}, [
-        [validation_rejections],
-        [happy_parallel_attempts, agent_timeout, task_container_oom, build_failure],
-        [crash_retry_partial_orphans, job_deadline],
-        [restart_sigkill_while_running],
-        [restart_sigterm_while_building],
-        [restart_after_job_vanished],
-    ]),
+    (
+        "base",
+        {},
+        [
+            [validation_rejections],
+            [happy_parallel_attempts, agent_timeout, task_container_oom, build_failure],
+            [crash_retry_partial_orphans, job_deadline],
+            [restart_sigkill_while_running],
+            [restart_sigterm_while_building],
+            [restart_after_job_vanished],
+        ],
+    ),
     ("single-worker", {"AQ_MAX_CONCURRENT_SUBMISSIONS": "1"}, [[restart_with_queued_backlog]]),
     ("tiny-harness-memory", {"AQ_HARNESS_MEMORY_LIMIT": "48Mi"}, [[harness_oom_retry]]),
-    ("broken-runner-image", {"AQ_RUNNER_IMAGE": "aq-runner:does-not-exist", "AQ_BUILD_TIMEOUT_SEC": "15"},
-     [[unstartable_pod_fails_fast, build_timeout]]),
+    (
+        "broken-runner-image",
+        {"AQ_RUNNER_IMAGE": "aq-runner:does-not-exist", "AQ_BUILD_TIMEOUT_SEC": "15"},
+        [[unstartable_pod_fails_fast, build_timeout]],
+    ),
     ("final", {}, [[secret_not_leaked]]),
 ]
 
@@ -425,7 +560,11 @@ def run_scenario(scenario, api: Api) -> dict:
         evidence = scenario(api) if takes_api else scenario()
         outcome = {"result": "pass", "evidence": evidence}
     except Exception as e:
-        outcome = {"result": "fail", "error": f"{type(e).__name__}: {e}", "trace": traceback.format_exc()[-1500:]}
+        outcome = {
+            "result": "fail",
+            "error": f"{type(e).__name__}: {e}",
+            "trace": traceback.format_exc()[-1500:],
+        }
     outcome["duration_sec"] = round(time.monotonic() - started)
     print(f"[{outcome['result'].upper()}] {scenario.__name__} ({outcome['duration_sec']}s)", flush=True)
     return outcome
@@ -441,12 +580,16 @@ def main(selected: list[str]) -> int:
         with Api(group, env) as api:
             for batch in filter(None, batches):
                 with ThreadPoolExecutor(len(batch)) as pool:
-                    for scenario, outcome in zip(batch, pool.map(lambda s: run_scenario(s, api), batch)):
+                    outcomes = pool.map(lambda s: run_scenario(s, api), batch)
+                    for scenario, outcome in zip(batch, outcomes, strict=True):
                         with lock:
                             recorded[scenario.__name__] = {"group": group, **outcome}
                 RESULTS_PATH.write_text(json.dumps(recorded, indent=2, default=str))
     failed = [name for name, outcome in recorded.items() if outcome["result"] != "pass"]
-    print(f"{len(recorded) - len(failed)}/{len(recorded)} scenarios passed" + (f"; failed: {failed}" if failed else ""))
+    print(
+        f"{len(recorded) - len(failed)}/{len(recorded)} scenarios passed"
+        + (f"; failed: {failed}" if failed else "")
+    )
     return 1 if failed else 0
 
 
