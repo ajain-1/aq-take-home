@@ -1,6 +1,7 @@
 """Kubernetes Job management: one Indexed Job per wave of attempts, one index per attempt."""
 
 from dataclasses import dataclass, field
+from functools import cached_property
 from pathlib import Path
 
 from kubernetes import client, config
@@ -18,8 +19,12 @@ FATAL_WAITING_REASONS = {
     "InvalidImageName",
     "CreateContainerConfigError",
     "CreateContainerError",
+    "FailedMount",
 }
-HARNESS_MEMORY_LIMIT = "2Gi"
+# Volume failures surface only as pod events, which the kubelet keeps retrying; a few
+# repeats rule out a transient hiccup.
+FATAL_EVENT_REASONS = {"FailedMount", "FailedAttachVolume"}
+FATAL_EVENT_MIN_COUNT = 3
 DOCKER_SOCKET = "/var/run/docker.sock"
 
 
@@ -53,6 +58,7 @@ def build_job_manifest(
     spec: TaskSpec,
     wave: Wave,
     runner_image: str,
+    submission_root: Path,
     task_root: Path,
     output_root: Path,
     agent: str,
@@ -78,7 +84,8 @@ def build_job_manifest(
         }
         for key in settings.llm_secret_keys
     ]
-    data_dir = str(settings.data_dir)
+    # Only this submission's directory is shared, at the same path as on the host.
+    shared_dir = str(submission_root)
     container = {
         "name": "trial",
         "image": runner_image,
@@ -86,11 +93,11 @@ def build_job_manifest(
         "env": [{"name": k, "value": v} for k, v in env.items()] + secret_env,
         "resources": {
             "requests": {"cpu": resources.cpu_request, "memory": resources.memory_request},
-            "limits": {"memory": HARNESS_MEMORY_LIMIT},
+            "limits": {"memory": settings.harness_memory_limit},
         },
         "volumeMounts": [
             {"name": "docker-socket", "mountPath": DOCKER_SOCKET},
-            {"name": "data", "mountPath": data_dir},
+            {"name": "submission", "mountPath": shared_dir},
         ],
     }
     return {
@@ -113,7 +120,7 @@ def build_job_manifest(
                     "containers": [container],
                     "volumes": [
                         {"name": "docker-socket", "hostPath": {"path": DOCKER_SOCKET, "type": "Socket"}},
-                        {"name": "data", "hostPath": {"path": data_dir, "type": "DirectoryOrCreate"}},
+                        {"name": "submission", "hostPath": {"path": shared_dir, "type": "DirectoryOrCreate"}},
                     ],
                 },
             },
@@ -122,14 +129,27 @@ def build_job_manifest(
 
 
 class KubeClient:
+    """Loads cluster credentials on first use, so the API can start (and report the
+    cluster as unavailable) without a working kubeconfig."""
+
     def __init__(self, namespace: str):
+        self._namespace = namespace
+
+    @cached_property
+    def _api_client(self) -> client.ApiClient:
         try:
             config.load_incluster_config()
         except config.ConfigException:
             config.load_kube_config()
-        self._namespace = namespace
-        self._batch = client.BatchV1Api()
-        self._core = client.CoreV1Api()
+        return client.ApiClient()
+
+    @property
+    def _batch(self) -> client.BatchV1Api:
+        return client.BatchV1Api(self._api_client)
+
+    @property
+    def _core(self) -> client.CoreV1Api:
+        return client.CoreV1Api(self._api_client)
 
     def available(self) -> bool:
         try:
@@ -187,7 +207,20 @@ class KubeClient:
                 finished, reason = True, condition.reason if condition.type == "Failed" else None
 
         pods = self._core.list_namespaced_pod(self._namespace, label_selector=f"job-name={name}").items
-        return JobSnapshot(exists=True, finished=finished, reason=reason, attempts=_attempts_from_pods(pods, wave))
+        attempts = _attempts_from_pods(pods, wave)
+        for attempt in attempts:
+            if attempt.state == AttemptState.PENDING and attempt.pod:
+                attempt.reason = self._fatal_pod_event(attempt.pod) or attempt.reason
+        return JobSnapshot(exists=True, finished=finished, reason=reason, attempts=attempts)
+
+    def _fatal_pod_event(self, pod_name: str) -> str | None:
+        events = self._core.list_namespaced_event(
+            self._namespace, field_selector=f"involvedObject.kind=Pod,involvedObject.name={pod_name}"
+        ).items
+        for event in events:
+            if event.reason in FATAL_EVENT_REASONS and (event.count or 1) >= FATAL_EVENT_MIN_COUNT:
+                return f"{event.reason}: {event.message}"
+        return None
 
 
 def _attempts_from_pods(pods: list, wave: Wave) -> list[AttemptProgress]:
@@ -204,12 +237,9 @@ def _attempts_from_pods(pods: list, wave: Wave) -> list[AttemptProgress]:
         if not tries:
             attempts.append(AttemptProgress(index=index))
             continue
-        latest = tries[-1]
-        state, reason = _pod_state(latest)
+        state, reason = _pod_state(tries[-1])
         attempts.append(
-            AttemptProgress(
-                index=index, state=state, pod=latest.metadata.name, retries=len(tries) - 1, reason=reason
-            )
+            AttemptProgress(index=index, state=state, pods=[pod.metadata.name for pod in tries], reason=reason)
         )
     return attempts
 

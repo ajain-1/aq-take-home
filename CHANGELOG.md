@@ -3,7 +3,7 @@
 ## Part 1 + Part 2: Task executor on Kubernetes
 
 #### What I did
-- Restored the parts of `terminal_bench/` that were missing and broke `tb run`: the run lock models, asciinema marker merging, Anthropic prompt caching, the asciinema timestamp script, and the `timeout.txt` / `formatted-response.txt` prompt templates, plus their imports. The S3/DB upload, registry, and livestream paths are left unimplemented because the executor never uses them.
+- Re-implemented the parts of `terminal_bench/` that were missing and broke `tb run` (written from scratch to match how the harness calls them): the run lock models, asciinema marker merging, Anthropic prompt caching, the asciinema timestamp script, and the `timeout.txt` / `formatted-response.txt` prompt templates, plus their imports. The S3/DB upload, registry, and livestream paths are left unimplemented because the executor never uses them.
 - Built the executor as a pipeline in `runner/`, with a thin FastAPI layer in `api/`:
   - `bundle.py`: safe ZIP extraction (no path traversal or symlinks, size and entry caps), `task.yaml` validation, and generation of the `docker-compose.yaml` that terminal-bench expects.
   - `docker_ops.py`: builds the task image once per submission, layers `tmux`/`asciinema` on top (task images don't include them), builds the content-addressed Job pod image, and cleans up containers, networks, and images by label.
@@ -15,10 +15,11 @@
 - `POST /submit` validates the ZIP synchronously and returns 422 for a malformed task, then queues the submission. It accepts optional `n_attempts` and `agent` (`terminus-1` by default; `oracle`/`nop` for infrastructure checks).
 - `GET /status/{id}` returns status (`queued|running|completed|failed`), a fine-grained phase, timestamps, and per-attempt pod state, including retries and failure reasons.
 - `GET /results/{id}` returns aggregate counts, per-test pass counts across attempts, and for each attempt: per-test pass/fail, failure mode, timings, token usage, the extracted pytest output, and the artifact directory (agent episodes, asciinema recording, tmux panes, pod log).
-- Made the helper scripts run on macOS's bash 3.2 (`head -n -1` and `declare -A` are not available there), and made polling stop on 404.
+- Made the helper scripts run on macOS's bash 3.2 and BSD tools: replaced `head -n -1` and `declare -A`, and fixed `mktemp /tmp/task-XXXXXX.zip`, which BSD `mktemp` does not randomize (every run reused one literal file). `run_all.sh` no longer exits silently under `set -e` when a submit fails, and polling stops on 404.
+- Model routing: the README's `anthropic/claude-opus-4-5-20250514` is not an OpenRouter model ID. The executor uses `openrouter/anthropic/claude-opus-4.5` through LiteLLM (configurable with `AQ_MODEL`).
 
 #### What I changed in tasks/
-Every task was checked with plain Docker. Each one builds, its `solution.sh` passes every test, and every test fails when the task is left unsolved.
+Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `results/task-verification/`). Each one builds, its `solution.sh` passes every test, and with the task left unsolved every test fails except one file-existence check each in `broken-flask-api` and `csv-to-json-cli-fix`, which check files the task already provides.
 
 - `tasks/broken-coordinate-transform/task.yaml`: Removed the duplicated copy of the instruction. The instruction also said to keep "the same format already in buggy.cpp", but that format prints prompts, a "Result matrix C:" header and trailing spaces, and the tests reject all of those. It now says to print only the result rows, with values separated by single spaces.
 - `tasks/config-manifest-validator/task.yaml`: Removed the duplicated copy of the instruction.
@@ -56,7 +57,8 @@ Every task was checked with plain Docker. Each one builds, its `solution.sh` pas
   - A failing test is a normal result, not an infrastructure failure.
   - Infrastructure failures of a single attempt (e.g. an OOM-killed or evicted pod) are retried once via `backoffLimitPerIndex` without touching the other attempts.
   - A retried pod first removes leftover task containers and partial output from the previous try.
-  - Pods that can never start (`ErrImageNeverPull`, `CreateContainerConfigError`, …) fail the submission immediately instead of waiting out the deadline.
+  - Pods that can never start because of a container-level error (`ErrImageNeverPull`, `CreateContainerConfigError`, …) fail the submission immediately instead of waiting out the deadline. Volume mount failures only show up as pod events, so they are not detected and still wait for the deadline.
+- **Task container memory.** `resource_class` caps the task container through compose `mem_limit`. If a task exceeds it, Docker kills the task container rather than the pod, and the attempt surfaces as an agent or test failure, not as a pod `OOMKilled`.
 - **Partial results.** An attempt that produced no results is reported as `status: error` with the pod's reason (e.g. `OOMKilled (exit code 137)`, `DeadlineExceeded`) while the other attempts still report. The submission is `failed` only if no attempt produced test results.
 - **Timeouts everywhere.** Docker builds (`AQ_BUILD_TIMEOUT_SEC`), the Job deadline, and an executor-side wait deadline (Job deadline plus a grace period) after which the Job is deleted.
 - **Cleanup always runs** after a terminal outcome: the Job is deleted, then labelled task containers and networks (which can be orphaned when a pod is killed before compose teardown), then the task images. `ttlSecondsAfterFinished` is a fallback. Each pod log is saved next to its attempt before the Job is deleted.
@@ -72,10 +74,48 @@ bash scripts/run_all.sh                           # API_URL=... to use another p
 ```
 The first submission builds the Job pod image (a few minutes); later submissions reuse it. Per-submission artifacts live under `data/submissions/<id>/`.
 
+#### Known limitations
+- The Job's `activeDeadlineSeconds` starts when the Job is created, so time spent `Pending` on a saturated node counts against it.
+- A Job that is deleted (for example by its 24h TTL) before a resumed API collects it gets re-created, and its attempts re-run.
+- Docker builds are not interruptible, so a clean API shutdown waits for in-flight builds to finish.
+- Only the latest pod's log per attempt is kept; logs from earlier retried pods are lost.
+
+#### End-to-end verification
+- All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards.
+- The committed real run is in `results/sample-run/` (csv-to-json-cli-fix: results, agent episodes, asciinema recording, tmux panes).
+- Restart recovery: an oracle submission with 2 attempts was interrupted by an API restart, resumed, and passed 5/5 on both attempts.
+
 #### What I'd do next
 - Replace the Docker socket with per-pod DinD/sysbox (or a remote BuildKit plus a registry) for real isolation, and use object storage instead of hostPath.
 - Move the worker pool out of the API process into a queue-driven controller, so API restarts and deploys don't pause monitoring.
 - Add per-submission cancellation (`DELETE /submissions/{id}`) and a cluster-wide attempt budget.
+
+## Stretch goal A: UI
+
+#### What I did
+- Added a web UI at `GET /ui`. It is plain HTML/CSS/JS in `api/static/` with no build step, served by the same FastAPI app.
+  - **Submit:** drag and drop (or choose) a task ZIP, pick the number of attempts and the agent, and submit. Validation errors from `/submit` (e.g. a malformed ZIP) are shown inline.
+  - **Watch it run:** the page polls `/status` every 2.5s and shows the status, phase, timestamps, and a chip per attempt with its pod state, retry count and failure reason. The submission list refreshes every 5s, and the URL hash makes a submission linkable.
+  - **Agent trajectory:** each LLM turn is shown with the agent's state analysis, plan, the exact keystrokes it sent (blocking/timeout), whether it marked the task complete, and the terminal output it saw afterwards. The initial prompt and the terminal after the agent and after the tests are collapsible. The trajectory works during a run, since agent logs are written as the agent goes.
+  - **Results:** resolved attempts, pass rate, and per-test pass counts across attempts, plus a tab per attempt with per-test pass/fail, timings, token usage and the pytest output.
+- Added read-only endpoints in `api/ui_routes.py`, kept out of `main.py`:
+  - `GET /submissions` lists the most recent submissions.
+  - `GET /submissions/{id}/attempts/{n}/episodes` returns the turn-by-turn trajectory (`agent-logs/episode-N/{prompt.txt,response.json}`) plus the tmux pane snapshots.
+
+#### Design decisions
+- **No frontend toolchain.** A single static page keeps the UI deployable with the API and reviewable in one sitting. All content goes through `textContent` (a tiny `h()` DOM helper), never `innerHTML`, so agent output and terminal text can't inject markup.
+- **Turns are paired with what the agent saw next.** terminus-1 feeds the terminal output after a turn's commands back as the next prompt, so the API attaches episode N+1's prompt to episode N as its "observation". That puts each action next to its effect.
+- **Safe paths.** Artifact paths are never taken from the request. The submission ID must exist in the store, the attempt index is an int bounded by `n_attempts`, and the trial directory is found by globbing inside that attempt's own directory.
+
+#### How I verified it
+- Developed the trajectory viewer against the committed real run (`results/sample-run`). Then did one real `terminus-1` run end to end through the UI in Chrome: uploaded `config-manifest-validator.zip` through the file input, submitted, watched the live status and live trajectory, and saw the final results (7/7 passed). I restarted the API mid-run; the submission resumed and finished.
+- Screenshots are in `docs/ui/`: `submitted-running.jpg`, `live-trajectory.jpg`, `completed-results.jpg`, `pytest-output.jpg`, `trajectory.jpg`.
+- Checked with curl that path-traversal attempts and an out-of-range attempt index return 404, and that a non-ZIP upload returns 422.
+
+#### Tradeoffs / what I'd do next
+- Polling rather than server-sent events or WebSockets: simpler and good enough at a 2.5s interval. SSE would cut latency and load.
+- No asciinema playback yet. The `.cast` recordings are already saved per trial, and embedding asciinema-player would let you replay the terminal.
+- No auth. The UI exposes everything the API does, which is fine for a local tool but not for a shared deployment.
 
 ## Stretch goal B: Inference cost optimization
 

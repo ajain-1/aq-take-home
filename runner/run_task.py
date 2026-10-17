@@ -19,25 +19,14 @@ from pathlib import Path
 from typing import Any
 
 from runner import bundle, docker_ops, learnability, results
-from runner.config import RESOURCE_CLASSES, Settings, settings as default_settings
+from runner.config import RESOURCE_CLASSES, Settings
 from runner.k8s import JobSnapshot, KubeClient, build_job_manifest, job_deadline_sec, job_name
-from runner.models import (
-    AttemptProgress,
-    Phase,
-    Progress,
-    Status,
-    Strategy,
-    Submission,
-    TaskSpec,
-    Wave,
-    utcnow,
-)
-from runner.store import SubmissionStore
+from runner.models import AttemptProgress, Phase, Status, Strategy, Submission, TaskSpec, Wave, utcnow
+from runner.store import SubmissionNotFound, SubmissionStore
 
 logger = logging.getLogger(__name__)
 
 WAIT_GRACE_SEC = 120
-MODEL_FREE_AGENTS = {"oracle", "nop"}
 
 
 class ExecutionError(RuntimeError):
@@ -81,7 +70,7 @@ def task_image_tag(submission_id: str) -> str:
 
 
 class TaskRunner:
-    def __init__(self, store: SubmissionStore, kube: KubeClient, settings: Settings = default_settings):
+    def __init__(self, store: SubmissionStore, kube: KubeClient, settings: Settings):
         self._store = store
         self._kube = kube
         self._settings = settings
@@ -100,11 +89,14 @@ class TaskRunner:
         paths = self.paths(submission_id)
         try:
             spec = self._prepare(submission, paths)
-            self._build(submission, spec, paths)
-            self._sync_credentials()
+            runner_image = None
             while wave := self._next_wave(submission_id, spec, paths):
-                self._run_wave(submission_id, spec, paths, wave)
-            outcome = self._collect(submission_id, spec, paths)
+                if wave.launched_at is None:
+                    runner_image = runner_image or self._build(submission, spec, paths)
+                    self._launch(submission, spec, paths, runner_image, wave)
+                self._wait(submission, spec, wave)
+                self._finish_wave(submission_id, paths, wave)
+            outcome = self._collect(submission, spec, paths)
         except Interrupted:
             logger.info("submission %s interrupted; it will resume on restart", submission_id)
             return None
@@ -142,19 +134,17 @@ class TaskRunner:
         self._store.update(submission.id, lambda s: setattr(s, "task_id", spec.task_id))
         return spec
 
-    def _build(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> None:
+    def _build(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> str:
+        """Build the task image and make sure the Job pod image exists; returns the latter."""
         self._set_phase(submission.id, Phase.BUILDING_IMAGE)
         tag = task_image_tag(submission.id)
+        timeout = self._settings.build_timeout_sec
         with self._build_slots:
             self._raise_if_stopping()
-            docker_ops.ensure_runner_image(paths.build_log, self._settings.build_timeout_sec)
+            runner_image = self._settings.runner_image or docker_ops.ensure_runner_image(paths.build_log, timeout)
             if not docker_ops.image_exists(tag):
-                docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, self._settings.build_timeout_sec)
-
-    def _sync_credentials(self) -> None:
-        credentials = {k: os.environ[k] for k in self._settings.llm_secret_keys if os.environ.get(k)}
-        if credentials:
-            self._kube.upsert_secret(self._settings.llm_secret_name, credentials)
+                docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, timeout)
+        return runner_image
 
     def _next_wave(self, submission_id: str, spec: TaskSpec, paths: SubmissionPaths) -> Wave | None:
         """The wave to run next: an unfinished one being resumed, or a newly planned one."""
@@ -168,12 +158,10 @@ class TaskRunner:
             size = 0 if waves else submission.n_attempts
         else:
             outcomes = [results.attempt_resolved(paths.attempt(i), spec.task_id) for i in range(launched)]
-            passes = sum(1 for outcome in outcomes if outcome is True)
-            failures = sum(1 for outcome in outcomes if outcome is False)
             size = learnability.next_wave_size(
-                passes,
-                failures,
-                launched,
+                passes=outcomes.count(True),
+                failures=outcomes.count(False),
+                launched=launched,
                 max_launches=learnability.TARGET_RUNS + self._settings.adaptive_extra_launches,
                 max_wave=self._settings.adaptive_max_wave,
                 confidence=submission.confidence,
@@ -181,7 +169,9 @@ class TaskRunner:
         if size == 0:
             return None
 
-        wave = Wave(index=len(waves), offset=launched, size=size)
+        # A fixed-strategy submission launched before waves existed re-attaches to its Job.
+        legacy_launch = submission.launched_at if not waves else None
+        wave = Wave(index=len(waves), offset=launched, size=size, launched_at=legacy_launch)
 
         def mutate(s: Submission) -> None:
             s.progress.waves.append(wave)
@@ -190,14 +180,21 @@ class TaskRunner:
         self._store.update(submission_id, mutate)
         return wave
 
-    def _run_wave(self, submission_id: str, spec: TaskSpec, paths: SubmissionPaths, wave: Wave) -> None:
-        submission = self._set_phase(submission_id, Phase.LAUNCHING)
+    def _launch(
+        self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths, runner_image: str, wave: Wave
+    ) -> None:
+        self._set_phase(submission.id, Phase.LAUNCHING)
+        credentials = {k: os.environ[k] for k in self._settings.llm_secret_keys if os.environ.get(k)}
+        if credentials:
+            self._kube.upsert_secret(self._settings.llm_secret_name, credentials)
+
         paths.runs.mkdir(parents=True, exist_ok=True)
         manifest = build_job_manifest(
-            submission_id=submission_id,
+            submission_id=submission.id,
             spec=spec,
             wave=wave,
-            runner_image=docker_ops.ensure_runner_image(paths.build_log, self._settings.build_timeout_sec),
+            runner_image=runner_image,
+            submission_root=paths.root,
             task_root=paths.tasks,
             output_root=paths.runs,
             agent=submission.agent,
@@ -206,29 +203,28 @@ class TaskRunner:
             settings=self._settings,
         )
         self._kube.create_job(manifest)
-        self._wait(submission_id, spec, wave)
-        self._save_pod_logs(submission_id, paths, wave)
+        # Persisted so a resumed run re-attaches instead of re-running paid attempts,
+        # even if the Job has since been garbage-collected.
+        def mark_launched(s: Submission) -> None:
+            s.launched_at = s.launched_at or utcnow()
+            s.progress.waves[wave.index].launched_at = utcnow()
 
-        def mark_done(s: Submission) -> None:
-            s.progress.waves[wave.index].done = True
+        self._store.update(submission.id, mark_launched)
 
-        self._store.update(submission_id, mark_done)
-        self._kube.delete_job(job_name(submission_id, wave.index))
-
-    def _wait(self, submission_id: str, spec: TaskSpec, wave: Wave) -> None:
-        self._set_phase(submission_id, Phase.RUNNING_ATTEMPTS)
-        name = job_name(submission_id, wave.index)
+    def _wait(self, submission: Submission, spec: TaskSpec, wave: Wave) -> None:
+        self._set_phase(submission.id, Phase.RUNNING_ATTEMPTS)
+        name = job_name(submission.id, wave.index)
         deadline = time.monotonic() + job_deadline_sec(spec, self._settings) + WAIT_GRACE_SEC
 
         while True:
             snapshot = self._kube.snapshot(name, wave)
-            self._record_attempts(submission_id, snapshot)
+            self._record_attempts(submission.id, snapshot)
             if not snapshot.exists or snapshot.finished:
                 return
             if reason := snapshot.fatal_reason:
                 raise ExecutionError(f"attempt pods cannot start: {reason}")
             if time.monotonic() > deadline:
-                logger.warning("submission %s exceeded its deadline; stopping job %s", submission_id, name)
+                logger.warning("submission %s exceeded its deadline; stopping job", submission.id)
                 self._kube.delete_job(name)
                 return
             if self._stopping.wait(self._settings.poll_interval_sec):
@@ -239,23 +235,27 @@ class TaskRunner:
             return
 
         def mutate(s: Submission) -> None:
-            updated = {attempt.index: attempt for attempt in snapshot.attempts}
-            merged = {attempt.index: attempt for attempt in s.progress.attempts} | updated
+            merged = {a.index: a for a in s.progress.attempts} | {a.index: a for a in snapshot.attempts}
             s.progress.attempts = [merged[index] for index in sorted(merged)]
 
         self._store.update(submission_id, mutate)
 
-    def _save_pod_logs(self, submission_id: str, paths: SubmissionPaths, wave: Wave) -> None:
+    def _finish_wave(self, submission_id: str, paths: SubmissionPaths, wave: Wave) -> None:
         submission = self._store.get(submission_id)
         for attempt in submission.progress.attempts:
-            in_wave = wave.offset <= attempt.index < wave.offset + wave.size
-            if in_wave and attempt.pod and (log := self._kube.pod_log(attempt.pod)):
-                paths.attempt(attempt.index).mkdir(parents=True, exist_ok=True)
-                (paths.attempt(attempt.index) / "pod.log").write_text(log)
+            if wave.offset <= attempt.index < wave.offset + wave.size:
+                self._save_pod_logs(attempt, paths.attempt(attempt.index))
 
-    def _collect(self, submission_id: str, spec: TaskSpec, paths: SubmissionPaths) -> dict[str, Any]:
-        submission = self._set_phase(submission_id, Phase.COLLECTING_RESULTS)
+        def mark_done(s: Submission) -> None:
+            s.progress.waves[wave.index].done = True
+
+        self._store.update(submission_id, mark_done)
+        self._kube.delete_job(job_name(submission_id, wave.index))
+
+    def _collect(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> dict[str, Any]:
+        submission = self._set_phase(submission.id, Phase.COLLECTING_RESULTS)
         progress = {a.index: a for a in submission.progress.attempts}
+
         attempts = [
             results.collect_attempt(
                 paths.attempt(index), spec.task_id, progress.get(index, AttemptProgress(index=index)), self._settings.data_dir
@@ -276,10 +276,10 @@ class TaskRunner:
             "execution_time_sec": (
                 round((finished_at - submission.started_at).total_seconds(), 2) if submission.started_at else None
             ),
-            "waves": [wave.model_dump(exclude={"done"}) for wave in submission.progress.waves],
+            "waves": [wave.model_dump(include={"index", "offset", "size"}) for wave in submission.progress.waves],
             "attempts": attempts,
         }
-        all_errored = outcome["summary"]["completed_attempts"] == 0
+        all_errored = outcome["summary"]["errored_attempts"] == len(attempts)
         status = Status.FAILED if all_errored else Status.COMPLETED
         outcome["status"] = status.value
         paths.results.write_text(json.dumps(outcome, indent=2))
@@ -296,6 +296,13 @@ class TaskRunner:
 
         self._store.update(submission.id, mutate)
         return outcome
+
+    def _save_pod_logs(self, attempt: AttemptProgress, attempt_dir: Path) -> None:
+        """Keep the logs of every try, including retried pods, before the Job is deleted."""
+        for try_number, pod in enumerate(attempt.pods):
+            if log := self._kube.pod_log(pod):
+                attempt_dir.mkdir(parents=True, exist_ok=True)
+                (attempt_dir / f"pod-try-{try_number}.log").write_text(log)
 
     def _fail(self, submission_id: str, error: str) -> dict[str, Any]:
         logger.warning("submission %s failed: %s", submission_id, error)
@@ -339,33 +346,16 @@ def run_task(zip_path: str, submission_id: str) -> dict:
         zip_path: Absolute path to the task ZIP file
         submission_id: Unique submission identifier
     """
-    store = SubmissionStore(default_settings.db_path)
-    runner = TaskRunner(store, KubeClient(default_settings.namespace))
+    settings = Settings.from_env()
+    store = SubmissionStore(settings.db_path)
+    runner = TaskRunner(store, KubeClient(settings.namespace), settings)
     paths = runner.paths(submission_id)
     paths.root.mkdir(parents=True, exist_ok=True)
     if Path(zip_path).resolve() != paths.upload.resolve():
         shutil.copyfile(zip_path, paths.upload)
     try:
         store.get(submission_id)
-    except KeyError:
-        store.save(new_submission(submission_id, default_settings.default_attempts, default_settings.agent, default_settings))
+    except SubmissionNotFound:
+        model = settings.model if settings.requires_model(settings.agent) else None
+        store.save(Submission.create(submission_id, settings.default_attempts, settings.agent, model))
     return runner.run(submission_id) or {}
-
-
-def new_submission(
-    submission_id: str,
-    n_attempts: int,
-    agent: str,
-    settings: Settings,
-    strategy: Strategy = Strategy.FIXED,
-    confidence: float = 1.0,
-) -> Submission:
-    return Submission(
-        id=submission_id,
-        n_attempts=n_attempts,
-        strategy=strategy,
-        confidence=confidence,
-        agent=agent,
-        model=None if agent in MODEL_FREE_AGENTS else settings.model,
-        progress=Progress(attempts_total=n_attempts if strategy == Strategy.FIXED else 0),
-    )

@@ -16,9 +16,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from runner.config import settings  # noqa: E402
+from runner.config import Settings  # noqa: E402
 from runner.learnability import TARGET_RUNS, Classification, classify, replay, ten_run_class  # noqa: E402
 
+settings = Settings.from_env()
 SEQUENCES = [list(bits) for bits in itertools.product([False, True], repeat=TARGET_RUNS)]
 P_GRID = [round(i / 20, 2) for i in range(21)]
 WAVE_CAPS = (1, 3, 5, 10)
