@@ -8,6 +8,7 @@ from typing import Any
 from runner.models import AttemptProgress
 
 PYTEST_SESSION_MARKER = "test session starts"
+TASK_CONTAINER_EVENTS_FILE = "task-container-events.jsonl"
 # terminal-bench leaves failure_mode "unset" when nothing went wrong.
 NO_FAILURE_MODES = {"unset", "none"}
 
@@ -26,6 +27,17 @@ def _pytest_output(pane_path: Path) -> str | None:
     return "\n".join(lines[start:]).strip()
 
 
+def infrastructure_issues(attempt_dir: Path) -> list[str]:
+    """Problems outside the agent's control, recorded by the pod while the attempt ran."""
+    events_path = attempt_dir / TASK_CONTAINER_EVENTS_FILE
+    if not events_path.exists():
+        return []
+    events = [json.loads(line) for line in events_path.read_text().splitlines() if line.strip()]
+    if any(event.get("status") == "oom" or event.get("Action") == "oom" for event in events):
+        return ["task container was OOM-killed (exceeded its resource_class memory limit)"]
+    return []
+
+
 def find_trial_dir(attempt_dir: Path, task_id: str) -> Path | None:
     matches = sorted(attempt_dir.glob(f"*/{task_id}/*/results.json"))
     return matches[-1].parent if matches else None
@@ -40,6 +52,7 @@ def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, 
             "resolved": False,
             "error": progress.reason or f"attempt produced no results (pod state: {progress.state})",
             "retries": progress.retries,
+            "infrastructure_issues": infrastructure_issues(attempt_dir),
             "tests": [],
             "passed_tests": 0,
             "total_tests": 0,
@@ -57,6 +70,7 @@ def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, 
         "resolved": bool(trial.get("is_resolved")),
         "failure_mode": "none" if failure_mode in NO_FAILURE_MODES else failure_mode,
         "retries": progress.retries,
+        "infrastructure_issues": infrastructure_issues(attempt_dir),
         "tests": tests,
         "passed_tests": sum(1 for test in tests if test["status"] == "passed"),
         "total_tests": len(tests),
