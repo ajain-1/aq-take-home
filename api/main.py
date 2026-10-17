@@ -26,37 +26,40 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from api.service import SubmissionRejected, SubmissionService, ValidationGate
+from api.service import SubmissionRejected, SubmissionService
+from api.validation import ValidationGate, ValidationRejected, ValidationService, router as validation_router
 from runner import docker_ops
 from runner.config import settings
 from runner.k8s import KubeClient
 from runner.models import AttemptState, Submission
-from runner.run_task import TaskRunner
 from runner.store import SubmissionNotFound, SubmissionStore
-from runner.validation.models import ValidationMode
-from runner.validation.pipeline import Validator
-from runner.validation.store import ValidationNotFound, ValidationStore
+from runner.validation.gate import GatedTaskRunner
+from runner.validation.store import ValidationStore
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 store = SubmissionStore(settings.db_path)
 kube = KubeClient(settings.namespace)
-runner = TaskRunner(store, kube, settings)
-validator = Validator(ValidationStore(settings.db_path), runner, settings)
-service = SubmissionService(store, runner, validator, settings)
+runner = GatedTaskRunner(store, kube, ValidationStore(settings.db_path), settings)
+service = SubmissionService(store, runner, settings)
+validations = ValidationService(runner.validator, settings)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     service.resume_unfinished()
+    validations.resume_unfinished()
     yield
+    validations.shutdown()
     service.shutdown()
 
 
 app = FastAPI(title="AQ Task Executor", lifespan=lifespan)
+app.state.validator = runner.validator
+app.state.validations = validations
+app.include_router(validation_router)
 
 
 def _get_submission(submission_id: str) -> Submission:
@@ -86,13 +89,18 @@ def submit_task(
 
     Optional form fields: `n_attempts` (parallel agent runs), `agent`
     (terminus-1, or oracle/nop for infrastructure checks), and `validation`
-    (none, static: reject on static errors, full: run oracle/nop checks before
-    any agent and fail the submission if they find errors).
+    (none; static: reject on static errors; full: also run oracle/nop checks
+    before any agent and fail the submission if they find errors).
     """
+    archive = file.file.read()
     try:
-        submission = service.submit(file.file.read(), n_attempts, agent, validation)
-    except SubmissionRejected as e:
+        gate = validations.check_gate(archive, validation)
+        submission = service.submit(archive, n_attempts, agent, validations.pending_gate_id(gate))
+        validations.mark_gating(submission)
+    except ValidationRejected as e:
         raise HTTPException(status_code=422, detail=e.report or str(e))
+    except SubmissionRejected as e:
+        raise HTTPException(status_code=422, detail=str(e))
     return {
         "submission_id": submission.id,
         "task_id": submission.task_id,
@@ -152,35 +160,6 @@ def get_results(submission_id: str):
             "attempts": [],
         }
     return {**submission.results, "error": submission.error}
-
-
-@app.post("/validate")
-def validate_task(
-    file: UploadFile = File(...),
-    mode: ValidationMode = Form(ValidationMode.FULL),
-    force: bool = Form(False),
-):
-    """
-    Check a task before spending agent compute on it.
-
-    `static` returns the report immediately. `full` (202) also builds the image,
-    probes it, and runs the oracle (twice) and nop agents as Jobs; poll
-    /validations/{id}. `force` runs the dynamic stages even if static checks fail.
-    """
-    try:
-        validation = service.validate(file.file.read(), mode, force)
-    except SubmissionRejected as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    status_code = 200 if validation.status.is_terminal else 202
-    return JSONResponse(status_code=status_code, content=jsonable_encoder(validation.report()))
-
-
-@app.get("/validations/{validation_id}")
-def get_validation(validation_id: str):
-    try:
-        return validator.get(validation_id).report()
-    except ValidationNotFound:
-        raise HTTPException(status_code=404, detail=f"validation {validation_id} not found")
 
 
 @app.get("/health")

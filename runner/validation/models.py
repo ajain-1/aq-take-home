@@ -46,6 +46,7 @@ class Validation(BaseModel):
     stages_run: list[Stage] = []
     oracle_submission_id: str | None = None
     nop_submission_id: str | None = None
+    gates_submission_id: str | None = None
     note: str | None = None
     error: str | None = None
     created_at: datetime = Field(default_factory=utcnow)

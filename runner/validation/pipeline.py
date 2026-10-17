@@ -30,6 +30,15 @@ class Validator:
         self._runner = runner
         self._settings = settings
 
+    def get(self, validation_id: str) -> Validation:
+        return self._store.get(validation_id)
+
+    def list_unfinished(self) -> list[Validation]:
+        return self._store.list_unfinished()
+
+    def mark_gating(self, validation_id: str, submission_id: str) -> None:
+        self._store.update(validation_id, lambda v: setattr(v, "gates_submission_id", submission_id))
+
     def root(self, validation_id: str) -> Path:
         return self._settings.data_dir / "validations" / validation_id
 
