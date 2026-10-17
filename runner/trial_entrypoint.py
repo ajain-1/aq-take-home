@@ -1,6 +1,6 @@
 """Runs one agent attempt inside a Kubernetes Job pod.
 
-The attempt index comes from the Indexed Job (JOB_COMPLETION_INDEX). A retried pod
+The attempt index is the wave's offset plus the Indexed Job's JOB_COMPLETION_INDEX. A retried pod
 starts from a clean slate: leftover task containers and partial output from the
 previous try are removed before `tb run` starts.
 """
@@ -64,7 +64,7 @@ def tb_command(submission_id: str, attempt: str, attempt_dir: Path) -> list[str]
 
 def main() -> int:
     submission_id = os.environ["AQ_SUBMISSION_ID"]
-    attempt = os.environ["JOB_COMPLETION_INDEX"]
+    attempt = str(int(os.environ.get("AQ_ATTEMPT_OFFSET", "0")) + int(os.environ["JOB_COMPLETION_INDEX"]))
     os.environ["AQ_ATTEMPT"] = attempt
     labels = {"aq.submission": submission_id, "aq.attempt": attempt}
 

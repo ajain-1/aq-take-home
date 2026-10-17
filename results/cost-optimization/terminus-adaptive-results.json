@@ -1,0 +1,286 @@
+{
+  "submission_id": "29a78788bb9e",
+  "task_id": "csv-to-json-cli-fix",
+  "agent": "terminus-1",
+  "model": "openrouter/anthropic/claude-opus-4.5",
+  "passed": true,
+  "passed_tests": 5,
+  "total_tests": 5,
+  "summary": {
+    "n_attempts": 5,
+    "completed_attempts": 5,
+    "errored_attempts": 0,
+    "resolved_attempts": 5,
+    "pass_rate": 1.0
+  },
+  "tests": [
+    {
+      "name": "test_commas_records_as_objects",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_default_delimiter_is_comma",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_utf8_stdout_encoding",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_semicolons_with_env_delim",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_pretty_flag_changes_format_only",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    }
+  ],
+  "learnability": {
+    "strategy": "adaptive",
+    "confidence": 0.9,
+    "target_runs": 10,
+    "classification": "too_easy",
+    "passing_runs": 5,
+    "failing_runs": 0,
+    "attempts_used": 5,
+    "tokens": {
+      "input": 139551,
+      "output": 8777
+    },
+    "estimated_cost_usd": 0.9172,
+    "estimated_savings_vs_target": {
+      "attempts": 5,
+      "input_tokens": 139551,
+      "output_tokens": 8777,
+      "cost_usd": 0.9172
+    }
+  },
+  "started_at": "2026-10-17T02:19:28.614107+00:00",
+  "finished_at": "2026-10-17T02:22:37.357217+00:00",
+  "execution_time_sec": 188.74,
+  "waves": [
+    {
+      "index": 0,
+      "offset": 0,
+      "size": 4
+    },
+    {
+      "index": 1,
+      "offset": 4,
+      "size": 1
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 0,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_commas_records_as_objects",
+          "status": "passed"
+        },
+        {
+          "name": "test_default_delimiter_is_comma",
+          "status": "passed"
+        },
+        {
+          "name": "test_utf8_stdout_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_semicolons_with_env_delim",
+          "status": "passed"
+        },
+        {
+          "name": "test_pretty_flag_changes_format_only",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 5,
+      "total_tests": 5,
+      "started_at": "2026-10-17T02:19:36.374864+00:00",
+      "finished_at": "2026-10-17T02:21:04.916883+00:00",
+      "duration_sec": 88.54,
+      "agent_duration_sec": 56.16,
+      "test_duration_sec": 11.31,
+      "input_tokens": 58421,
+      "output_tokens": 2237,
+      "artifacts_dir": "submissions/29a78788bb9e/runs/attempt-0/29a78788bb9e-attempt-0/csv-to-json-cli-fix/csv-to-json-cli-fix.1-of-1.29a78788bb9e-attempt-0",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 5 items\n\n../tests/test_outputs.py .....                                                                                                                           [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_commas_records_as_objects\nPASSED ../tests/test_outputs.py::test_default_delimiter_is_comma\nPASSED ../tests/test_outputs.py::test_utf8_stdout_encoding\nPASSED ../tests/test_outputs.py::test_semicolons_with_env_delim\nPASSED ../tests/test_outputs.py::test_pretty_flag_changes_format_only\n====================================================================== 5 passed in 0.14s =======================================================================\nroot@187da59837d6:/app#"
+    },
+    {
+      "attempt": 1,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_commas_records_as_objects",
+          "status": "passed"
+        },
+        {
+          "name": "test_default_delimiter_is_comma",
+          "status": "passed"
+        },
+        {
+          "name": "test_utf8_stdout_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_semicolons_with_env_delim",
+          "status": "passed"
+        },
+        {
+          "name": "test_pretty_flag_changes_format_only",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 5,
+      "total_tests": 5,
+      "started_at": "2026-10-17T02:19:36.365451+00:00",
+      "finished_at": "2026-10-17T02:20:42.722167+00:00",
+      "duration_sec": 66.36,
+      "agent_duration_sec": 33.73,
+      "test_duration_sec": 11.86,
+      "input_tokens": 12479,
+      "output_tokens": 1400,
+      "artifacts_dir": "submissions/29a78788bb9e/runs/attempt-1/29a78788bb9e-attempt-1/csv-to-json-cli-fix/csv-to-json-cli-fix.1-of-1.29a78788bb9e-attempt-1",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 5 items\n\n../tests/test_outputs.py .....                                                                                                                           [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_commas_records_as_objects\nPASSED ../tests/test_outputs.py::test_default_delimiter_is_comma\nPASSED ../tests/test_outputs.py::test_utf8_stdout_encoding\nPASSED ../tests/test_outputs.py::test_semicolons_with_env_delim\nPASSED ../tests/test_outputs.py::test_pretty_flag_changes_format_only\n====================================================================== 5 passed in 0.15s =======================================================================\nroot@16f1ae8e6a40:/app#"
+    },
+    {
+      "attempt": 2,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_commas_records_as_objects",
+          "status": "passed"
+        },
+        {
+          "name": "test_default_delimiter_is_comma",
+          "status": "passed"
+        },
+        {
+          "name": "test_utf8_stdout_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_semicolons_with_env_delim",
+          "status": "passed"
+        },
+        {
+          "name": "test_pretty_flag_changes_format_only",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 5,
+      "total_tests": 5,
+      "started_at": "2026-10-17T02:19:36.327671+00:00",
+      "finished_at": "2026-10-17T02:20:38.801231+00:00",
+      "duration_sec": 62.47,
+      "agent_duration_sec": 28.96,
+      "test_duration_sec": 12.4,
+      "input_tokens": 12634,
+      "output_tokens": 1531,
+      "artifacts_dir": "submissions/29a78788bb9e/runs/attempt-2/29a78788bb9e-attempt-2/csv-to-json-cli-fix/csv-to-json-cli-fix.1-of-1.29a78788bb9e-attempt-2",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 5 items\n\n../tests/test_outputs.py .....                                                                                                                           [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_commas_records_as_objects\nPASSED ../tests/test_outputs.py::test_default_delimiter_is_comma\nPASSED ../tests/test_outputs.py::test_utf8_stdout_encoding\nPASSED ../tests/test_outputs.py::test_semicolons_with_env_delim\nPASSED ../tests/test_outputs.py::test_pretty_flag_changes_format_only\n====================================================================== 5 passed in 0.07s =======================================================================\nroot@8f6802b08601:/app#"
+    },
+    {
+      "attempt": 3,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_commas_records_as_objects",
+          "status": "passed"
+        },
+        {
+          "name": "test_default_delimiter_is_comma",
+          "status": "passed"
+        },
+        {
+          "name": "test_utf8_stdout_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_semicolons_with_env_delim",
+          "status": "passed"
+        },
+        {
+          "name": "test_pretty_flag_changes_format_only",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 5,
+      "total_tests": 5,
+      "started_at": "2026-10-17T02:19:36.317762+00:00",
+      "finished_at": "2026-10-17T02:21:00.552344+00:00",
+      "duration_sec": 84.23,
+      "agent_duration_sec": 46.54,
+      "test_duration_sec": 17.03,
+      "input_tokens": 35445,
+      "output_tokens": 1925,
+      "artifacts_dir": "submissions/29a78788bb9e/runs/attempt-3/29a78788bb9e-attempt-3/csv-to-json-cli-fix/csv-to-json-cli-fix.1-of-1.29a78788bb9e-attempt-3",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 5 items\n\n../tests/test_outputs.py .....                                                                                                                           [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_commas_records_as_objects\nPASSED ../tests/test_outputs.py::test_default_delimiter_is_comma\nPASSED ../tests/test_outputs.py::test_utf8_stdout_encoding\nPASSED ../tests/test_outputs.py::test_semicolons_with_env_delim\nPASSED ../tests/test_outputs.py::test_pretty_flag_changes_format_only\n====================================================================== 5 passed in 0.06s =======================================================================\nroot@060fa275fdb0:/app#"
+    },
+    {
+      "attempt": 4,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_commas_records_as_objects",
+          "status": "passed"
+        },
+        {
+          "name": "test_default_delimiter_is_comma",
+          "status": "passed"
+        },
+        {
+          "name": "test_utf8_stdout_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_semicolons_with_env_delim",
+          "status": "passed"
+        },
+        {
+          "name": "test_pretty_flag_changes_format_only",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 5,
+      "total_tests": 5,
+      "started_at": "2026-10-17T02:21:16.568908+00:00",
+      "finished_at": "2026-10-17T02:22:29.438236+00:00",
+      "duration_sec": 72.87,
+      "agent_duration_sec": 36.0,
+      "test_duration_sec": 18.29,
+      "input_tokens": 20572,
+      "output_tokens": 1684,
+      "artifacts_dir": "submissions/29a78788bb9e/runs/attempt-4/29a78788bb9e-attempt-4/csv-to-json-cli-fix/csv-to-json-cli-fix.1-of-1.29a78788bb9e-attempt-4",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 5 items\n\n../tests/test_outputs.py .....                                                                                                                           [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_commas_records_as_objects\nPASSED ../tests/test_outputs.py::test_default_delimiter_is_comma\nPASSED ../tests/test_outputs.py::test_utf8_stdout_encoding\nPASSED ../tests/test_outputs.py::test_semicolons_with_env_delim\nPASSED ../tests/test_outputs.py::test_pretty_flag_changes_format_only\n====================================================================== 5 passed in 0.05s =======================================================================\nroot@3c2b2a412554:/app#"
+    }
+  ],
+  "status": "completed"
+}
