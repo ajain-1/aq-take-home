@@ -1,6 +1,7 @@
 """Kubernetes Job management: one Indexed Job per submission, one index per attempt."""
 
 from dataclasses import dataclass, field
+from functools import cached_property
 from pathlib import Path
 
 from kubernetes import client, config
@@ -121,14 +122,27 @@ def build_job_manifest(
 
 
 class KubeClient:
+    """Loads cluster credentials on first use, so the API can start (and report the
+    cluster as unavailable) without a working kubeconfig."""
+
     def __init__(self, namespace: str):
+        self._namespace = namespace
+
+    @cached_property
+    def _api_client(self) -> client.ApiClient:
         try:
             config.load_incluster_config()
         except config.ConfigException:
             config.load_kube_config()
-        self._namespace = namespace
-        self._batch = client.BatchV1Api()
-        self._core = client.CoreV1Api()
+        return client.ApiClient()
+
+    @property
+    def _batch(self) -> client.BatchV1Api:
+        return client.BatchV1Api(self._api_client)
+
+    @property
+    def _core(self) -> client.CoreV1Api:
+        return client.CoreV1Api(self._api_client)
 
     def available(self) -> bool:
         try:
@@ -197,12 +211,9 @@ def _attempts_from_pods(pods: list, n_attempts: int) -> list[AttemptProgress]:
         if not tries:
             attempts.append(AttemptProgress(index=index))
             continue
-        latest = tries[-1]
-        state, reason = _pod_state(latest)
+        state, reason = _pod_state(tries[-1])
         attempts.append(
-            AttemptProgress(
-                index=index, state=state, pod=latest.metadata.name, retries=len(tries) - 1, reason=reason
-            )
+            AttemptProgress(index=index, state=state, pods=[pod.metadata.name for pod in tries], reason=reason)
         )
     return attempts
 
