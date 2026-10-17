@@ -168,6 +168,7 @@ function renderResults(r) {
       ["Resolved attempts", `${r.summary.resolved_attempts}/${r.summary.n_attempts}`],
       ["Pass rate", `${Math.round(r.summary.pass_rate * 100)}%`],
       ["Tests passing in every attempt", `${r.passed_tests}/${r.total_tests}`],
+      ["Tests not run", r.summary.tests_not_run_attempts ?? 0],
       ["Errored attempts", r.summary.errored_attempts],
       ["Execution time", fmtSec(r.execution_time_sec)],
     ]),
