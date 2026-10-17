@@ -9,12 +9,13 @@
   - `docker_ops.py`: builds the task image once per submission, layers `tmux`/`asciinema` on top (task images don't include them), builds the content-addressed Job pod image, and cleans up containers, networks, and images by label.
   - `k8s.py`: one Indexed Job per wave of attempts (a fixed-strategy submission is a single wave), one index per attempt. The manifest is derived from `task.yaml`; the module also reads per-attempt state from pods and syncs the LLM Secret.
   - `results.py`: turns terminal-bench trial output into per-attempt and aggregate results.
-  - `run_task.py`: the orchestrator (prepare → build → launch → wait → collect → cleanup).
-  - `store.py`: SQLite-backed submission state.
+  - `run_task.py`: the orchestrator (prepare → build → launch and wait for each wave → collect → cleanup).
+  - `store.py`: SQLite-backed state (a shared document store for submissions and validations).
   - `trial_entrypoint.py`: what each Job pod runs (`tb run` for a single attempt).
-- `POST /submit` validates the ZIP synchronously and returns 422 for a malformed task, then queues the submission. It accepts optional `n_attempts` and `agent` (`terminus-1` by default; `oracle`/`nop` for infrastructure checks).
+  - `paths.py` / `trajectory.py`: the one on-disk submission layout and the one agent-trajectory loader, shared by the runner, results, UI, insights and validation.
+- `POST /submit` validates the ZIP synchronously and returns 422 for a malformed task, then queues the submission. It accepts optional `n_attempts` and `agent` (`terminus-1` by default; `oracle`/`nop` for infrastructure checks), plus `strategy`/`confidence` (stretch goal B) and `validation` (stretch goal C).
 - `GET /status/{id}` returns status (`queued|running|completed|failed`), a fine-grained phase, timestamps, and per-attempt pod state, including retries and failure reasons.
-- `GET /results/{id}` returns aggregate counts, per-test pass counts across attempts, and for each attempt: per-test pass/fail, failure mode, timings, token usage, the extracted pytest output, and the artifact directory (agent episodes, asciinema recording, tmux panes, pod log).
+- `GET /results/{id}` returns aggregate counts, per-test pass counts across attempts, and for each attempt: per-test pass/fail, failure mode, infrastructure issues (e.g. task-container OOM), timings, token usage, the extracted pytest output, and the artifact directory (agent episodes, asciinema recording, tmux panes, pod logs).
 - Made the helper scripts run on macOS's bash 3.2 and BSD tools: replaced `head -n -1` and `declare -A`, and fixed `mktemp /tmp/task-XXXXXX.zip`, which BSD `mktemp` does not randomize (every run reused one literal file). `run_all.sh` no longer exits silently under `set -e` when a submit fails, and polling stops on 404.
 - Model routing: the README's `anthropic/claude-opus-4-5-20250514` is not an OpenRouter model ID. The executor uses `openrouter/anthropic/claude-opus-4.5` through LiteLLM (configurable with `AQ_MODEL`).
 
