@@ -1,5 +1,25 @@
 # Changelog
 
+## Summary
+- **Works end to end:** each submission runs as Kubernetes Jobs, with N parallel attempts and the task image built once per submission. All 6 tasks ran concurrently with `terminus-1` (`results/e2e-all-tasks/`). A real run is committed in `results/sample-run/`.
+- **Robustness:**
+  - durable state with restart recovery, per-attempt retries, queue-aware deadlines, OOM detection, fail-fast on unstartable pods, and guaranteed cleanup;
+  - 142 unit tests;
+  - 18 live failure scenarios (`tests/robustness/REPORT.md`).
+- **Task fixes:** five of the six tasks had bugs that made them unsolvable or mis-specified; all are fixed and verified with each task's own solution (`results/task-verification/`).
+- **Stretch goals, all built:**
+  - **A:** a task-centred UI;
+  - **B:** adaptive waves, exact, 22% fewer runs;
+  - **C:** a pre-submission validation pipeline that catches every original task bug but one;
+  - **D:** evidence-backed insights, where every claim is mechanically verified against the run logs.
+
+#### Order of work
+1. Restored the missing `terminal_bench` pieces, built the runner and API, and got all 6 tasks through K8s Jobs.
+2. Fixed the task bugs, then hardened the pipeline (Part 2) and fixed the issues from a first code review.
+3. Built stretch goals A–D in parallel and merged them.
+4. A second design review reconciled them: composed validation gate, one learnability rule, shared modules.
+5. Live robustness suite, queue-aware deadlines, a UI redesign, and N=10 runs on Opus 4.5 and GPT-4.1-mini as evidence for B and D.
+
 ## Part 1 + Part 2: Task executor on Kubernetes
 
 #### What I did
@@ -79,20 +99,30 @@ echo 'OPENROUTER_API_KEY=sk-or-...' > .env        # gitignored; synced to a K8s 
 python3.12 -m venv .venv && .venv/bin/pip install -r api/requirements.txt
 cd api && ../.venv/bin/uvicorn main:app --port 8000
 bash scripts/run_all.sh                           # API_URL=... to use another port
+
+.venv/bin/pip install -r requirements-dev.txt    # tests and lint
+.venv/bin/python -m pytest -q tests && .venv/bin/ruff check api runner tests
 ```
+The live robustness scenarios (`tests/robustness/live_scenarios.py`) need the cluster and a running API; see `tests/robustness/REPORT.md`.
 The first submission builds the Job pod image (a few minutes); later submissions reuse it. Per-submission artifacts live under `data/submissions/<id>/`.
 
 #### Known limitations
-- Docker builds are not interruptible, so a clean API shutdown waits for in-flight builds to finish.
+- **Isolation:** Job pods mount the host Docker socket, which is effectively root on the node. That's fine locally; production needs DinD/sysbox or a registry-backed runtime.
+- **Single node:** shared storage is a hostPath at the same path everywhere, a local stand-in for object storage, and it assumes one node.
+- **No authentication** on the API or the UI.
+- **Uninterruptible builds:** Docker builds can't be interrupted, so a clean API shutdown waits for in-flight builds.
+- **Task versions:** task aggregates in the UI group runs by task ID, so edited versions of a task are combined.
+- **Untested live:** the queue cap and an adaptive wave-1 crash are covered only by unit tests (see Robustness verification).
 
 #### Fixes from code reviews
-- **Resume:** never re-creates a Job once launched. Each wave's persisted `launched_at` makes a resumed run re-attach and collect instead of re-running paid attempts, even if the Job was garbage-collected.
-- **API startup:** the API is wired in the FastAPI lifespan (`api/context.py`), and the cluster client connects lazily, so a missing kubeconfig shows up as `k8s_available: false` on `/health` instead of a crash at startup. The `runner`/`api` loggers get their own handler, because uvicorn owns the root logger.
-- **Settings and agents:** settings are read from the environment when the API starts (`Settings.from_env()`), not at import, and the agent catalog lives in one place (`runner/config.py`).
-- **Pod mounts:** pods mount only their own submission directory, not the whole data directory (which holds the state database and other submissions).
-- **Store and uploads:** `store.update` holds its lock across the read and the write, and uploads are read only up to the size limit.
-- **Retried pods:** logs from every try of an attempt are kept (`pod-try-N.log`). The pod entrypoint forwards SIGTERM to `tb`.
-- **Linting:** `ruff.toml` added, and the code is clean under it.
+- **First review (core executor):**
+  - a resumed submission never re-creates a launched Job;
+  - the API is wired at startup with a lazily connected cluster client (`/health` reports a missing kubeconfig instead of crashing);
+  - settings are read at startup and the agent catalog lives in one place;
+  - pods mount only their own submission directory;
+  - store updates are atomic and uploads are read only up to the size limit;
+  - logs from every retried pod are kept;
+  - `ruff.toml` added, and the code is clean under it.
 - **Second review (after the stretch goals were merged):**
   - **Validation gate:** composed instead of inherited. `TaskRunner` no longer knows about validations. `SubmissionService` runs the gate (validate, then run or fail), and `/submit` with a gate is one call that checks every parameter before creating anything. A gating validation is linked to its submission from the moment it is created, and one whose static checks fail finishes immediately, so neither can be orphaned. Oracle/nop runs of an unfinished validation are resumed only by that validation, never twice.
   - **Shared code:** one `DocumentStore` base for submissions and validations (atomic updates in both), one submission layout (`runner/paths.py`) and one trajectory loader (`runner/trajectory.py`) shared by the runner, results, UI, insights and validation.
@@ -115,7 +145,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
   - The same submission could execute in two threads.
 
 #### End-to-end verification
-- All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`, one attempt each. Tests passed per task: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards. Evidence: each submission's `/results` JSON and the script output are in `results/e2e-all-tasks/`. This ran on the Part 1/2 code; later refactors were re-verified with oracle runs, the live scenarios, and the N=10 runs under stretch goal D.
+- All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`, one attempt each. Tests passed per task: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7. That failure was not infrastructure: the task's instruction under-specified the report format, which stretch goal D later proved and the task fix resolved (see the tasks section). No Jobs or task containers were left afterwards. Evidence: each submission's `/results` JSON and the script output are in `results/e2e-all-tasks/`. This ran on the Part 1/2 code; later refactors were re-verified with oracle runs, the live scenarios, and the N=10 runs under stretch goal D.
 - The committed real run is in `results/sample-run/` (csv-to-json-cli-fix: results, agent episodes, asciinema recording, tmux panes).
 - Restart recovery: a submission was interrupted by an API restart while its attempt was running, then resumed and completed. Evidence: `results/restart-recovery/` holds the API's interrupted and resuming log lines and the final results.
 
@@ -198,7 +228,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - **Exact by default.** "Learnable" is defined on 10 actual runs, so the default never changes a label; the probabilistic mode is opt-in and its error rate is published alongside its savings.
 - **Errored attempts are replaced.** Attempts with no test results (infrastructure errors) don't count as passes or failures. They are replaced, up to 3 extra launches (`AQ_ADAPTIVE_EXTRA_LAUNCHES`), after which the class can come back `undetermined`.
 - **Configurable caps and prices.** `AQ_ADAPTIVE_MAX_WAVE` caps attempts in flight. Prices default to Opus 4.5 list prices (`AQ_PRICE_*_PER_MTOK`). Token counts are terminal-bench's tokenizer estimates and ignore prompt caching, so dollar figures are approximate.
-- **Not done:** screening with a cheaper model first. It is not exact against a SOTA-defined label, and the measured savings above come from attempts avoided, not cheaper ones.
+- **Not done:** screening with a cheaper model first. It is not exact against a SOTA-defined label: the same fixed `log-rotation-analyzer` task resolved 10/10 on Opus 4.5 but 2/10 on GPT-4.1-mini (`results/insights/`). The measured savings above come from attempts avoided, not cheaper ones.
 
 ## Stretch goal C: Task quality checks
 
@@ -282,7 +312,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
 
 #### How trust is enforced
 - Every finding carries evidence IDs. Each item is either a verbatim quote, with its source path relative to the submission and, where relevant, line, attempt and episode, or an absence claim scoped to exactly what it is about (`task.yaml#instruction`).
-- `evidence.verify` re-reads the artifacts independently of the parsers that produced the claim. JSON is compared by its decoded string values, so keystrokes are matched without escaping artefacts.
+- `evidence.verify` re-reads the artifacts independently of the parsers that produced the claim. JSON is compared by its decoded string values, so keystrokes are matched without escaping artifacts.
 - A finding is published only if all its evidence verifies; otherwise it is moved to `rejected_insights` and listed as withheld. During development this caught a real false positive: an absence check against all of `task.yaml` matched `difficulty: medium`, which led to scoping absence checks to the instruction field.
 - The optional LLM narrative (`AQ_INSIGHTS_MODEL`, default `openai/gpt-4.1-mini` via OpenRouter, opt-in with `?narrative=true`) only sees verified findings. Each sentence must cite IDs from them, and every number in a sentence must appear in the cited material; failing sentences are dropped and counted. The report says that the findings, not the narrative, are the source of truth.
 - Limitations are stated in every report: rule-based classification, lexical matching, and wide intervals at small N.
