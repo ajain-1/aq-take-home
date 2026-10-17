@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The Flask server failed to start because port 3000 is still in use. There seems to be a stopped process holding the port. Let me bring the stopped process to the foreground and kill it, then restart properly.",
+    "explanation": "Kill all stopped processes and restart the server properly by first checking what's using the port.",
+    "commands": [
+        {
+            "keystrokes": "jobs\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        }
+    ],
+    "is_task_complete": false
+}

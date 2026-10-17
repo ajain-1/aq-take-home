@@ -1,0 +1,40 @@
+        return jsonify(user)
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3000, debug=False)
+root@dcf6149afda3:/app# cat data/users.json; tmux wait -S done
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "role": "user"
+  },
+  {
+    "id": 3,
+    "name": "Bob Johnson",
+    "email": "bob@example.com",
+    "role": "user"
+  },
+  {
+    "id": 4,
+    "name": "Alice Brown",
+    "email": "alice@example.com",
+    "role": "moderator"
+  }
+]
+root@dcf6149afda3:/app# sed -i 's/debug=False/debug=True/' app.py && cat app.py | tail -5; tmux wait -S done
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3000, debug=True)
+root@dcf6149afda3:/app#

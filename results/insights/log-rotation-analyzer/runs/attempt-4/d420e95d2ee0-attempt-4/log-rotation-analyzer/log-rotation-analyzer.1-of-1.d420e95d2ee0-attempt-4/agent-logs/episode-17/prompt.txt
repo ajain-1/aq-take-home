@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='python3 -c "\nimport json, os, csv\nfrom datetime import datetime\n\nwith open(\'/app/log_metadata.json\') as f:\n    meta = json.load(f)\n\nlog_info = {l[\'path\']: l for l in meta[\'logs\']}\nlogs = []\nfor fn in os.listdir(\'/var/log/samples\'):\n    fp = \'/var/log/samples/\' + fn\n    if os.path.isfile(fp):\n        st = os.stat(fp)\n        logs.append({\'name\': fn, \'path\': fp, \'size_mb\': st.st_size/(1024*1024), \'size_bytes\': st.st_size})\n\nconfigs = set(os.listdir(\'/etc/logrotate.d/samples\'))\ncsv_rows = []\nfor l in logs:\n    if \'.old\' in l[\'name\'] or \'.gz\' in l[\'name\']: continue\n    info = log_info.get(l[\'path\'], {})\n    growth = info.get(\'growth_rate_mb_per_day\', 0)\n    base = l[\'name\'].replace(\'.log\', \'\')\n    days = int(l[\'size_mb\']/growth) if growth > 0 else 0\n    sched = \'daily\' if growth > 10 else \'weekly\'\n    savings = l[\'size_mb\'] * 0.5\n    csv_rows.append([l[\'path\'], round(l[\'size_mb\'],2), days, sched, round(savings,2)])\n\nwith open(\'/app/rotation_summary.csv\', \'w\', newline=\'\') as f:\n    w = csv.writer(f)\n    w.writerow([\'log_path\',\'current_size_mb\',\'days_since_rotation\',\'recommended_schedule\',\'estimated_savings_mb\'])\n    for r in sorted(csv_rows, key=lambda x: -x[1]):\n        w.writerow(r)\nprint(\'CSV created\')\n"\n' is_blocking=True timeout_sec=15.0
+
+The previous command timed out after 15.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+> PY; tmux wait -S done
+> ; tmux wait -S done
+> ^C
+root@538a382ae791:/app# rm -f /app/analyzer.py 2>/dev/null; echo '#!/usr/bin/env python3' > /app/analyzer.py; tmux wait -S done
+root@538a382ae791:/app# python3 -c "
+> import json, os, csv
+> from datetime import datetime
+>
+> with open('/app/log_metadata.json') as f:
+>     meta = json.load(f)
+>
+> log_info = {l['path']: l for l in meta['logs']}
+> logs = []
+> for fn in os.listdir('/var/log/samples'):
+>     fp = '/var/log/samples/' + fn
+>     if os.path.isfile(fp):
+>         st = os.stat(fp)
+>         logs.append({'name': fn, 'path': fp, 'size_mb': st.st_size/(1024*1024), 'size_bytes': st.st_size})
+>
+> configs = set(os.listdir('/etc/logrotate.d/samples'))
+> csv_rows = []
+> for l in logs:
+>     if '.old' in l['name'] or '.gz' in l['name']: continue
+>     info = log_info.get(l['path'], {})
+>     growth = info.get('growth_rate_mb_per_day', 0)
+>     base = l['name'].replace('.log', '')
+>     days = int(l['size_mb']/growth) if growth > 0 else 0
+>     sched = 'daily' if growth > 10 else 'weekly'
+>     savings = l['size_mb'] * 0.5
+>     csv_rows.append([l['path'], round(l['size_mb'],2), days, sched, round(savings,2)])
+>
+> with open('/app/rotation_summary.csv', 'w', newline='') as f:
+>     w = csv.writer(f)
+>     w.writerow(['log_path','current_size_mb','days_since_rotation','recommended_schedule','estimated_savings_mb'])
+>     for r in sorted(csv_rows, key=lambda x: -x[1]):
+>         w.writerow(r)
+> print('CSV created')
+> "; tmux wait -S done
+CSV created
+root@538a382ae791:/app#
+

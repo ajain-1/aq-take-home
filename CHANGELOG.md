@@ -123,3 +123,34 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - Polling rather than server-sent events or WebSockets: simpler and good enough at a 2.5s interval. SSE would cut latency and load.
 - No asciinema playback yet. The `.cast` recordings are already saved per trial, and embedding asciinema-player would let you replay the terminal.
 - No auth. The UI exposes everything the API does, which is fine for a local tool but not for a shared deployment.
+
+## Stretch goal D: Beyond pass/fail
+
+#### What I did
+- Added `runner/insights/`, which turns the N attempts of a submission into findings a customer can act on. It is served by `GET /insights/{id}` (`?format=markdown`, `?refresh=true`, `?narrative=false`) and written to `insights.json` / `insights.md` in the submission directory. `python -m runner.insights <dir>` regenerates and re-verifies a report offline.
+- What it reports:
+  - **Outcome with honest uncertainty.** Resolved k/N with a 95% Wilson interval, and a learnability verdict. At N=10 it applies the exact 2–7-of-10 rule; below that it commits to "likely learnable / too easy / too hard" only when the whole interval supports it, and otherwise says `insufficient_evidence`.
+  - **Per-test pass rates**, each with its own interval.
+  - **Per-attempt failure taxonomy**: `infrastructure_issue` (e.g. task-container OOM, cited from the pod's `task-container-events.jsonl`), `infrastructure_error`, `tests_not_run`, `agent_timeout`, `test_timeout`, `llm_error`, `tests_unparseable`, `stopped_without_completing`, `declared_done_with_failing_tests`, and `declared_done_despite_failure_warning` (terminus showed the agent its "TESTS FAILED! Are you sure" prompt and it declared done anyway).
+  - **Consistent failures**: a test that fails in every completed attempt, flagged as systematic when the assertion message is identical each time.
+  - **Hidden requirements (task-quality signal).** The test file is parsed with `ast` to find the literal strings each failing test checks for, skipping assertion messages, docstrings, f-strings, dict keys and call arguments, and taking the literal prefix of regexes. A literal counts as hidden if it is absent from the instruction and was never shown to an agent by the environment before that agent typed it. The agent's own echoed output doesn't count as discovery.
+  - **Divergence**: for tests that pass in some attempts and fail in others, a literal that every passing attempt typed and no failing attempt did.
+- Evidence committed in `results/insights/`:
+  - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files.
+  - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and still gives `insufficient_evidence` for learnability (interval 57–100%) rather than declaring it too easy.
+  - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `insufficient_evidence` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
+
+#### How trust is enforced
+- Every finding carries evidence IDs. Each item is either a verbatim quote, with its source path relative to the submission and, where relevant, line, attempt and episode, or an absence claim scoped to exactly what it is about (`task.yaml#instruction`).
+- `evidence.verify` re-reads the artifacts independently of the parsers that produced the claim. JSON is compared by its decoded string values, so keystrokes are matched without escaping artefacts.
+- A finding is published only if all its evidence verifies; otherwise it is moved to `rejected_insights` and listed as withheld. During development this caught a real false positive: an absence check against all of `task.yaml` matched `difficulty: medium`, which led to scoping absence checks to the instruction field.
+- The optional LLM narrative (`openai/gpt-4.1-mini` via OpenRouter) only sees verified findings. Each sentence must cite IDs from them, and every number in a sentence must appear in the cited material; failing sentences are dropped and counted. The report says that the findings, not the narrative, are the source of truth.
+- Limitations are stated in every report: rule-based classification, lexical matching, and wide intervals at small N.
+
+#### Design decisions
+- **Deterministic first.** Every finding comes from rules over recorded artifacts; the LLM is used only for an optional, citation-checked summary.
+- **Self-contained and portable.** The analysis lives in its own package, the endpoint in its own router (`api/insights_routes.py`), and the only executor change is wiring. Paths are relative to the submission directory, so a copied evidence directory re-verifies anywhere.
+
+#### What I'd do next
+- Cluster failing trajectories by their first divergent command, and diff the files each attempt finally produced against what the tests read.
+- Use the pytest assertion introspection (the `E` lines) to explain *how* an output missed (e.g. which section header was absent), not just that it did.

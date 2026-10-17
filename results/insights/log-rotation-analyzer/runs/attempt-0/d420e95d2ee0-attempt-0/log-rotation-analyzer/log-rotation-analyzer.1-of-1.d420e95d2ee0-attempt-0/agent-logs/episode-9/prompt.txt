@@ -1,0 +1,40 @@
+>             f.write("    postrotate\n")
+>             f.write("        # Signal application to reopen log files if needed\n")
+>             if a['application'] == 'nginx':
+>                 f.write("        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true\n")
+>             elif a['application'] == 'systemd':
+>                 f.write("        /usr/bin/systemctl kill -s HUP rsyslog.service 2>/dev/null || true\n")
+>             else:
+>                 f.write("        # Add application-specific reload command here\n")
+>             f.write("    endscript\n")
+>
+>         f.write("}\n\n")
+>
+> print("Generated: optimized_logrotate.conf")
+>
+> # Generate rotation_summary.csv
+> with open('/app/rotation_summary.csv', 'w', newline='') as f:
+>     writer = csv.writer(f)
+>     writer.writerow(['log_path', 'current_size_mb', 'days_since_rotation', 'recommended_schedule', 'estimated_savings_mb'])
+>
+>     for a in analysis:
+>         days = a['days_since_rotation'] if isinstance(a['days_since_rotation'], int) else 0
+>         schedule = f"{a['recommended_schedule']}, rotate {a['recommended_rotate']}"
+>         writer.writerow([
+>             a['path'],
+>             f"{a['current_size_mb']:.4f}",
+>             days,
+>             schedule,
+>             f"{a['estimated_savings_mb']:.4f}"
+>         ])
+>
+> print("Generated: rotation_summary.csv")
+> print("\nAnalysis complete!")
+> EOF
+root@6a3736b1a6ac:/app# python3 /app/analyze_logs.py; tmux wait -S done
+Generated: analysis_report.txt
+Generated: optimized_logrotate.conf
+Generated: rotation_summary.csv
+
+Analysis complete!
+root@6a3736b1a6ac:/app#

@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The job keeps getting stopped. This might be a tty issue with the debug mode. Let me try running the server with nohup or using a subshell approach to keep it running.",
+    "explanation": "Start the server using nohup to keep it running in the background.",
+    "commands": [
+        {
+            "keystrokes": "pkill -f python3 2>/dev/null; nohup python3 app.py > /tmp/flask.log 2>&1 &\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

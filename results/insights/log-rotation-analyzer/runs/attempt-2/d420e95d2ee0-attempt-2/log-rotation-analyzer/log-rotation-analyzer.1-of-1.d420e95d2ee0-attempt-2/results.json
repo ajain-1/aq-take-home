@@ -1,0 +1,26 @@
+{
+    "id": "7f36f561-c096-4738-aec0-b51090111e4c",
+    "trial_name": "log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2",
+    "task_id": "log-rotation-analyzer",
+    "instruction": "You are a system administrator tasked with analyzing log rotation patterns across multiple servers.\nYour organization has been experiencing disk space issues and inconsistent log management practices.\nYour task is to create a log rotation analyzer that:\n\nAnalyzes existing log files in /var/log/samples/ to understand current rotation patterns\nIdentifies problematic patterns such as:\n\nFiles growing too large without rotation\nInconsistent rotation schedules\nMissing compression on old logs\nRetention periods that are too long/short\n\n\nGenerates optimization recommendations in a structured report\nCreates an optimized logrotate configuration file\n\nAvailable Data\nYou have access to:\n\nSample log files with various rotation states in /var/log/samples/\nCurrent logrotate configurations in /etc/logrotate.d/samples/\nSystem information in /proc/meminfo and /proc/diskstats\nA log file metadata database in log_metadata.json\n\nRequirements\nYour solution should create the following files in /app (the working directory):\n\nanalysis_report.txt - A human-readable report containing:\n\nSummary of current log rotation status\nIdentified issues and their severity\nDisk space impact analysis\nRecommendations for improvement\n\n\noptimized_logrotate.conf - An optimized logrotate configuration that:\n\nImplements proper rotation schedules\nIncludes appropriate compression settings\nSets reasonable retention policies\nHandles edge cases (empty files, rapid growth, etc.)\n\n\nrotation_summary.csv - A CSV file with columns:\n\nlog_path, current_size_mb, days_since_rotation, recommended_schedule, estimated_savings_mb\n\nSuccess Criteria\nYour analyzer should handle various log types (application logs, system logs, access logs) and\nprovide actionable recommendations that could realistically reduce disk usage by at least 20%\nwhile maintaining appropriate log retention for debugging and compliance needs.",
+    "is_resolved": false,
+    "failure_mode": "unset",
+    "parser_results": {
+        "test_analysis_report_exists": "passed",
+        "test_rotation_summary_csv": "passed",
+        "test_optimized_logrotate_config": "passed",
+        "test_analysis_report_content": "failed",
+        "test_savings_calculation": "failed",
+        "test_issue_identification": "failed",
+        "test_recommendations_quality": "failed"
+    },
+    "recording_path": "d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/sessions/agent.cast",
+    "total_input_tokens": 290502,
+    "total_output_tokens": 11695,
+    "trial_started_at": "2026-10-17T02:09:37.357746+00:00",
+    "trial_ended_at": "2026-10-17T02:14:39.051605+00:00",
+    "agent_started_at": "2026-10-17T02:09:41.622644+00:00",
+    "agent_ended_at": "2026-10-17T02:14:09.881702+00:00",
+    "test_started_at": "2026-10-17T02:14:13.288879+00:00",
+    "test_ended_at": "2026-10-17T02:14:28.261077+00:00"
+}

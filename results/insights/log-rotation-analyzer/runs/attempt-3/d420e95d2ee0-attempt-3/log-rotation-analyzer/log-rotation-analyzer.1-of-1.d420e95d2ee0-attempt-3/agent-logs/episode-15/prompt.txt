@@ -1,0 +1,40 @@
+  * Some critical logs lack rotation configuration
+
+CRITICAL ISSUES REQUIRING IMMEDIATE ATTENTION
+----------------------------------------
+
+  Log: /var/log/samples/error.log
+  Type: error | Importance: critical
+  Application: web-server
+    - CRITICAL: No rotation configuration exists
+
+  Log: /var/log/samples/debug.log
+  Type: debug | Importance: low
+  Application: web-server
+    - CRITICAL: No rotation configuration exists
+
+HIGH PRIORITY ISSUES
+----------------------------------------
+
+  Log: /var/log/samples/app.log
+  Type: application | Importance: high
+    - HIGH: Retention 28 days < required 30 days
+
+  Log: /var/log/samples/system.log
+  Type: system | Importance: critical
+    - HIGH: Retention 28 days < required 90 days
+
+  Log: /var/log/samples/access.log
+  Type: access | Importance: medium
+    - HIGH: Monthly rotation too infrequent for 45.7MB/day growth
+    - LOW: Retention 60 days excessive (required: 14)
+
+DETAILED LOG ANALYSIS
+================================================================================
+
+/var/log/samples/error.log
+------------------------------------------------------------
+  Type: error
+  Importance: CRITICAL
+  Application: web-server
+root@ac550e797a3d:/app#

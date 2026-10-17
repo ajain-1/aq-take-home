@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='head -50 /app/analysis_report.txt\n' is_blocking=True timeout_sec=10.0
+
+The previous command timed out after 10.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+Estimated reduction: 51.8%
+
+Log partition usage: 78%
+Available disk space: 50 GB
+Compliance requirements: PCI-DSS, SOX
+
+----------------------------------------------------------------------
+CURRENT LOG STATUS
+----------------------------------------------------------------------
+  app.log                       0.25 MB  Type: application Importance: high
+  error.log                     0.23 MB  Type: error      Importance: critical
+  access.log                    0.15 MB  Type: access     Importance: medium
+  debug.log                     0.05 MB  Type: debug      Importance: low
+  access.log.old                0.04 MB  Type: rotated    Importance: -
+  system.log.1.gz               0.00 MB  Type: rotated    Importance: -
+  system.log                    0.00 MB  Type: system     Importance: critical
+
+----------------------------------------------------------------------
+KNOWN ISSUES FROM SYSTEM
+----------------------------------------------------------------------
+  * High disk usage on log partition
+  * Inconsistent rotation schedules
+  * Missing compression on some logs
+  * Some critical logs lack rotation configuration
+
+----------------------------------------------------------------------
+IDENTIFIED ISSUES
+----------------------------------------------------------------------
+
+HIGH SEVERITY (4 issues):
+  [HIGH] error.log: File large - rotation needed
+  [HIGH] error.log: No logrotate configuration
+  [HIGH] debug.log: No logrotate configuration
+  [HIGH] app.log: File large - rotation needed
+
+MEDIUM SEVERITY (1 issues):
+  [MEDIUM] access.log.old: Rotated log not compressed
+
+----------------------------------------------------------------------
+root@538a382ae791:/app#
+

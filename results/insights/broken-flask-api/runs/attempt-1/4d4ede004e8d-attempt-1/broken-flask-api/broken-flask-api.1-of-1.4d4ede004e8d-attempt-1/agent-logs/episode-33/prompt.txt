@@ -1,0 +1,40 @@
+    "email": "jane@example.com",
+    "role": "user"
+  },
+  {
+    "id": 3,
+    "name": "Bob Johnson",
+    "email": "bob@example.com",
+    "role": "user"
+  },
+  {
+    "id": 4,
+    "name": "Alice Brown",
+    "email": "alice@example.com",
+    "role": "moderator"
+  }
+]
+root@dcf6149afda3:/app# sed -i 's/debug=False/debug=True/' app.py && cat app.py | tail -5; tmux wait -S done
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3000, debug=True)
+root@dcf6149afda3:/app# pkill -f 'python3 app.py' 2>/dev/null; sleep 1; python3 app.py &
+Terminated
+[3]+  Exit 143                sed -i 's/debug=True/debug=False/' app.py && python3 app.py
+[1] 974
+root@dcf6149afda3:/app#  * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://172.24.0.2:3000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 141-897-828
+sleep 3; tmux wait -S done
+
+[1]+  Stopped                 python3 app.py
+root@dcf6149afda3:/app#

@@ -1,0 +1,186 @@
+{
+  "task_id": "broken-flask-api",
+  "outcome": {
+    "resolved_attempts": 5,
+    "n_attempts": 5,
+    "learnability": {
+      "verdict": "insufficient_evidence",
+      "basis": "95% interval 57%-100% overlaps the 20-70% boundary; more runs needed",
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ],
+      "n": 5
+    }
+  },
+  "tests": [
+    {
+      "name": "test_app_file_exists",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_data_file_valid_json",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_requirements_file_exists",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_server_handles_multiple_requests",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_server_is_running",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_user_by_id_endpoint_invalid_id",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_user_by_id_endpoint_valid_id",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_users_endpoint_has_correct_structure",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_users_endpoint_returns_json",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 0,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 26,
+      "declared_complete": true,
+      "duration_sec": 194.99,
+      "input_tokens": 311653,
+      "output_tokens": 4959
+    },
+    {
+      "attempt": 1,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 47,
+      "declared_complete": true,
+      "duration_sec": 259.64,
+      "input_tokens": 872000,
+      "output_tokens": 5609
+    },
+    {
+      "attempt": 2,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 36,
+      "declared_complete": true,
+      "duration_sec": 206.89,
+      "input_tokens": 506526,
+      "output_tokens": 5010
+    },
+    {
+      "attempt": 3,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 16,
+      "declared_complete": true,
+      "duration_sec": 109.95,
+      "input_tokens": 120815,
+      "output_tokens": 3127
+    },
+    {
+      "attempt": 4,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 28,
+      "declared_complete": true,
+      "duration_sec": 162.51,
+      "input_tokens": 313796,
+      "output_tokens": 3604
+    }
+  ],
+  "attempt_stats": {
+    "resolved": {
+      "n": 5,
+      "mean_episodes": 30.6,
+      "mean_duration_sec": 186.8,
+      "mean_input_tokens": 424958
+    },
+    "unresolved": {
+      "n": 0
+    },
+    "note": "Descriptive only; differences at this sample size are not statistically meaningful."
+  },
+  "insights": [],
+  "rejected_insights": [],
+  "evidence": {},
+  "limitations": [
+    "Pass-rate intervals are 95% Wilson intervals; with few attempts they are wide and verdicts say so.",
+    "Attempt classification is rule-based on recorded artifacts; it does not infer the agent's intent.",
+    "Hidden-requirement detection is lexical: a test literal counts as stated only if it appears (case-insensitively) in the instruction, and as discoverable only if the environment showed it to an agent before that agent typed it; tests that accept any of several alternatives may be over-reported."
+  ]
+}

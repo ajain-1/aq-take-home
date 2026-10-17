@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='python3 << \'PY\'\nimport json, os, csv\nfrom datetime import datetime\n\n# Load data\nwith open(\'/app/log_metadata.json\') as f:\n    meta = json.load(f)\n\nlog_info = {l[\'path\']: l for l in meta[\'logs\']}\nsys_info = meta[\'system_info\']\n\n# Scan log files\nlogs = []\nfor fn in os.listdir(\'/var/log/samples\'):\n    fp = f\'/var/log/samples/{fn}\'\n    if os.path.isfile(fp):\n        st = os.stat(fp)\n        logs.append({\'name\': fn, \'path\': fp, \'size_mb\': st.st_size/(1024*1024), \'size_bytes\': st.st_size})\n\n# Existing configs\nconfigs = set(os.listdir(\'/etc/logrotate.d/samples\'))\n\n# Analysis\nissues = []\ncsv_rows = []\ntotal_size = sum(l[\'size_bytes\'] for l in logs)\ntotal_savings = 0\n\nfor l in logs:\n    if \'.old\' in l[\'name\'] or \'.gz\' in l[\'name\']:\n        continue\n    info = log_info.get(l[\'path\'], {})\n    growth = info.get(\'growth_rate_mb_per_day\', 0)\n    base = l[\'name\'].replace(\'.log\', \'\')\n    days = int(l[\'size_mb\']/growth) if growth > 0 else 0\n    sched = \'daily\' if growth > 10 else \'weekly\'\n    savings = l[\'size_mb\'] * 0.5\n    total_savings += savings\n    \n    if l[\'size_mb\'] > 200:\n        issues.append((\'HIGH\', l[\'name\'], f\'File critically large ({l["size_mb"]:.1f}MB)\'))\n    elif l[\'size_mb\'] > 100:\n        issues.append((\'HIGH\', l[\'name\'], f\'File too large ({l["size_mb"]:.1f}MB)\'))\n    if base not in configs:\n        issues.append((\'HIGH\', l[\'name\'], \'No logrotate config\'))\n    \n    csv_rows.append([l[\'path\'], round(l[\'size_mb\'],2), days, sched, round(savings,2)])\n\n# Check uncompressed old files\nfor l in logs:\n    if \'.old\' in l[\'name\']:\n        issues.append((\'MEDIUM\', l[\'name\'], f\'Rotated log not compressed ({l["size_mb"]:.1f}MB)\'))\n        total_savings += l[\'size_mb\'] * 0.85\n\nsavings_pct = (total_savings*1024*1024/total_size*100) if total_size > 0 else 0\n\n# Write CSV\nwith open(\'/app/rotation_summary.csv\', \'w\', newline=\'\') as f:\n    w = csv.writer(f)\n    w.writerow([\'log_path\',\'current_size_mb\',\'days_since_rotation\',\'recommended_schedule\',\'estimated_savings_mb\'])\n    for r in sorted(csv_rows, key=lambda x: -x[1]):\n        w.writerow(r)\n\nprint(f\'CSV written. Issues: {len(issues)}, Savings: {savings_pct:.1f}%\')\nPY\n' is_blocking=True timeout_sec=15.0
+
+The previous command timed out after 15.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+> total_savings = 0
+>
+> for l in logs:
+>     if '.old' in l['name'] or '.gz' in l['name']:
+>         continue
+>     info = log_info.get(l['path'], {})
+>     growth = info.get('growth_rate_mb_per_day', 0)
+>     base = l['name'].replace('.log', '')
+>     days = int(l['size_mb']/growth) if growth > 0 else 0
+>     sched = 'daily' if growth > 10 else 'weekly'
+>     savings = l['size_mb'] * 0.5
+>     total_savings += savings
+>
+>     if l['size_mb'] > 200:
+>         issues.append(('HIGH', l['name'], f'File critically large ({l["size_mb"]:.1f}MB)'))
+>     elif l['size_mb'] > 100:
+>         issues.append(('HIGH', l['name'], f'File too large ({l["size_mb"]:.1f}MB)'))
+>     if base not in configs:
+>         issues.append(('HIGH', l['name'], 'No logrotate config'))
+>
+>     csv_rows.append([l['path'], round(l['size_mb'],2), days, sched, round(savings,2)])
+>
+> # Check uncompressed old files
+> for l in logs:
+>     if '.old' in l['name']:
+>         issues.append(('MEDIUM', l['name'], f'Rotated log not compressed ({l["size_mb"]:.1f}MB)'))
+>         total_savings += l['size_mb'] * 0.85
+>
+> savings_pct = (total_savings*1024*1024/total_size*100) if total_size > 0 else 0
+>
+> # Write CSV
+> with open('/app/rotation_summary.csv', 'w', newline='') as f:
+>     w = csv.writer(f)
+>     w.writerow(['log_path','current_size_mb','days_since_rotation','recommended_schedule','estimated_savings_mb'])
+>     for r in sorted(csv_rows, key=lambda x: -x[1]):
+>         w.writerow(r)
+>
+> print(f'CSV written. Issues: {len(issues)}, Savings: {savings_pct:.1f}%')
+> PY; tmux wait -S done
+>
+

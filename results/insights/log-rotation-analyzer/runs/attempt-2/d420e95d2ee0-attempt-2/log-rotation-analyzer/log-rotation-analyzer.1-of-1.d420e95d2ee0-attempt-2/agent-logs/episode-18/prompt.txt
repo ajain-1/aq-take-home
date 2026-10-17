@@ -1,0 +1,50 @@
+Previous command:
+keystrokes="ls -la /app/*.txt /app/*.conf /app/*.csv && echo '\\n--- analysis_report.txt (first 50 lines) ---' && head -50 /app/analysis_report.txt\n" is_blocking=True timeout_sec=10.0
+
+The previous command timed out after 10.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+Compliance requirements: PCI-DSS, SOX
+
+----------------------------------------------------------------------
+CURRENT LOG STATUS
+----------------------------------------------------------------------
+
+/var/log/samples/app.log:
+  Type: application | Importance: high
+  Current Size: 0.25 MB
+  Growth Rate: 15.2 MB/day
+  Retention Requirement: 30 days
+  Current Config: weekly, 4 rotations, compress=True
+
+/var/log/samples/system.log:
+  Type: system | Importance: critical
+  Current Size: 0.00 MB
+  Growth Rate: 2.1 MB/day
+  Retention Requirement: 90 days
+  Current Config: weekly, 4 rotations, compress=True
+
+/var/log/samples/access.log:
+  Type: access | Importance: medium
+  Current Size: 0.15 MB
+  Growth Rate: 45.7 MB/day
+  Retention Requirement: 14 days
+  Current Config: monthly, 2 rotations, compress=True
+
+/var/log/samples/error.log:
+  Type: error | Importance: critical
+  Current Size: 0.23 MB
+  Growth Rate: 8.9 MB/day
+  Retention Requirement: 60 days
+  Current Config: ** NO CONFIGURATION **
+
+/var/log/samples/debug.log:
+  Type: debug | Importance: low
+  Current Size: 0.05 MB
+  Growth Rate: 5.3 MB/day
+  Retention Requirement: 7 days
+root@633112936ae8:/app#
+

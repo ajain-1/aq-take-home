@@ -1,0 +1,40 @@
+================================================================================
+
+/var/log/samples/error.log
+------------------------------------------------------------
+  Type: error
+  Importance: CRITICAL
+  Application: web-server
+root@ac550e797a3d:/app# grep -A 30 'RECOMMENDATIONS' /app/analysis_report.txt; tmux wait -S done
+RECOMMENDATIONS
+================================================================================
+
+1. IMMEDIATE ACTIONS (Critical)
+----------------------------------------
+   a. Create logrotate configurations for error.log and debug.log
+   b. Implement the optimized_logrotate.conf provided
+   c. Run 'logrotate -f' to force immediate rotation of large files
+
+2. SHORT-TERM IMPROVEMENTS (This Week)
+----------------------------------------
+   a. Change access.log rotation from monthly to daily
+   b. Enable compression on all rotated logs
+   c. Set up monitoring alerts for log partition usage > 80%
+
+3. LONG-TERM STRATEGY
+----------------------------------------
+   a. Implement centralized log management (ELK stack or similar)
+   b. Archive logs older than 30 days to cold storage
+   c. Review and adjust retention policies quarterly
+   d. Consider log level adjustments to reduce debug log volume
+
+4. COMPLIANCE NOTES
+----------------------------------------
+   - PCI-DSS: Maintain audit logs for minimum 1 year, 3 months immediately available
+   - SOX: Financial system logs must be retained for 7 years
+   - Ensure error.log (critical) retention meets 60-day minimum
+   - System logs should be retained for 90 days per policy
+
+================================================================================
+END OF REPORT
+root@ac550e797a3d:/app#

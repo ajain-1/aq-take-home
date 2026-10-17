@@ -1,0 +1,42 @@
+['asciinema rec --stdin /logs/agent.cast', 'Enter']
+['clear', 'Enter']
+'ls -la\n'
+'cat app.py\n'
+'cat requirements.txt\n'
+'cat data/users.json\n'
+"cat > requirements.txt << 'EOF'\nflask==3.0.0\nrequests==2.31.0\nEOF\n"
+'cat > data/users.json << \'EOF\'\n[\n  {\n    "id": 1,\n    "name": "John Doe",\n    "email": "john@example.com",\n    "role": "admin"\n  },\n  {\n    "id": 2,\n    "name": "Jane Smith",\n    "email": "jane@example.com",\n    "role": "user"\n  },\n  {\n    "id": 3,\n    "name": "Bob Johnson",\n    "email": "bob@example.com",\n    "role": "user"\n  },\n  {\n    "id": 4,\n    "name": "Alice Brown",\n    "email": "alice@example.com",\n    "role": "moderator"\n  }\n]\nEOF\n'
+"cat > app.py << 'EOF'\nfrom flask import Flask, jsonify\nimport json\nimport os\n\napp = Flask(__name__)\n\n# Load user data\nwith open('./data/users.json', 'r') as file:\n    users_data = json.load(file)\n\n@app.route('/users', methods=['GET'])\ndef get_users():\n    return jsonify(users_data)\n\n@app.route('/users/<user_id>', methods=['GET'])\ndef get_user(user_id):\n    # Convert user_id to integer for proper comparison\n    try:\n        user_id_int = int(user_id)\n    except ValueError:\n        return jsonify({'error': 'User not found'}), 404\n    \n    user = next((u for u in users_data if u['id'] == user_id_int), None)\n\n    if user:\n        return jsonify(user)\n    else:\n        return jsonify({'error': 'User not found'}), 404\n\nif __name__ == '__main__':\n    app.run(host='0.0.0.0', port=3000, debug=True)\nEOF\n"
+'pip install -r requirements.txt\n'
+'pip install -r requirements.txt --break-system-packages\n'
+'python app.py &\n'
+'python3 app.py &\n'
+'sleep 2 && curl http://localhost:3000/users\n'
+'python3 app.py > /dev/null 2>&1 &\n'
+'sleep 1 && wget -qO- http://localhost:3000/users\n'
+'python3 app.py 2>&1 &\n'
+'sleep 2\n'
+"pkill -f 'python3 app.py' ; sleep 1 ; lsof -i :3000 || echo 'port is free'\n"
+'python3 app.py &\n'
+'sleep 2 && python3 -c "import requests; r = requests.get(\'http://localhost:3000/users\'); print(r.status_code); print(r.json())"\n'
+'jobs\n'
+'\n'
+'C-c'
+'\n'
+'kill %2 2>/dev/null; pkill -9 -f python3; sleep 1\n'
+"cat > app.py << 'EOF'\nfrom flask import Flask, jsonify\nimport json\nimport os\n\napp = Flask(__name__)\n\n# Load user data\nwith open('./data/users.json', 'r') as file:\n    users_data = json.load(file)\n\n@app.route('/users', methods=['GET'])\ndef get_users():\n    return jsonify(users_data)\n\n@app.route('/users/<user_id>', methods=['GET'])\ndef get_user(user_id):\n    # Convert user_id to integer for proper comparison\n    try:\n        user_id_int = int(user_id)\n    except ValueError:\n        return jsonify({'error': 'User not found'}), 404\n    \n    user = next((u for u in users_data if u['id'] == user_id_int), None)\n\n    if user:\n        return jsonify(user)\n    else:\n        return jsonify({'error': 'User not found'}), 404\n\nif __name__ == '__main__':\n    app.run(host='0.0.0.0', port=3000, debug=False)\nEOF\n"
+'python3 app.py &\n'
+'sleep 2\n'
+'python3 -c "import requests; r = requests.get(\'http://localhost:3000/users\'); print(\'Status:\', r.status_code); print(\'Response:\', r.json())"\n'
+'python3 -c "import requests; r = requests.get(\'http://localhost:3000/users/1\'); print(\'User 1 Status:\', r.status_code); print(\'User 1:\', r.json())"\n'
+'python3 -c "import requests; r = requests.get(\'http://localhost:3000/users/999\'); print(\'User 999 Status:\', r.status_code); print(\'Response:\', r.json())"\n'
+'python3 -c "import requests; [print(requests.get(\'http://localhost:3000/users\').status_code) for _ in range(3)]"\n'
+'cat requirements.txt\n'
+'cat app.py\n'
+"cat > app.py << 'EOF'\nfrom flask import Flask, jsonify\nimport json\nimport os\n\napp = Flask(__name__)\n\n# Load user data\nwith open('./data/users.json', 'r') as file:\n    users_data = json.load(file)\n\n@app.route('/users', methods=['GET'])\ndef get_users():\n    return jsonify(users_data)\n\n@app.route('/users/<user_id>', methods=['GET'])\ndef get_user(user_id):\n    # Convert user_id to integer for proper comparison\n    try:\n        user_id_int = int(user_id)\n    except ValueError:\n        return jsonify({'error': 'User not found'}), 404\n\n    user = next((u for u in users_data if u['id'] == user_id_int), None)\n\n    if user:\n        return jsonify(user)\n    else:\n        return jsonify({'error': 'User not found'}), 404\n\nif __name__ == '__main__':\n    app.run(host='0.0.0.0', port=3000, debug=True)\nEOF\n"
+'cat data/users.json\n'
+['asciinema rec --stdin /logs/tests.cast', 'Enter']
+['clear', 'Enter']
+['bash ', '/tests/run-tests.sh', 'Enter']
+['C-d']
+['C-d']

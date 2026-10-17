@@ -1,0 +1,176 @@
+{
+  "task_id": "broken-coordinate-transform",
+  "outcome": {
+    "resolved_attempts": 5,
+    "n_attempts": 5,
+    "learnability": {
+      "verdict": "insufficient_evidence",
+      "basis": "95% interval 57%-100% overlaps the 20-70% boundary; more runs needed",
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ],
+      "n": 5
+    }
+  },
+  "tests": [
+    {
+      "name": "test_exists_and_compiles",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_invalid_dimensions",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_larger_matrix",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_matrices_with_zeros",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_negative_numbers",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_normal_multiplication",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_row_times_column",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    },
+    {
+      "name": "test_single_element",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.566,
+        1.0
+      ]
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 0,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 12,
+      "declared_complete": true,
+      "duration_sec": 116.47,
+      "input_tokens": 49383,
+      "output_tokens": 2679
+    },
+    {
+      "attempt": 1,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 11,
+      "declared_complete": true,
+      "duration_sec": 101.42,
+      "input_tokens": 41924,
+      "output_tokens": 2031
+    },
+    {
+      "attempt": 2,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 14,
+      "declared_complete": true,
+      "duration_sec": 115.27,
+      "input_tokens": 62384,
+      "output_tokens": 2324
+    },
+    {
+      "attempt": 3,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 12,
+      "declared_complete": true,
+      "duration_sec": 104.44,
+      "input_tokens": 49897,
+      "output_tokens": 2151
+    },
+    {
+      "attempt": 4,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 24,
+      "declared_complete": true,
+      "duration_sec": 204.58,
+      "input_tokens": 215628,
+      "output_tokens": 4784
+    }
+  ],
+  "attempt_stats": {
+    "resolved": {
+      "n": 5,
+      "mean_episodes": 14.6,
+      "mean_duration_sec": 128.4,
+      "mean_input_tokens": 83843
+    },
+    "unresolved": {
+      "n": 0
+    },
+    "note": "Descriptive only; differences at this sample size are not statistically meaningful."
+  },
+  "insights": [],
+  "rejected_insights": [],
+  "evidence": {},
+  "limitations": [
+    "Pass-rate intervals are 95% Wilson intervals; with few attempts they are wide and verdicts say so.",
+    "Attempt classification is rule-based on recorded artifacts; it does not infer the agent's intent.",
+    "Hidden-requirement detection is lexical: a test literal counts as stated only if it appears (case-insensitively) in the instruction, and as discoverable only if the environment showed it to an agent before that agent typed it; tests that accept any of several alternatives may be over-reported."
+  ]
+}

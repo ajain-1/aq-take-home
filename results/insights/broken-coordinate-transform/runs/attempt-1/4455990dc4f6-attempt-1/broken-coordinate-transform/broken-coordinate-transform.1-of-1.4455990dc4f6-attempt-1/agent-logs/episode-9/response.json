@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The output shows lines 8-46, but I need to see lines 1-7 as well to verify the complete file. Let me view the first 10 lines.",
+    "explanation": "View the first 10 lines of the file to verify the beginning is correct.",
+    "commands": [
+        {
+            "keystrokes": "head -10 /app/buggy.cpp\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

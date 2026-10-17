@@ -1,0 +1,44 @@
+Current terminal state:
+    try:
+        user = next((u for u in users_data if u['id'] == int(user_id)), None)
+    except ValueError:
+        return jsonify({'error': 'User not found'}), 404
+
+    if user:
+        return jsonify(user)
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3000, debug=False)
+root@9b68b8a4b36d:/app# cat data/users.json; tmux wait -S done
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "role": "user"
+  },
+  {
+    "id": 3,
+    "name": "Bob Johnson",
+    "email": "bob@example.com",
+    "role": "user"
+  },
+  {
+    "id": 4,
+    "name": "Alice Brown",
+    "email": "alice@example.com",
+    "role": "moderator"
+  }
+]
+root@9b68b8a4b36d:/app#
+
+
+TESTS FAILED! Are you sure you want to mark complete? You have ONE chance to fix this. If you set is_task_complete: true again, the task will end.

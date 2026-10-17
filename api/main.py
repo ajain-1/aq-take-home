@@ -28,7 +28,7 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from api import ui_routes
+from api import insights_routes, ui_routes
 from api.context import AppContext, configure_logging, get_context
 from api.service import SubmissionRejected
 from runner import docker_ops
@@ -51,6 +51,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AQ Task Executor", lifespan=lifespan)
 app.include_router(ui_routes.router)
+app.include_router(insights_routes.router)
 app.mount("/ui/static", StaticFiles(directory=ui_routes.STATIC_DIR), name="ui-static")
 
 

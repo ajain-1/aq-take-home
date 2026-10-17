@@ -1,0 +1,40 @@
+>
+> app = Flask(__name__)
+>
+> # Load user data
+> with open('./data/users.json', 'r') as file:
+>     users_data = json.load(file)
+>
+> @app.route('/users', methods=['GET'])
+> def get_users():
+>     return jsonify(users_data)
+>
+> @app.route('/users/<user_id>', methods=['GET'])
+> def get_user(user_id):
+>     # Convert user_id to integer for proper comparison
+>     try:
+>         user_id_int = int(user_id)
+>     except ValueError:
+>         return jsonify({'error': 'User not found'}), 404
+>
+>     user = next((u for u in users_data if u['id'] == user_id_int), None)
+>
+>     if user:
+>         return jsonify(user)
+>     else:
+>         return jsonify({'error': 'User not found'}), 404
+>
+> if __name__ == '__main__':
+>     app.run(host='0.0.0.0', port=3000, debug=False)
+> EOF
+root@cefbfd39e4bf:/app# python3 app.py &
+[1] 785
+root@cefbfd39e4bf:/app#  * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://172.25.0.2:3000
+Press CTRL+C to quit
+sleep 2; tmux wait -S done
+root@cefbfd39e4bf:/app#

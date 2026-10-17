@@ -1,0 +1,40 @@
+    - HIGH: Retention 28 days < required 30 days
+
+  Log: /var/log/samples/system.log
+  Type: system | Importance: critical
+    - HIGH: Retention 28 days < required 90 days
+
+  Log: /var/log/samples/access.log
+  Type: access | Importance: medium
+    - HIGH: Monthly rotation too infrequent for 45.7MB/day growth
+    - LOW: Retention 60 days excessive (required: 14)
+
+DETAILED LOG ANALYSIS
+================================================================================
+
+/var/log/samples/error.log
+------------------------------------------------------------
+  Type: error
+  Importance: CRITICAL
+  Application: web-server
+  Owner: www-data
+  Current Size: 0.228 MB
+  Rotated Files Size: 0.000 MB
+  Growth Rate: 8.9 MB/day
+  Retention Requirement: 60 days
+  Days Since Last Rotation: 0
+
+  Current Configuration:
+    *** NO CONFIGURATION EXISTS ***
+
+  Recommended Configuration:
+    Schedule: weekly
+    Rotations kept: 9
+    Compression: Yes (gzip)
+
+  Issues Found:
+    - CRITICAL: No rotation configuration exists
+
+  Disk Space Impact:
+    Current projected usage: 267.0 MB
+root@ac550e797a3d:/app#
