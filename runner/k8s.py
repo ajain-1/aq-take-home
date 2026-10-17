@@ -1,5 +1,6 @@
 """Kubernetes Job management: one Indexed Job per submission, one index per attempt."""
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -36,6 +37,13 @@ class JobSnapshot:
             (a.reason for a in self.attempts if a.reason and a.reason.split(":")[0] in FATAL_WAITING_REASONS),
             None,
         )
+
+
+def api_error_message(error: ApiException) -> str:
+    try:
+        return json.loads(error.body)["message"]
+    except (TypeError, ValueError, KeyError):
+        return f"{error.status} {error.reason}"
 
 
 def job_name(submission_id: str) -> str:

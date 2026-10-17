@@ -16,9 +16,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from kubernetes.client.exceptions import ApiException
+
 from runner import bundle, docker_ops, results
 from runner.config import RESOURCE_CLASSES, Settings, settings as default_settings
-from runner.k8s import JobSnapshot, KubeClient, build_job_manifest, job_deadline_sec, job_name
+from runner.k8s import JobSnapshot, KubeClient, api_error_message, build_job_manifest, job_deadline_sec, job_name
 from runner.models import AttemptProgress, AttemptState, Phase, Progress, Status, Submission, TaskSpec, utcnow
 from runner.store import SubmissionStore
 
@@ -163,7 +165,10 @@ class TaskRunner:
             resources=RESOURCE_CLASSES[spec.resource_class],
             settings=self._settings,
         )
-        self._kube.create_job(manifest)
+        try:
+            self._kube.create_job(manifest)
+        except ApiException as e:
+            raise ExecutionError(f"Kubernetes rejected the Job: {api_error_message(e)}") from e
         # Once launched, a resumed submission never recreates its Job: if the Job vanished
         # while the API was down, attempts are collected as-is rather than re-run (and re-billed).
         self._store.update(submission.id, lambda s: setattr(s, "launched_at", utcnow()))
