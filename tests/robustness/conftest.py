@@ -72,6 +72,7 @@ class FakeKube:
         self.snapshots = list(snapshots)
         self.created: list[dict] = []
         self.deleted: list[str] = []
+        self.deleted_submissions: list[str] = []
 
     def upsert_secret(self, name, data):
         pass
@@ -81,6 +82,9 @@ class FakeKube:
 
     def delete_job(self, name):
         self.deleted.append(name)
+
+    def delete_submission_jobs(self, submission_id):
+        self.deleted_submissions.append(submission_id)
 
     def pod_log(self, pod_name):
         return None

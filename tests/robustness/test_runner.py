@@ -7,7 +7,7 @@ from conftest import FakeKube, finished_snapshot, running_snapshot, task_zip
 
 from runner import docker_ops, run_task
 from runner.k8s import JobSnapshot
-from runner.models import AttemptProgress, Status, Submission, utcnow
+from runner.models import AttemptProgress, Status, Submission, Wave, utcnow
 from runner.run_task import TaskRunner
 from runner.store import SubmissionStore
 
@@ -72,6 +72,7 @@ def test_happy_path_completes_and_cleans_up(harness):
     outcome = h.runner.run("sub1")
     assert outcome["status"] == "completed" and outcome["passed"] is True
     assert len(h.kube.created) == 1 and h.kube.deleted == ["aq-sub1"]
+    assert h.kube.deleted_submissions == ["sub1"]
     assert ("labels", "aq.submission=sub1") in h.removed
     assert h.store.get("sub1").launched_at is not None
 
@@ -93,7 +94,7 @@ def test_unstartable_pods_fail_fast(harness):
     h.submit()
     outcome = h.runner.run("sub1")
     assert outcome["status"] == "failed" and "ErrImageNeverPull" in outcome["error"]
-    assert "aq-sub1" in h.kube.deleted
+    assert h.kube.deleted_submissions == ["sub1"]
 
 
 def test_job_deadline_is_attributed_to_attempts_whose_pods_vanished(harness):
@@ -158,7 +159,7 @@ def test_shutdown_leaves_submission_resumable(harness):
     assert h.runner.run("sub1") is None
     stored = h.store.get("sub1")
     assert stored.status == Status.RUNNING and stored.finished_at is None
-    assert h.kube.deleted == [] and h.removed == []
+    assert h.kube.deleted == [] and h.kube.deleted_submissions == [] and h.removed == []
     assert [s.id for s in h.store.list_unfinished()] == ["sub1"]
 
 
@@ -210,3 +211,38 @@ def test_concurrent_builds_are_bounded(harness):
     for thread in threads:
         thread.join()
     assert h.builds["max"] == h.settings.max_concurrent_builds == 1
+
+
+def test_resumed_wave_whose_job_vanished_only_blames_its_own_attempts(harness):
+    h = harness([JobSnapshot(exists=False)])
+    h.submit(n_attempts=8)
+    launched = utcnow()
+
+    def resume_mid_second_wave(s):
+        s.progress.waves = [
+            Wave(index=0, offset=0, size=5, launched_at=launched, done=True),
+            Wave(index=1, offset=5, size=3, launched_at=launched),
+        ]
+        s.progress.attempts = [
+            AttemptProgress(index=i, state="succeeded", pods=[f"aq-sub1-{i}"]) for i in range(5)
+        ] + [AttemptProgress(index=i, state="running", pods=[f"aq-sub1-w1-{i - 5}"]) for i in range(5, 8)]
+
+    h.store.update("sub1", resume_mid_second_wave)
+    for attempt in range(5):
+        h.write_trial_result(attempt=attempt)
+
+    outcome = h.runner.run("sub1")
+    assert h.kube.created == []
+    assert "aq-sub1-w1" in h.kube.deleted
+    errors = [a.get("error") for a in outcome["attempts"]]
+    assert errors == [None] * 5 + ["job failed: JobNotFound"] * 3
+    assert outcome["summary"]["resolved_attempts"] == 5
+
+
+def test_failed_indexes_keep_each_attempts_own_failure_reason(harness):
+    oom = AttemptProgress(index=0, state="failed", pods=["p0", "p1"], reason="OOMKilled (exit code 137)")
+    h = harness([JobSnapshot(exists=True, finished=True, reason="FailedIndexes", attempts=[oom])])
+    h.submit()
+    outcome = h.runner.run("sub1")
+    assert outcome["attempts"][0]["error"] == "OOMKilled (exit code 137)"
+    assert outcome["attempts"][0]["retries"] == 1

@@ -3,7 +3,7 @@ import json
 from runner import results
 from runner.config import RESOURCE_CLASSES
 from runner.k8s import JobSnapshot, _pod_state, build_job_manifest, job_deadline_sec
-from runner.models import AttemptProgress, AttemptState, TaskSpec
+from runner.models import AttemptProgress, AttemptState, TaskSpec, Wave
 
 
 def _write_trial(attempt_dir, task_id, parser_results, resolved):
@@ -81,7 +81,7 @@ def test_manifest_derives_limits_and_never_inlines_secrets(settings, tmp_path):
     manifest = build_job_manifest(
         submission_id="abc",
         spec=spec,
-        n_attempts=3,
+        wave=Wave(index=0, offset=0, size=3),
         runner_image="aq-runner:x",
         submission_root=tmp_path,
         task_root=tmp_path,
@@ -120,7 +120,7 @@ def test_memory_request_never_exceeds_harness_limit(settings, tmp_path):
     manifest = build_job_manifest(
         submission_id="abc",
         spec=spec,
-        n_attempts=1,
+        wave=Wave(index=0, offset=0, size=1),
         runner_image="aq-runner:x",
         submission_root=tmp_path,
         task_root=tmp_path,
