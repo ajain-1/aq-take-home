@@ -19,7 +19,7 @@
 - Model routing: the README's `anthropic/claude-opus-4-5-20250514` is not an OpenRouter model ID. The executor uses `openrouter/anthropic/claude-opus-4.5` through LiteLLM (configurable with `AQ_MODEL`).
 
 #### What I changed in tasks/
-Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `results/task-verification/`). Each one builds, its `solution.sh` passes every test, and every test fails when the task is left unsolved.
+Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `results/task-verification/`). Each one builds, its `solution.sh` passes every test, and with the task left unsolved every test fails except one file-existence check each in `broken-flask-api` and `csv-to-json-cli-fix`, which check files the task already provides.
 
 - `tasks/broken-coordinate-transform/task.yaml`: Removed the duplicated copy of the instruction. The instruction also said to keep "the same format already in buggy.cpp", but that format prints prompts, a "Result matrix C:" header and trailing spaces, and the tests reject all of those. It now says to print only the result rows, with values separated by single spaces.
 - `tasks/config-manifest-validator/task.yaml`: Removed the duplicated copy of the instruction.
