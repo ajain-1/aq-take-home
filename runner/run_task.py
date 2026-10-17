@@ -19,15 +19,14 @@ from typing import Any
 from kubernetes.client.exceptions import ApiException
 
 from runner import bundle, docker_ops, results
-from runner.config import RESOURCE_CLASSES, Settings, settings as default_settings
+from runner.config import RESOURCE_CLASSES, Settings
 from runner.k8s import JobSnapshot, KubeClient, api_error_message, build_job_manifest, job_deadline_sec, job_name
-from runner.models import AttemptProgress, AttemptState, Phase, Progress, Status, Submission, TaskSpec, utcnow
-from runner.store import SubmissionStore
+from runner.models import AttemptProgress, AttemptState, Phase, Status, Submission, TaskSpec, utcnow
+from runner.store import SubmissionNotFound, SubmissionStore
 
 logger = logging.getLogger(__name__)
 
 WAIT_GRACE_SEC = 120
-MODEL_FREE_AGENTS = {"oracle", "nop"}
 
 
 class ExecutionError(RuntimeError):
@@ -71,7 +70,7 @@ def task_image_tag(submission_id: str) -> str:
 
 
 class TaskRunner:
-    def __init__(self, store: SubmissionStore, kube: KubeClient, settings: Settings = default_settings):
+    def __init__(self, store: SubmissionStore, kube: KubeClient, settings: Settings):
         self._store = store
         self._kube = kube
         self._settings = settings
@@ -90,9 +89,9 @@ class TaskRunner:
         paths = self.paths(submission_id)
         try:
             spec = self._prepare(submission, paths)
-            self._build(submission, spec, paths)
             if submission.launched_at is None:
-                self._launch(submission, spec, paths)
+                runner_image = self._build(submission, spec, paths)
+                self._launch(submission, spec, paths, runner_image)
             self._wait(submission, spec)
             outcome = self._collect(submission, spec, paths)
         except Interrupted:
@@ -132,21 +131,23 @@ class TaskRunner:
         self._store.update(submission.id, lambda s: setattr(s, "task_id", spec.task_id))
         return spec
 
-    def _build(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> None:
+    def _build(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> str:
+        """Build the task image and make sure the Job pod image exists; returns the latter."""
         self._set_phase(submission.id, Phase.BUILDING_IMAGE)
         tag = task_image_tag(submission.id)
+        timeout = self._settings.build_timeout_sec
         with self._build_slots:
             self._raise_if_stopping()
-            self._runner_image(paths)
+            runner_image = self._settings.runner_image
+            if runner_image is None:
+                runner_image = docker_ops.ensure_runner_image(paths.build_log, timeout)
             if not docker_ops.image_exists(tag):
-                docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, self._settings.build_timeout_sec)
+                docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, timeout)
+        return runner_image
 
-    def _runner_image(self, paths: SubmissionPaths) -> str:
-        if self._settings.runner_image:
-            return self._settings.runner_image
-        return docker_ops.ensure_runner_image(paths.build_log, self._settings.build_timeout_sec)
-
-    def _launch(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> None:
+    def _launch(
+        self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths, runner_image: str
+    ) -> None:
         self._set_phase(submission.id, Phase.LAUNCHING)
         credentials = {k: os.environ[k] for k in self._settings.llm_secret_keys if os.environ.get(k)}
         if credentials:
@@ -157,7 +158,8 @@ class TaskRunner:
             submission_id=submission.id,
             spec=spec,
             n_attempts=submission.n_attempts,
-            runner_image=self._runner_image(paths),
+            runner_image=runner_image,
+            submission_root=paths.root,
             task_root=paths.tasks,
             output_root=paths.runs,
             agent=submission.agent,
@@ -169,8 +171,8 @@ class TaskRunner:
             self._kube.create_job(manifest)
         except ApiException as e:
             raise ExecutionError(f"Kubernetes rejected the Job: {api_error_message(e)}") from e
-        # Once launched, a resumed submission never recreates its Job: if the Job vanished
-        # while the API was down, attempts are collected as-is rather than re-run (and re-billed).
+        # Persisted so a resumed run re-attaches instead of re-running paid attempts,
+        # even if the Job has since been garbage-collected.
         self._store.update(submission.id, lambda s: setattr(s, "launched_at", utcnow()))
 
     def _wait(self, submission: Submission, spec: TaskSpec) -> None:
@@ -197,16 +199,21 @@ class TaskRunner:
                 raise Interrupted
 
     def _record_attempts(self, submission_id: str, snapshot: JobSnapshot) -> None:
-        """Pods vanish when a Job fails (e.g. DeadlineExceeded), so keep the last known pod
-        for each attempt and attribute the Job's failure to attempts that never succeeded."""
-
+        """Pods vanish when a Job fails (e.g. DeadlineExceeded), so merge each attempt with
+        what earlier snapshots saw and attribute the Job's failure to unfinished attempts."""
         failure = snapshot.reason if snapshot.finished else None if snapshot.exists else "JobNotFound"
+
+        def merge(attempt: AttemptProgress, previous: AttemptProgress | None) -> AttemptProgress:
+            if previous is None:
+                return attempt
+            if not attempt.pods:
+                return previous
+            attempt.pods = previous.pods + [pod for pod in attempt.pods if pod not in previous.pods]
+            return attempt
 
         def mutate(s: Submission) -> None:
             previous = {a.index: a for a in s.progress.attempts}
-            attempts = [
-                a if a.pod or a.index not in previous else previous[a.index] for a in snapshot.attempts
-            ] or list(previous.values())
+            attempts = [merge(a, previous.get(a.index)) for a in snapshot.attempts] or list(previous.values())
             if failure:
                 for attempt in attempts:
                     if attempt.state != AttemptState.SUCCEEDED:
@@ -223,28 +230,27 @@ class TaskRunner:
         attempts = []
         for index in range(submission.n_attempts):
             attempt_progress = progress.get(index, AttemptProgress(index=index))
-            if attempt_progress.pod and (log := self._kube.pod_log(attempt_progress.pod)):
-                paths.attempt(index).mkdir(parents=True, exist_ok=True)
-                (paths.attempt(index) / "pod.log").write_text(log)
+            self._save_pod_logs(attempt_progress, paths.attempt(index))
+            attempt_dir = paths.attempt(index)
             attempts.append(
-                results.collect_attempt(paths.attempt(index), spec.task_id, attempt_progress, self._settings.data_dir)
+                results.collect_attempt(attempt_dir, spec.task_id, attempt_progress, self._settings.data_dir)
             )
 
         finished_at = utcnow()
+        started_at = submission.started_at
+        elapsed = round((finished_at - started_at).total_seconds(), 2) if started_at else None
         outcome = {
             "submission_id": submission.id,
             "task_id": spec.task_id,
             "agent": submission.agent,
             "model": submission.model,
             **results.aggregate(attempts),
-            "started_at": submission.started_at.isoformat() if submission.started_at else None,
+            "started_at": started_at.isoformat() if started_at else None,
             "finished_at": finished_at.isoformat(),
-            "execution_time_sec": (
-                round((finished_at - submission.started_at).total_seconds(), 2) if submission.started_at else None
-            ),
+            "execution_time_sec": elapsed,
             "attempts": attempts,
         }
-        all_errored = outcome["summary"]["completed_attempts"] == 0
+        all_errored = outcome["summary"]["errored_attempts"] == len(attempts)
         status = Status.FAILED if all_errored else Status.COMPLETED
         outcome["status"] = status.value
         paths.results.write_text(json.dumps(outcome, indent=2))
@@ -262,6 +268,13 @@ class TaskRunner:
         self._store.update(submission.id, mutate)
         return outcome
 
+    def _save_pod_logs(self, attempt: AttemptProgress, attempt_dir: Path) -> None:
+        """Keep the logs of every try, including retried pods, before the Job is deleted."""
+        for try_number, pod in enumerate(attempt.pods):
+            if log := self._kube.pod_log(pod):
+                attempt_dir.mkdir(parents=True, exist_ok=True)
+                (attempt_dir / f"pod-try-{try_number}.log").write_text(log)
+
     def _fail(self, submission_id: str, error: str) -> dict[str, Any]:
         logger.warning("submission %s failed: %s", submission_id, error)
 
@@ -276,10 +289,11 @@ class TaskRunner:
 
     def _cleanup(self, submission_id: str) -> None:
         """Release cluster and Docker resources; safe to call repeatedly."""
+        image = task_image_tag(submission_id)
         for step in (
             lambda: self._kube.delete_job(job_name(submission_id)),
             lambda: docker_ops.remove_labelled_resources(f"aq.submission={submission_id}"),
-            lambda: docker_ops.remove_images(task_image_tag(submission_id), f"{task_image_tag(submission_id)}-base"),
+            lambda: docker_ops.remove_images(image, f"{image}-base"),
         ):
             try:
                 step()
@@ -304,24 +318,16 @@ def run_task(zip_path: str, submission_id: str) -> dict:
         zip_path: Absolute path to the task ZIP file
         submission_id: Unique submission identifier
     """
-    store = SubmissionStore(default_settings.db_path)
-    runner = TaskRunner(store, KubeClient(default_settings.namespace))
+    settings = Settings.from_env()
+    store = SubmissionStore(settings.db_path)
+    runner = TaskRunner(store, KubeClient(settings.namespace), settings)
     paths = runner.paths(submission_id)
     paths.root.mkdir(parents=True, exist_ok=True)
     if Path(zip_path).resolve() != paths.upload.resolve():
         shutil.copyfile(zip_path, paths.upload)
     try:
         store.get(submission_id)
-    except KeyError:
-        store.save(new_submission(submission_id, default_settings.default_attempts, default_settings.agent, default_settings))
+    except SubmissionNotFound:
+        model = settings.model if settings.requires_model(settings.agent) else None
+        store.save(Submission.create(submission_id, settings.default_attempts, settings.agent, model))
     return runner.run(submission_id) or {}
-
-
-def new_submission(submission_id: str, n_attempts: int, agent: str, settings: Settings) -> Submission:
-    return Submission(
-        id=submission_id,
-        n_attempts=n_attempts,
-        agent=agent,
-        model=None if agent in MODEL_FREE_AGENTS else settings.model,
-        progress=Progress(attempts_total=n_attempts),
-    )

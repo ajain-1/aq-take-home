@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Status(StrEnum):
@@ -40,9 +40,16 @@ class AttemptState(StrEnum):
 class AttemptProgress(BaseModel):
     index: int
     state: AttemptState = AttemptState.PENDING
-    pod: str | None = None
-    retries: int = 0
+    pods: list[str] = []
     reason: str | None = None
+
+    @property
+    def pod(self) -> str | None:
+        return self.pods[-1] if self.pods else None
+
+    @property
+    def retries(self) -> int:
+        return max(len(self.pods) - 1, 0)
 
 
 class Progress(BaseModel):
@@ -79,3 +86,13 @@ class Submission(BaseModel):
     started_at: datetime | None = None
     launched_at: datetime | None = None
     finished_at: datetime | None = None
+
+    @classmethod
+    def create(cls, submission_id: str, n_attempts: int, agent: str, model: str | None) -> "Submission":
+        return cls(
+            id=submission_id,
+            n_attempts=n_attempts,
+            agent=agent,
+            model=model,
+            progress=Progress(attempts_total=n_attempts),
+        )
