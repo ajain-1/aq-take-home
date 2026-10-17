@@ -68,6 +68,19 @@ def test_manifest_derives_limits_and_never_inlines_secrets(settings, tmp_path):
         "name": settings.llm_secret_name, "key": "OPENROUTER_API_KEY", "optional": True}}}]
 
 
+def test_memory_request_never_exceeds_harness_limit(settings, tmp_path):
+    from dataclasses import replace
+
+    spec = TaskSpec(task_id="t", instruction="x")
+    manifest = build_job_manifest(
+        submission_id="abc", spec=spec, n_attempts=1, runner_image="aq-runner:x", task_root=tmp_path,
+        output_root=tmp_path, agent="oracle", model=None, resources=RESOURCE_CLASSES["large"],
+        settings=replace(settings, harness_memory_limit="48Mi"),
+    )
+    resources = manifest["spec"]["template"]["spec"]["containers"][0]["resources"]
+    assert resources["requests"]["memory"] == resources["limits"]["memory"] == "48Mi"
+
+
 def test_fatal_waiting_reasons_are_detected():
     stuck = AttemptProgress(index=0, reason="ErrImageNeverPull: image not present with pull policy of Never")
     assert JobSnapshot(exists=True, attempts=[stuck]).fatal_reason.startswith("ErrImageNeverPull")

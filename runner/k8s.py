@@ -5,6 +5,7 @@ from pathlib import Path
 
 from kubernetes import client, config
 from kubernetes.client.exceptions import ApiException
+from kubernetes.utils import parse_quantity
 
 from runner.config import ResourceClass, Settings
 from runner.models import AttemptProgress, AttemptState, TaskSpec
@@ -77,13 +78,15 @@ def build_job_manifest(
         for key in settings.llm_secret_keys
     ]
     data_dir = str(settings.data_dir)
+    # Kubernetes rejects a request above the limit; the harness limit wins if they clash.
+    memory_request = min(resources.memory_request, settings.harness_memory_limit, key=parse_quantity)
     container = {
         "name": "trial",
         "image": runner_image,
         "imagePullPolicy": "Never",
         "env": [{"name": k, "value": v} for k, v in env.items()] + secret_env,
         "resources": {
-            "requests": {"cpu": resources.cpu_request, "memory": resources.memory_request},
+            "requests": {"cpu": resources.cpu_request, "memory": memory_request},
             "limits": {"memory": settings.harness_memory_limit},
         },
         "volumeMounts": [
