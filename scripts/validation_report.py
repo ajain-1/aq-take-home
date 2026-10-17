@@ -58,15 +58,22 @@ def wait_for(validation_id: str) -> dict:
 
 
 def summarize(reports: dict[str, dict]) -> str:
-    lines = ["| Task | Verdict | Errors | Warnings | Findings |", "|---|---|---|---|---|"]
+    lines = ["| Task | Verdict | Stages run | Errors | Warnings | Findings |", "|---|---|---|---|---|---|"]
     for task, report in reports.items():
         findings = "<br>".join(
-            f"**{f['severity']}** `{f['stage']}/{f['check']}`: {f['message']}"
-            for f in report["findings"] if f["severity"] != "info"
+            f"**{f['severity']}** `{f['stage']}/{f['check']}`: {f['message']}" for f in report["findings"]
         ) or "—"
         verdict = "PASS" if report["passed"] else "FAIL"
-        lines.append(f"| {task} | {verdict} | {report['counts']['error']} | {report['counts']['warning']} | {findings} |")
+        counts = report["counts"]
+        lines.append(
+            f"| {task} | {verdict} | {', '.join(report['stages_run'])} | {counts['error']} | {counts['warning']} | {findings} |"
+        )
     return "\n".join(lines) + "\n"
+
+
+def rewrite_summary(out_dir: Path) -> None:
+    reports = {path.stem: json.loads(path.read_text()) for path in sorted(out_dir.glob("*.json"))}
+    (out_dir / "SUMMARY.md").write_text(summarize(reports))
 
 
 def main() -> None:
