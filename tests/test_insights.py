@@ -12,7 +12,7 @@ from runner.insights.evidence import Evidence, EvidenceLedger, verify
 from runner.insights.narrative import summarize
 from runner.insights.report import render_markdown
 from runner.insights.stats import learnability_verdict, wilson_interval
-from runner.insights.test_spec import required_literals
+from runner.test_literals import required_literals
 
 TEST_SOURCE = '''
 import re
