@@ -299,7 +299,7 @@ def crash_retry_partial_orphans() -> dict:
     sid = submit("rb-slow", n_attempts=2)
     first_pod = wait_for(lambda: attempt_pod(sid, 1), 300, "attempt 1 pod")["pod"]
     first_task_container = wait_for(lambda: task_container(sid, 1), 300, "attempt 1 task container")
-    manifest = sh("kubectl", "get", "job", f"aq-{sid}", "-o", "json")
+    manifest = sh("kubectl", "get", "job", f"aq-{sid}-w0", "-o", "json")
     kill_pod_container(first_pod)
 
     retry = wait_for(lambda: (p := attempt_pod(sid, 1)) and p["pod"] != first_pod and p, 120, "retry pod")
@@ -454,7 +454,7 @@ def restart_after_job_vanished(api: Api) -> dict:
     sid = submit("rb-slow")
     wait_for(lambda: (p := attempt_pod(sid, 0)) and p["state"] == "running", 300, "attempt running")
     api.stop(signal.SIGKILL)
-    sh("kubectl", "delete", "job", f"aq-{sid}", "--wait=true")
+    sh("kubectl", "delete", "job", f"aq-{sid}-w0", "--wait=true")
     api.start()
     results = wait_terminal(sid)
     recreated = sh("kubectl", "get", "jobs", "-l", f"aq/submission={sid}", "-o", "name")
@@ -590,6 +590,81 @@ def adaptive_wave1_pod_failure() -> dict:
     }
 
 
+def gate_static_reject() -> dict:
+    fixture = Path(tempfile.mkdtemp()) / "rb-no-workdir"
+    for source in (FIXTURES / "rb-ok").rglob("*"):
+        if source.is_file():
+            target = fixture / source.relative_to(FIXTURES / "rb-ok")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(source.read_bytes())
+    (fixture / "Dockerfile").write_text("FROM python:3.12-slim\n")
+    archive = fixture.parent / "rb-no-workdir.zip"
+    with zipfile.ZipFile(archive, "w") as zipped:
+        for file in sorted(fixture.rglob("*")):
+            zipped.write(file, Path(fixture.name) / file.relative_to(fixture))
+
+    before = get("/health")[1]["submissions_tracked"]
+    observed = {}
+    for mode in ("static", "full"):
+        code, body = post(archive, agent="oracle", validation=mode)
+        checks = [f["check"] for f in (body.get("report") or {}).get("findings", [])]
+        check(code == 422 and isinstance(body.get("detail"), str), f"{mode} gate rejects with 422: {body}")
+        check("workdir" in checks, f"{mode} gate report names the failing check: {checks}")
+        observed[mode] = {"http_status": code, "detail": body["detail"], "checks": checks}
+    check(get("/health")[1]["submissions_tracked"] == before, "rejected gated uploads are not tracked")
+    return {"cases": observed}
+
+
+def gate_full_restart_mid_validation(api: Api) -> dict:
+    code, body = post(zip_fixture("rb-ok"), agent="oracle", n_attempts=1, validation="full")
+    check(code == 202 and body.get("validation_id"), f"full gate accepted: {body}")
+    sid, vid = body["submission_id"], body["validation_id"]
+    check(get(f"/validations/{vid}")[1]["gates_submission_id"] == sid, "gate linked to its submission")
+
+    def is_running(submission_id: str | None) -> bool:
+        return bool(submission_id) and any(
+            a["state"] == "running" for a in status(submission_id)["progress"]["attempts"]
+        )
+
+    def child_running() -> str | None:
+        report = get(f"/validations/{vid}")[1]
+        children = [report.get("oracle_submission_id"), report.get("nop_submission_id")]
+        return next((child for child in children if is_running(child)), None)
+
+    running_child = wait_for(child_running, 600, "an oracle/nop reference run in flight")
+    api.stop(signal.SIGKILL)
+    api.start()
+    results = wait_terminal(sid, timeout=1200)
+    report = get(f"/validations/{vid}")[1]
+    children = [report["oracle_submission_id"], report["nop_submission_id"]]
+    tries = {}
+    for child in children:
+        progress = status(child)["progress"]
+        pods = [len(attempt["pods"]) for attempt in progress["attempts"]]
+        tries[child] = {"waves": len(progress["waves"]), "pods": pods}
+    check(report["passed"] and report["status"] == "completed", f"validation passed: {report}")
+    check(results["status"] == "completed" and results["passed"], f"gated run passed: {summarize(results)}")
+    check(
+        all(t["waves"] == 1 and set(t["pods"]) == {1} for t in tries.values()),
+        f"reference runs re-attached once, never run twice: {tries}",
+    )
+    log = api.log_path.read_text()
+    check(f"resuming submission {sid}" in log, "the gated submission was resumed")
+    check(
+        not any(f"resuming submission {child}" in log for child in children),
+        "reference runs are resumed only by their validation",
+    )
+    return {
+        "submission": sid,
+        "validation": vid,
+        "restarted_while_running": running_child,
+        "reference_runs": tries,
+        "stages_run": report["stages_run"],
+        "results": summarize(results),
+        "leftovers": {child: assert_cleaned_up(child) for child in [sid, *children]},
+    }
+
+
 def secret_not_leaked() -> dict:
     secret = secret_value()
     check(bool(secret), "a key must be configured to check for leaks")
@@ -613,6 +688,8 @@ GROUPS = [
             [restart_sigkill_while_running],
             [restart_sigterm_while_building],
             [restart_after_job_vanished],
+            [gate_static_reject],
+            [gate_full_restart_mid_validation],
         ],
     ),
     ("single-worker", {"AQ_MAX_CONCURRENT_SUBMISSIONS": "1"}, [[restart_with_queued_backlog]]),
