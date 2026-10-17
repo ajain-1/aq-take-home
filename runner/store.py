@@ -15,7 +15,7 @@ class SubmissionNotFound(KeyError):
 class SubmissionStore:
     def __init__(self, db_path: Path):
         db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._conn = sqlite3.connect(db_path, check_same_thread=False, isolation_level=None)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute(
@@ -47,10 +47,11 @@ class SubmissionStore:
         return Submission.model_validate_json(row[0])
 
     def update(self, submission_id: str, mutate: Callable[[Submission], None]) -> Submission:
-        """Read-modify-write a submission; callers mutate the model in place."""
-        submission = self.get(submission_id)
-        mutate(submission)
-        self.save(submission)
+        """Atomically read-modify-write a submission; callers mutate the model in place."""
+        with self._lock:
+            submission = self.get(submission_id)
+            mutate(submission)
+            self.save(submission)
         return submission
 
     def list_unfinished(self) -> list[Submission]:
