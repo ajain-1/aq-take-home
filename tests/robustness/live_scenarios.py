@@ -132,8 +132,10 @@ def post(zip_path: Path, **fields) -> tuple[int, dict]:
     return int(code), json.loads(body or "{}")
 
 
-def submit(fixture: str, n_attempts: int = 1, agent: str = "oracle") -> str:
-    code, body = post(zip_fixture(fixture), n_attempts=n_attempts, agent=agent)
+def submit(fixture: str, n_attempts: int | None = 1, agent: str = "oracle", **fields) -> str:
+    if n_attempts is not None:
+        fields["n_attempts"] = n_attempts
+    code, body = post(zip_fixture(fixture), agent=agent, **fields)
     check(code == 202, f"submit {fixture} returned {code}: {body}")
     return body["submission_id"]
 
@@ -178,6 +180,20 @@ def task_container(submission_id: str, attempt: int) -> str | None:
         f"label=aq.attempt={attempt}",
     )
     return ids.split()[0] if ids else None
+
+
+def running_in_wave(submission_id: str, wave_index: int) -> dict | None:
+    """A running attempt of the given wave, once that wave has been planned."""
+    progress = status(submission_id).get("progress", {})
+    waves = progress.get("waves", [])
+    if len(waves) <= wave_index:
+        return None
+    wave = waves[wave_index]
+    indexes = range(wave["offset"], wave["offset"] + wave["size"])
+    return next(
+        (a for a in progress["attempts"] if a["index"] in indexes and a["state"] == "running" and a["pod"]),
+        None,
+    )
 
 
 def attempt_pod(submission_id: str, attempt: int) -> dict | None:
@@ -517,6 +533,63 @@ def build_timeout() -> dict:
     }
 
 
+def adaptive_restart_mid_wave(api: Api) -> dict:
+    sid = submit("rb-ok", n_attempts=None, strategy="adaptive")
+    in_flight = wait_for(lambda: running_in_wave(sid, 1), 600, "second wave running")
+    api.stop(signal.SIGKILL)
+    api.start()
+    results = wait_terminal(sid, timeout=900)
+    progress = status(sid)["progress"]
+    waves = progress["waves"]
+    tries = {a["index"]: len(a["pods"]) for a in progress["attempts"]}
+    check(
+        results["status"] == "completed",
+        f"adaptive submission completes after restart: {results.get('error')}",
+    )
+    check(results["learnability"]["classification"] == "too_easy", f"got {results['learnability']}")
+    check(all(wave["done"] for wave in waves) and len(waves) == 4, f"four waves of two, all done: {waves}")
+    check(set(tries.values()) == {1}, f"every attempt ran exactly once (in-flight wave re-attached): {tries}")
+    return {
+        "submission": sid,
+        "killed_during_attempt": in_flight["index"],
+        "waves": waves,
+        "learnability": results["learnability"],
+        "results": summarize(results),
+        "leftovers": assert_cleaned_up(sid),
+    }
+
+
+def adaptive_wave1_pod_failure() -> dict:
+    sid = submit("rb-slow", n_attempts=None, strategy="adaptive")
+    target = wait_for(lambda: running_in_wave(sid, 1), 600, "second wave running")
+    index, first_pod = target["index"], target["pod"]
+    wait_for(lambda: task_container(sid, index), 300, "task container of the wave-1 attempt")
+    kill_pod_container(first_pod)
+    retry = wait_for(lambda: (p := attempt_pod(sid, index)) and p["pod"] != first_pod and p, 120, "retry pod")
+    wait_for(lambda: task_container(sid, index), 300, "retried task container")
+    kill_pod_container(retry["pod"])
+
+    results = wait_terminal(sid, timeout=1500)
+    attempts = {a["attempt"]: a for a in results["attempts"]}
+    crashed = attempts[index]
+    others = [a for i, a in attempts.items() if i != index]
+    check(crashed["status"] == "error" and crashed["retries"] == 1, f"wave-1 attempt errored: {crashed}")
+    check("exit code 137" in (crashed["error"] or ""), f"crash reason kept: {crashed['error']}")
+    check(all(a["resolved"] for a in others), "every other attempt resolved")
+    check(results["learnability"]["classification"] == "too_easy", f"got {results['learnability']}")
+    check(
+        len(attempts) == 9, f"the errored attempt is replaced by one extra launch: {len(attempts)} launched"
+    )
+    return {
+        "submission": sid,
+        "crashed_attempt": index,
+        "killed_pods": [first_pod, retry["pod"]],
+        "learnability": results["learnability"],
+        "results": summarize(results),
+        "leftovers": assert_cleaned_up(sid),
+    }
+
+
 def secret_not_leaked() -> dict:
     secret = secret_value()
     check(bool(secret), "a key must be configured to check for leaks")
@@ -549,6 +622,7 @@ GROUPS = [
         {"AQ_RUNNER_IMAGE": "aq-runner:does-not-exist", "AQ_BUILD_TIMEOUT_SEC": "15"},
         [[unstartable_pod_fails_fast, build_timeout]],
     ),
+    ("adaptive", {"AQ_ADAPTIVE_MAX_WAVE": "2"}, [[adaptive_restart_mid_wave], [adaptive_wave1_pod_failure]]),
     ("final", {}, [[secret_not_leaked]]),
 ]
 
