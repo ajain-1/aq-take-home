@@ -79,7 +79,7 @@ def submit_task(
     (terminus-1, or oracle/nop for infrastructure checks).
     """
     try:
-        submission = service.submit(file.file.read(), n_attempts, agent)
+        submission = service.submit(file.file.read(settings.max_upload_bytes + 1), n_attempts, agent)
     except SubmissionRejected as e:
         raise HTTPException(status_code=422, detail=str(e))
     return {
