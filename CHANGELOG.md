@@ -57,9 +57,9 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
   - A failing test is a normal result, not an infrastructure failure.
   - Infrastructure failures of a single attempt (e.g. an OOM-killed or evicted pod) are retried once via `backoffLimitPerIndex` without touching the other attempts.
   - A retried pod first removes leftover task containers and partial output from the previous try.
-  - Pods that can never start because of a container-level error (`ErrImageNeverPull`, `CreateContainerConfigError`, …) fail the submission immediately instead of waiting out the deadline. Volume mount failures only show up as pod events, so they are not detected and still wait for the deadline.
-- **Task container memory.** `resource_class` caps the task container through compose `mem_limit`. If a task exceeds it, Docker kills the task container rather than the pod, and the attempt surfaces as an agent or test failure, not as a pod `OOMKilled`.
-- **Partial results.** An attempt that produced no results is reported as `status: error` with the pod's reason (e.g. `OOMKilled (exit code 137)`, `DeadlineExceeded`) while the other attempts still report. The submission is `failed` only if no attempt produced test results.
+  - Pods that can never start fail the submission immediately instead of waiting out the deadline: container-level errors (`ErrImageNeverPull`, `CreateContainerConfigError`, …) and volume failures (`FailedMount`, read from pod events after 3 repeats so a transient hiccup doesn't count).
+- **Task container memory.** `resource_class` caps the task container through compose `mem_limit`, with `memswap_limit` set to the same value (otherwise Docker silently adds an equal amount of swap and the limit doubles). If a task exceeds it, Docker kills the task container rather than the pod. terminal-bench would report that as a plain agent or test failure, so the pod watches Docker's `oom` events for its task container, and the attempt's `infrastructure_issues` says it was OOM-killed.
+- **Partial results.** Each attempt has one of three statuses: `completed` (tests ran), `tests_not_run` (the trial finished but produced no parseable test results, e.g. a test timeout), or `error` (no results at all, reported with the pod's reason, e.g. `OOMKilled (exit code 137)`). The other attempts still report either way. The submission is `failed` only if every attempt errored.
 - **Timeouts everywhere.** Docker builds (`AQ_BUILD_TIMEOUT_SEC`), the Job deadline, and an executor-side wait deadline (Job deadline plus a grace period) after which the Job is deleted.
 - **Cleanup always runs** after a terminal outcome: the Job is deleted, then labelled task containers and networks (which can be orphaned when a pod is killed before compose teardown), then the task images. `ttlSecondsAfterFinished` is a fallback. Each pod log is saved next to its attempt before the Job is deleted.
 - **Bounded concurrency.** A worker pool caps active submissions and a semaphore caps concurrent Docker builds. Pod resource requests let Kubernetes queue attempts rather than overcommit the node.
@@ -76,9 +76,16 @@ The first submission builds the Job pod image (a few minutes); later submissions
 
 #### Known limitations
 - The Job's `activeDeadlineSeconds` starts when the Job is created, so time spent `Pending` on a saturated node counts against it.
-- A Job that is deleted (for example by its 24h TTL) before a resumed API collects it gets re-created, and its attempts re-run.
 - Docker builds are not interruptible, so a clean API shutdown waits for in-flight builds to finish.
-- Only the latest pod's log per attempt is kept; logs from earlier retried pods are lost.
+
+#### Fixes from code review
+- **Resume:** never re-creates a Job once launched. The persisted `launched_at` makes a resumed run re-attach and collect instead of re-running paid attempts, even if the Job was garbage-collected.
+- **API startup:** the API is wired in the FastAPI lifespan (`api/context.py`), and the cluster client connects lazily, so a missing kubeconfig shows up as `k8s_available: false` on `/health` instead of a crash at startup. The `runner`/`api` loggers get their own handler, because uvicorn owns the root logger.
+- **Settings and agents:** settings are read from the environment when the API starts (`Settings.from_env()`), not at import, and the agent catalog lives in one place (`runner/config.py`).
+- **Pod mounts:** pods mount only their own submission directory, not the whole data directory (which holds the state database and other submissions).
+- **Store and uploads:** `store.update` holds its lock across the read and the write, and uploads are read only up to the size limit.
+- **Retried pods:** logs from every try of an attempt are kept (`pod-try-N.log`). The pod entrypoint forwards SIGTERM to `tb`.
+- **Linting:** `ruff.toml` added, and the code is clean under it.
 
 #### End-to-end verification
 - All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards.
