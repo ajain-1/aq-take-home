@@ -1,2 +1,4 @@
-# Runner has no Python package dependencies beyond stdlib.
-# It calls Docker via subprocess.
+# Host-side runner dependencies (the Job pod image is defined in runner/Dockerfile).
+kubernetes==31.0.0
+pydantic==2.14.1
+pyyaml==6.0.2
