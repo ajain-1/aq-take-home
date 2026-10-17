@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from runner.config import Settings
+from runner.learnability import TARGET_RUNS, decide
 from runner.models import AttemptProgress
 
 PYTEST_SESSION_MARKER = "test session starts"
@@ -27,6 +29,14 @@ def _pytest_output(pane_path: Path) -> str | None:
 def find_trial_dir(attempt_dir: Path, task_id: str) -> Path | None:
     matches = sorted(attempt_dir.glob(f"*/{task_id}/*/results.json"))
     return matches[-1].parent if matches else None
+
+
+def attempt_resolved(attempt_dir: Path, task_id: str) -> bool | None:
+    """Whether the attempt passed every test; None if it produced no results."""
+    trial_dir = find_trial_dir(attempt_dir, task_id)
+    if trial_dir is None:
+        return None
+    return bool(json.loads((trial_dir / "results.json").read_text()).get("is_resolved"))
 
 
 def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, data_dir: Path) -> dict[str, Any]:
@@ -96,4 +106,37 @@ def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
             "pass_rate": round(resolved / len(attempts), 3) if attempts else 0.0,
         },
         "tests": tests,
+    }
+
+
+def learnability(attempts: list[dict[str, Any]], strategy: str, confidence: float, settings: Settings) -> dict[str, Any]:
+    """Classify the task under the 10-run rule and account for inference spent and saved."""
+    completed = [a for a in attempts if a["status"] == "completed"]
+    passes = sum(1 for a in completed if a["resolved"])
+
+    measured = [a for a in attempts if a.get("input_tokens") is not None]
+    input_tokens = sum(a["input_tokens"] for a in measured)
+    output_tokens = sum(a.get("output_tokens") or 0 for a in measured)
+    cost_usd = (input_tokens * settings.price_input_per_mtok + output_tokens * settings.price_output_per_mtok) / 1e6
+    saved = max(0, TARGET_RUNS - len(attempts))
+
+    def per_attempt(total: float) -> float:
+        return total / len(measured) * saved if measured else 0
+
+    return {
+        "strategy": strategy,
+        "confidence": confidence,
+        "target_runs": TARGET_RUNS,
+        "classification": decide(passes, len(completed) - passes, confidence),
+        "passing_runs": passes,
+        "failing_runs": len(completed) - passes,
+        "attempts_used": len(attempts),
+        "tokens": {"input": input_tokens, "output": output_tokens},
+        "estimated_cost_usd": round(cost_usd, 4),
+        "estimated_savings_vs_target": {
+            "attempts": saved,
+            "input_tokens": round(per_attempt(input_tokens)),
+            "output_tokens": round(per_attempt(output_tokens)),
+            "cost_usd": round(per_attempt(cost_usd), 4),
+        },
     }
