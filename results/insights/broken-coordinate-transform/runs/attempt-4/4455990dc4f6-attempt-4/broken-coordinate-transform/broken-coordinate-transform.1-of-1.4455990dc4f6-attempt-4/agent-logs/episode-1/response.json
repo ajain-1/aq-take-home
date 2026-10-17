@@ -1,0 +1,12 @@
+{
+    "state_analysis": "I can see the buggy.cpp file content. It's a matrix multiplication program with several bugs that I need to fix. Let me see the full file including the beginning.",
+    "explanation": "Let me view the complete file to see if there's more code at the beginning, including any includes and the main function signature.",
+    "commands": [
+        {
+            "keystrokes": "head -50 buggy.cpp\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

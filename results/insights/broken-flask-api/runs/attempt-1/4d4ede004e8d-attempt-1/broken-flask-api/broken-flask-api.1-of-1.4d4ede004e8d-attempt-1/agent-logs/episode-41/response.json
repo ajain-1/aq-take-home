@@ -1,0 +1,12 @@
+{
+    "state_analysis": "I can see there are two python3 app.py processes (PIDs 974 and 975) that are in 'T' (stopped) state but still holding the port. I need to kill them.",
+    "explanation": "Kill the stopped python processes that are holding port 3000.",
+    "commands": [
+        {
+            "keystrokes": "kill -9 974 975; sleep 1; nohup python3 app.py > /tmp/flask.log 2>&1 &\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

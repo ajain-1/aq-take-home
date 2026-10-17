@@ -123,3 +123,59 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - Polling rather than server-sent events or WebSockets: simpler and good enough at a 2.5s interval. SSE would cut latency and load.
 - No asciinema playback yet. The `.cast` recordings are already saved per trial, and embedding asciinema-player would let you replay the terminal.
 - No auth. The UI exposes everything the API does, which is fine for a local tool but not for a shared deployment.
+
+## Stretch goal B: Inference cost optimization
+
+#### What I did
+- `strategy=adaptive` on `POST /submit` runs attempts in waves (one Indexed Job per wave, with a global attempt offset) and stops as soon as the 10-run learnability class is decided. `/results` gains a `learnability` block: `classification` (`learnable | too_easy | too_hard | undetermined`), passing/failing runs, `attempts_used` vs. `target_runs`, measured tokens, estimated cost, and estimated tokens/cost saved versus running all 10. `/status` shows the waves.
+- `runner/learnability.py` holds the decision rules. Out of 10 runs the class is already fixed once passes ≥ 8 (too easy), failures ≥ 9 (too hard), or passes ≥ 2 and failures ≥ 3 (learnable), because no outcome of the remaining runs can change it. Stopping exactly then (`confidence=1.0`, the default) always returns the same answer as running all 10.
+- Optional `confidence < 1.0` also stops once the posterior predictive probability of one class (uniform Beta prior on the per-run pass rate, Beta-Binomial over the remaining runs) reaches the threshold. This trades a bounded misclassification rate for fewer runs.
+- `scripts/simulate_cost.py` produces `results/cost-optimization/simulation.md`. It replays all 1024 outcome sequences of 10 runs, so the expectations are exact rather than sampled, and checks every classification against the 10-run rule.
+
+#### Results
+- **Exact policy:** 0 misclassifications across all 1024 sequences × wave caps {1, 3, 5, 10}. It uses 7.85 attempts on average instead of 10 (22% fewer, p uniform). That is 8 for a task every run solves, 9 for one every run fails, and about 6.6 near p = 0.4. At the measured $0.61 per terminus-1 attempt, that is $4.75 instead of $6.05 per task.
+- **Confidence stopping:** 0.95 → 7.34 attempts (27% fewer) with a 0.5% misclassification rate; 0.9 → 6.43 attempts (36% fewer) with a 3.1% rate.
+- **Waves cost nothing extra.** Each wave launches `runs_until_decidable` attempts: the fewest more runs after which a decision is even possible. A one-at-a-time policy would run every one of those, so parallel waves have exactly the sequential policy's cost (checked for every sequence in the tests), and latency drops from about 7.9 waves to about 2.9 (averaged over p). The first wave is always 5. A naive "batches of 5" alternative costs 9.21 attempts.
+- **No in-flight cancellation is needed.** A wave never exceeds the minimum runs to a decision, so a decision can't arrive mid-wave.
+
+#### Verification
+- `tests/test_learnability.py` (31 tests): boundary cases; exactness against the 10-run rule for every sequence and wave cap; the stopping point is the first decidable prefix; parallel cost equals sequential cost; class probabilities sum to 1; replacement of errored attempts is bounded.
+- **End-to-end oracle run** (always passes) on `config-manifest-validator` with at most 4 attempts in flight: waves of 4, 3 and 1 → `too_easy` after 8 attempts, with all Jobs, containers and images cleaned up (`results/cost-optimization/oracle-adaptive-results.json`).
+- **End-to-end terminus-1 run** on `csv-to-json-cli-fix` with `confidence=0.9`: waves of 4 and 1, all 5 passed → `too_easy` after 5 attempts. It used 139,551 input / 8,777 output tokens (about $0.92) and saved an estimated 5 attempts (about $0.92) versus running all 10 (`results/cost-optimization/terminus-adaptive-results.json`).
+
+#### Design decisions
+- **Exact by default.** "Learnable" is defined on 10 actual runs, so the default never changes a label; the probabilistic mode is opt-in and its error rate is published alongside its savings.
+- **Errored attempts are replaced.** Attempts with no test results (infrastructure errors) don't count as passes or failures. They are replaced, up to 3 extra launches (`AQ_ADAPTIVE_EXTRA_LAUNCHES`), after which the class can come back `undetermined`.
+- **Configurable caps and prices.** `AQ_ADAPTIVE_MAX_WAVE` caps attempts in flight. Prices default to Opus 4.5 list prices (`AQ_PRICE_*_PER_MTOK`). Token counts are terminal-bench's tokenizer estimates and ignore prompt caching, so dollar figures are approximate.
+- **Not done:** screening with a cheaper model first. It is not exact against a SOTA-defined label, and the measured savings above come from attempts avoided, not cheaper ones.
+
+## Stretch goal D: Beyond pass/fail
+
+#### What I did
+- Added `runner/insights/`, which turns the N attempts of a submission into findings a customer can act on. It is served by `GET /insights/{id}` (`?format=markdown`, `?refresh=true`, `?narrative=false`) and written to `insights.json` / `insights.md` in the submission directory. `python -m runner.insights <dir>` regenerates and re-verifies a report offline.
+- What it reports:
+  - **Outcome with honest uncertainty.** Resolved k/N with a 95% Wilson interval, and a learnability verdict. At N=10 it applies the exact 2–7-of-10 rule; below that it commits to "likely learnable / too easy / too hard" only when the whole interval supports it, and otherwise says `insufficient_evidence`.
+  - **Per-test pass rates**, each with its own interval.
+  - **Per-attempt failure taxonomy**: `infrastructure_issue` (e.g. task-container OOM, cited from the pod's `task-container-events.jsonl`), `infrastructure_error`, `tests_not_run`, `agent_timeout`, `test_timeout`, `llm_error`, `tests_unparseable`, `stopped_without_completing`, `declared_done_with_failing_tests`, and `declared_done_despite_failure_warning` (terminus showed the agent its "TESTS FAILED! Are you sure" prompt and it declared done anyway).
+  - **Consistent failures**: a test that fails in every completed attempt, flagged as systematic when the assertion message is identical each time.
+  - **Hidden requirements (task-quality signal).** The test file is parsed with `ast` to find the literal strings each failing test checks for, skipping assertion messages, docstrings, f-strings, dict keys and call arguments, and taking the literal prefix of regexes. A literal counts as hidden if it is absent from the instruction and was never shown to an agent by the environment before that agent typed it. The agent's own echoed output doesn't count as discovery.
+  - **Divergence**: for tests that pass in some attempts and fail in others, a literal that every passing attempt typed and no failing attempt did.
+- Evidence committed in `results/insights/`:
+  - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files.
+  - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and still gives `insufficient_evidence` for learnability (interval 57–100%) rather than declaring it too easy.
+  - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `insufficient_evidence` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
+
+#### How trust is enforced
+- Every finding carries evidence IDs. Each item is either a verbatim quote, with its source path relative to the submission and, where relevant, line, attempt and episode, or an absence claim scoped to exactly what it is about (`task.yaml#instruction`).
+- `evidence.verify` re-reads the artifacts independently of the parsers that produced the claim. JSON is compared by its decoded string values, so keystrokes are matched without escaping artefacts.
+- A finding is published only if all its evidence verifies; otherwise it is moved to `rejected_insights` and listed as withheld. During development this caught a real false positive: an absence check against all of `task.yaml` matched `difficulty: medium`, which led to scoping absence checks to the instruction field.
+- The optional LLM narrative (`openai/gpt-4.1-mini` via OpenRouter) only sees verified findings. Each sentence must cite IDs from them, and every number in a sentence must appear in the cited material; failing sentences are dropped and counted. The report says that the findings, not the narrative, are the source of truth.
+- Limitations are stated in every report: rule-based classification, lexical matching, and wide intervals at small N.
+
+#### Design decisions
+- **Deterministic first.** Every finding comes from rules over recorded artifacts; the LLM is used only for an optional, citation-checked summary.
+- **Self-contained and portable.** The analysis lives in its own package, the endpoint in its own router (`api/insights_routes.py`), and the only executor change is wiring. Paths are relative to the submission directory, so a copied evidence directory re-verifies anywhere.
+
+#### What I'd do next
+- Cluster failing trajectories by their first divergent command, and diff the files each attempt finally produced against what the tests read.
+- Use the pytest assertion introspection (the `E` lines) to explain *how* an output missed (e.g. which section header was absent), not just that it did.

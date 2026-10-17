@@ -1,0 +1,40 @@
+# Retention requirement: 60 days
+/var/log/samples/error.log {
+    daily
+    rotate 60
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    postrotate
+        # Signal application to reopen log files if needed
+        # Add application-specific reload command here
+    endscript
+}
+
+# DEBUG LOG - web-server
+# Importance: low | Growth: 5.3 MB/day
+# Retention requirement: 7 days
+/var/log/samples/debug.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+}
+
+root@6a3736b1a6ac:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.2479,0,"daily, rotate 30",0.0000
+/var/log/samples/system.log,0.0002,1,"weekly, rotate 13",0.0000
+/var/log/samples/access.log,0.1537,1,"daily, rotate 14",0.0348
+/var/log/samples/error.log,0.2280,0,"weekly, rotate 9",0.0000
+/var/log/samples/debug.log,0.0518,0,"weekly, rotate 1",0.0000
+root@6a3736b1a6ac:/app#

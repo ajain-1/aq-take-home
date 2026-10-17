@@ -1,4 +1,4 @@
-"""Kubernetes Job management: one Indexed Job per submission, one index per attempt."""
+"""Kubernetes Job management: one Indexed Job per wave of attempts, one index per attempt."""
 
 import json
 from dataclasses import dataclass, field
@@ -10,7 +10,7 @@ from kubernetes.client.exceptions import ApiException
 from kubernetes.utils import parse_quantity
 
 from runner.config import ResourceClass, Settings
-from runner.models import AttemptProgress, AttemptState, TaskSpec
+from runner.models import AttemptProgress, AttemptState, TaskSpec, Wave
 
 MANAGED_BY = "aq-task-executor"
 COMPLETION_INDEX_ANNOTATION = "batch.kubernetes.io/job-completion-index"
@@ -52,8 +52,8 @@ def api_error_message(error: ApiException) -> str:
         return f"{error.status} {error.reason}"
 
 
-def job_name(submission_id: str) -> str:
-    return f"aq-{submission_id}"
+def job_name(submission_id: str, wave: int = 0) -> str:
+    return f"aq-{submission_id}" if wave == 0 else f"aq-{submission_id}-w{wave}"
 
 
 def job_deadline_sec(spec: TaskSpec, settings: Settings) -> int:
@@ -65,7 +65,7 @@ def build_job_manifest(
     *,
     submission_id: str,
     spec: TaskSpec,
-    n_attempts: int,
+    wave: Wave,
     runner_image: str,
     submission_root: Path,
     task_root: Path,
@@ -75,9 +75,14 @@ def build_job_manifest(
     resources: ResourceClass,
     settings: Settings,
 ) -> dict:
-    labels = {"app.kubernetes.io/managed-by": MANAGED_BY, "aq/submission": submission_id}
+    labels = {
+        "app.kubernetes.io/managed-by": MANAGED_BY,
+        "aq/submission": submission_id,
+        "aq/wave": str(wave.index),
+    }
     env = {
         "AQ_SUBMISSION_ID": submission_id,
+        "AQ_ATTEMPT_OFFSET": str(wave.offset),
         "AQ_TASK_ROOT": str(task_root),
         "AQ_TASK_ID": spec.task_id,
         "AQ_OUTPUT_ROOT": str(output_root),
@@ -113,13 +118,13 @@ def build_job_manifest(
     return {
         "apiVersion": "batch/v1",
         "kind": "Job",
-        "metadata": {"name": job_name(submission_id), "labels": labels},
+        "metadata": {"name": job_name(submission_id, wave.index), "labels": labels},
         "spec": {
             "completionMode": "Indexed",
-            "completions": n_attempts,
-            "parallelism": n_attempts,
+            "completions": wave.size,
+            "parallelism": wave.size,
             "backoffLimitPerIndex": settings.retries_per_attempt,
-            "maxFailedIndexes": n_attempts,
+            "maxFailedIndexes": wave.size,
             "activeDeadlineSeconds": job_deadline_sec(spec, settings),
             "ttlSecondsAfterFinished": 24 * 3600,
             "template": {
@@ -185,6 +190,11 @@ class KubeClient:
             if e.status != 409:
                 raise
 
+    def delete_submission_jobs(self, submission_id: str) -> None:
+        self._batch.delete_collection_namespaced_job(
+            self._namespace, label_selector=f"aq/submission={submission_id}", propagation_policy="Background"
+        )
+
     def delete_job(self, name: str) -> None:
         try:
             self._batch.delete_namespaced_job(name, self._namespace, propagation_policy="Background")
@@ -198,7 +208,7 @@ class KubeClient:
         except ApiException:
             return None
 
-    def snapshot(self, name: str, n_attempts: int) -> JobSnapshot:
+    def snapshot(self, name: str, wave: Wave) -> JobSnapshot:
         try:
             job = self._batch.read_namespaced_job(name, self._namespace)
         except ApiException as e:
@@ -212,7 +222,7 @@ class KubeClient:
                 finished, reason = True, condition.reason if condition.type == "Failed" else None
 
         pods = self._core.list_namespaced_pod(self._namespace, label_selector=f"job-name={name}").items
-        attempts = _attempts_from_pods(pods, n_attempts)
+        attempts = _attempts_from_pods(pods, wave)
         for attempt in attempts:
             if attempt.state == AttemptState.PENDING and attempt.pod:
                 attempt.reason = self._fatal_pod_event(attempt.pod) or attempt.reason
@@ -228,7 +238,7 @@ class KubeClient:
         return None
 
 
-def _attempts_from_pods(pods: list, n_attempts: int) -> list[AttemptProgress]:
+def _attempts_from_pods(pods: list, wave: Wave) -> list[AttemptProgress]:
     by_index: dict[int, list] = {}
     for pod in pods:
         index = (pod.metadata.annotations or {}).get(COMPLETION_INDEX_ANNOTATION)
@@ -236,8 +246,9 @@ def _attempts_from_pods(pods: list, n_attempts: int) -> list[AttemptProgress]:
             by_index.setdefault(int(index), []).append(pod)
 
     attempts = []
-    for index in range(n_attempts):
-        tries = sorted(by_index.get(index, []), key=lambda pod: pod.metadata.creation_timestamp)
+    for local_index in range(wave.size):
+        index = wave.offset + local_index
+        tries = sorted(by_index.get(local_index, []), key=lambda pod: pod.metadata.creation_timestamp)
         if not tries:
             attempts.append(AttemptProgress(index=index))
             continue

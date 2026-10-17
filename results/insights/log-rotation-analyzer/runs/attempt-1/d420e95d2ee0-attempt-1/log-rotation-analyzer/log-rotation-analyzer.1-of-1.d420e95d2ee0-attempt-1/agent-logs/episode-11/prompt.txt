@@ -1,0 +1,40 @@
+>     # Rotation schedule: Weekly (low volume)
+>     weekly
+>
+>     # Retention: 4 copies (adequate for system logs)
+>     rotate 4
+>
+>     # Compression settings
+>     compress
+>     compresscmd /usr/bin/gzip
+>     compressoptions -9
+>     delaycompress
+>
+>     # Handle edge cases
+>     missingok
+>     notifempty
+>
+>     # Create new file with proper permissions
+>     create 644 root adm
+>
+>     # Use date extension
+>     dateext
+>     dateformat -%Y%m%d
+> }
+>
+> #============================================================================
+> # GLOBAL DEFAULTS (can be placed in /etc/logrotate.conf)
+> #============================================================================
+> # These settings apply to all logs unless overridden:
+> #
+> # weekly              - Default rotation frequency
+> # rotate 4            - Default number of rotations to keep
+> # create              - Create new log file after rotation
+> # compress            - Compress rotated logs
+> # delaycompress       - Don't compress the most recent rotated log
+> # notifempty          - Don't rotate empty logs
+> # missingok           - Don't error if log file is missing
+> # dateext             - Use date extension instead of numbers
+> #============================================================================
+> EOF
+root@d0ec239fff97:/app#

@@ -1,0 +1,40 @@
+>         f.write(f'   Impact: {issue["impact"]}\n')
+>
+>     f.write('\n' + '-' * 70 + '\n')
+>     f.write('DISK SPACE IMPACT ANALYSIS\n')
+>     f.write('-' * 70 + '\n')
+>     f.write(f'Current estimated monthly storage: {total_current:.2f} MB\n')
+>     f.write(f'Optimized monthly storage: {total_opt:.2f} MB\n')
+>     f.write(f'Estimated monthly savings: {total_savings:.2f} MB ({savings_pct:.1f}%)\n\n')
+>
+>     f.write('-' * 70 + '\n')
+>     f.write('RECOMMENDATIONS\n')
+>     f.write('-' * 70 + '\n\n')
+>     f.write('1. IMMEDIATE ACTIONS (Critical):\n')
+>     f.write('   - Add logrotate configuration for error.log and debug.log\n')
+>     f.write('   - Compress existing uncompressed rotated files\n')
+>     f.write('   - Increase rotation frequency for high-growth logs\n\n')
+>     f.write('2. CONFIGURATION CHANGES:\n')
+>     for rec in recommendations:
+>         f.write(f'   {rec["path"]}:\n')
+>         f.write(f'     Schedule: {rec["schedule"]}, Rotate: {rec["rotate"]}, Compress: Yes\n')
+>         if rec['size_trigger']:
+>             f.write(f'     Size trigger: {rec["size_trigger"]}\n')
+>         f.write(f'     Max age: {rec["maxage"]} days\n')
+>     f.write('\n3. COMPLIANCE CONSIDERATIONS:\n')
+>     f.write('   - PCI-DSS: Ensure audit logs retained for minimum 1 year\n')
+>     f.write('   - SOX: Maintain financial system logs for 7 years\n')
+>     f.write('   - Critical logs use delaycompress for immediate access\n\n')
+>     f.write('4. MONITORING RECOMMENDATIONS:\n')
+>     f.write('   - Set up alerts for log partition usage > 80%\n')
+>     f.write('   - Monitor log growth rate anomalies\n')
+>     f.write(f'   - Schedule rotation outside peak hours: {", ".join(system_info["peak_traffic_hours"])}\n\n')
+>     f.write('=' * 70 + '\n')
+>     f.write('END OF REPORT\n')
+>     f.write('=' * 70 + '\n')
+>
+> print("Created: analysis_report.txt")
+> EOF
+Analysis: 6 issues, 82.1% potential savings
+Created: analysis_report.txt
+root@633112936ae8:/app#

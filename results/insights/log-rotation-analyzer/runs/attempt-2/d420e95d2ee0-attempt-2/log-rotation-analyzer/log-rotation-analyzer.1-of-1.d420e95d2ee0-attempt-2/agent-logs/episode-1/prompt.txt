@@ -1,0 +1,40 @@
+root@633112936ae8:/app# ls -la /var/log/samples/ && ls -la /etc/logrotate.d/samples/ && ls -la /app/; tmux wait -S done
+total 768
+drwxr-xr-x 1 root root   4096 Oct 17 01:55 .
+drwxr-xr-x 1 root root   4096 Oct 17 01:55 ..
+-rw-r--r-- 1 root root 161214 Oct 17 01:55 access.log
+-rw-r--r-- 1 root root  40500 Oct 17 01:55 access.log.old
+-rw-r--r-- 1 root root 259893 Oct 17 01:55 app.log
+-rw-r--r-- 1 root root  54292 Oct 17 01:55 debug.log
+-rw-r--r-- 1 root root 239071 Oct 17 01:55 error.log
+-rw-r--r-- 1 root root    219 Oct 17 01:55 system.log
+-rw-r--r-- 1 root root    551 Oct 17 01:55 system.log.1.gz
+total 24
+drwxr-xr-x 1 root root 4096 Oct 17 01:55 .
+drwxr-xr-x 1 root root 4096 Oct 17 01:55 ..
+-rw-r--r-- 1 root root   84 Oct 17 01:55 access
+-rw-r--r-- 1 root root   95 Oct 17 01:55 app
+-rw-r--r-- 1 root root  125 Oct 17 01:55 system
+total 24
+drwxr-xr-x 1 root root 4096 Oct 17 01:55 .
+drwxr-xr-x 1 root root 4096 Oct 17 02:09 ..
+-rwxr-xr-x 1 root root 6285 Oct 17 01:53 generate-samples.sh
+-rw-r--r-- 1 root root 1704 Oct 17 01:55 log_metadata.json
+root@633112936ae8:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

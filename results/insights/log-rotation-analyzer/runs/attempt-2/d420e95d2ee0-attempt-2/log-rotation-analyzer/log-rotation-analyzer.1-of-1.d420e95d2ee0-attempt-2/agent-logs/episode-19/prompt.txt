@@ -1,0 +1,50 @@
+Previous command:
+keystrokes="echo '--- optimized_logrotate.conf ---' && cat /app/optimized_logrotate.conf\n" is_blocking=True timeout_sec=10.0
+
+The previous command timed out after 10.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+# ERROR LOG - web-server
+# Importance: critical | Growth: 8.9 MB/day
+/var/log/samples/error.log {
+    weekly
+    rotate 9
+    compress
+    delaycompress
+    missingok
+    notifempty
+    maxage 67
+    create 640 www-data adm
+    dateext
+    dateformat -%Y%m%d
+    sharedscripts
+    postrotate
+        # Signal application to reopen log files if needed
+        true
+    endscript
+}
+
+# DEBUG LOG - web-server
+# Importance: low | Growth: 5.3 MB/day
+/var/log/samples/debug.log {
+    weekly
+    rotate 1
+    compress
+    missingok
+    notifempty
+    maxage 14
+    create 640 www-data adm
+    dateext
+    dateformat -%Y%m%d
+    sharedscripts
+    postrotate
+        # Signal application to reopen log files if needed
+        true
+    endscript
+}
+
+root@633112936ae8:/app#
+

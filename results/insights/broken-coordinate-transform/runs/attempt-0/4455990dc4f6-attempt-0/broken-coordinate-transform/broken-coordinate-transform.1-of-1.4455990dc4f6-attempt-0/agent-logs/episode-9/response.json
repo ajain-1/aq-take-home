@@ -1,0 +1,12 @@
+{
+    "state_analysis": "I can see lines 8-46, but I need to see lines 1-7 to confirm the beginning of the file is correct.",
+    "explanation": "View the first 10 lines of the file to verify the includes and main function declaration.",
+    "commands": [
+        {
+            "keystrokes": "head -10 /app/buggy.cpp\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

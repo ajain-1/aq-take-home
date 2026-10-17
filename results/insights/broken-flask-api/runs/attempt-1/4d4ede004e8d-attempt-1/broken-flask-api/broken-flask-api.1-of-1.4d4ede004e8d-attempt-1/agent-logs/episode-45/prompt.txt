@@ -1,0 +1,40 @@
+Address already in use
+Port 3000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+root@dcf6149afda3:/app# fuser -k 3000/tcp 2>/dev/null; sleep 1; nohup python3 app.py > /tmp/flask.log 2>&1 &
+[2] 1168
+root@dcf6149afda3:/app# sleep 3 && cat /tmp/flask.log; tmux wait -S done
+[2]-  Exit 1                  nohup python3 app.py > /tmp/flask.log 2>&1
+nohup: ignoring input
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 3000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+root@dcf6149afda3:/app# ps aux | grep python; tmux wait -S done
+root        47  0.1  0.2 103028 21508 pts/0    Sl+  02:15   0:00 /usr/bin/python3 /usr/bin/asciinema rec --stdin /logs/agent.cast
+root       974  0.4  0.3  39680 31216 pts/1    T    02:17   0:00 python3 app.py
+root       975  0.3  0.3  39740 31184 pts/1    T    02:17   0:00 /usr/bin/python3 app.py
+root      1217  0.0  0.0   3508  1616 pts/1    S+   02:18   0:00 grep --color=auto python
+root@dcf6149afda3:/app# kill -9 974 975; sleep 1; nohup python3 app.py > /tmp/flask.log 2>&1 &
+[1]+  Killed                  python3 app.py
+[1] 1255
+root@dcf6149afda3:/app# sleep 3 && cat /tmp/flask.log; tmux wait -S done
+nohup: ignoring input
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://172.24.0.2:3000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 134-736-077
+root@dcf6149afda3:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users'); print('Status:', r.status_code); print('Users:', len(r.jso
+n()))"; tmux wait -S done
+Status: 200
+Users: 4
+root@dcf6149afda3:/app# python3 -c "import requests; r1 = requests.get('http://localhost:3000/users/1'); r2 = requests.get('http://localhost:3000/users/999'); p
+rint('User 1:', r1.status_code, r1.json()); print('User 999:', r2.status_code, r2.json())"; tmux wait -S done
+User 1: 200 {'email': 'john@example.com', 'id': 1, 'name': 'John Doe', 'role': 'admin'}
+User 999: 404 {'error': 'User not found'}
+root@dcf6149afda3:/app#

@@ -1,0 +1,40 @@
+# SYSTEM LOG - systemd
+# Importance: critical | Growth: 2.1 MB/day
+# Retention requirement: 90 days
+/var/log/samples/system.log {
+    weekly
+    rotate 12
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 640 root adm
+    dateext
+    dateformat -%Y%m%d
+    sharedscripts
+    postrotate
+        # Reload service if needed (uncomment as appropriate)
+        # /usr/bin/systemctl reload systemd > /dev/null 2>&1 || true
+        /usr/bin/logger -t logrotate "/var/log/samples/system.log rotated"
+    endscript
+}
+
+# ACCESS LOG - nginx
+# Importance: medium | Growth: 45.7 MB/day
+# Retention requirement: 14 days
+/var/log/samples/access.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    size 100M
+    maxsize 500M
+    create 640 www-data adm
+    dateext
+    dateformat -%Y%m%d
+}
+
+# End of optimized configuration
+root@ac550e797a3d:/app#

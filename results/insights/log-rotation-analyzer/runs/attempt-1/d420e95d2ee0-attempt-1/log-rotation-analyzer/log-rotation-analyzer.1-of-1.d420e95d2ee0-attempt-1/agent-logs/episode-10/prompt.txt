@@ -1,0 +1,40 @@
+>    - Remove or compress access.log.old
+>    - Implement naming convention enforcement
+>
+> 6. MEDIUM: Add size-based rotation triggers
+>    - Prevent runaway growth during traffic spikes
+>    - Recommended sizes based on growth rates
+>
+> 7. LOW: Schedule rotation during off-peak hours
+>    - Avoid rotation during peak traffic (09:00-11:00, 14:00-16:00, 20:00-22:00)
+>    - Recommended rotation time: 03:00-05:00
+>
+> ================================================================================
+>                     COMPLIANCE NOTES
+> ================================================================================
+>
+> PCI-DSS Requirements:
+> - Log retention: Minimum 1 year online, 1 year archived
+> - Current error.log config: NON-COMPLIANT (no rotation/retention)
+> - Recommendation: Implement 60-day online + archive policy
+>
+> SOX Requirements:
+> - Audit trail integrity required
+> - Current config: AT RISK (potential log loss on disk full)
+> - Recommendation: Implement rotation before disk issues
+>
+> ================================================================================
+>                     IMPLEMENTATION PRIORITY
+> ================================================================================
+>
+> 1. Deploy optimized_logrotate.conf (immediate)
+> 2. Run manual rotation to clear backlog: logrotate -f /etc/logrotate.conf
+> 3. Clean up orphaned files: rm /var/log/samples/access.log.old
+> 4. Monitor disk usage for 1 week
+> 5. Adjust rotation sizes if needed based on actual compression ratios
+>
+> ================================================================================
+>                     END OF REPORT
+> ================================================================================
+> EOF
+root@d0ec239fff97:/app#

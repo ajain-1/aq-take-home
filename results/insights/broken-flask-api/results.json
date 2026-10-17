@@ -1,0 +1,358 @@
+{
+  "submission_id": "4d4ede004e8d",
+  "task_id": "broken-flask-api",
+  "agent": "terminus-1",
+  "model": "openrouter/anthropic/claude-opus-4.5",
+  "passed": true,
+  "passed_tests": 9,
+  "total_tests": 9,
+  "summary": {
+    "n_attempts": 5,
+    "completed_attempts": 5,
+    "errored_attempts": 0,
+    "resolved_attempts": 5,
+    "pass_rate": 1.0
+  },
+  "tests": [
+    {
+      "name": "test_server_is_running",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_users_endpoint_returns_json",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_users_endpoint_has_correct_structure",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_user_by_id_endpoint_valid_id",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_user_by_id_endpoint_invalid_id",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_requirements_file_exists",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_app_file_exists",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_server_handles_multiple_requests",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_data_file_valid_json",
+      "passed": 5,
+      "failed": 0,
+      "pass_rate": 1.0
+    }
+  ],
+  "started_at": "2026-10-17T02:15:16.734155+00:00",
+  "finished_at": "2026-10-17T02:19:46.599635+00:00",
+  "execution_time_sec": 269.87,
+  "attempts": [
+    {
+      "attempt": 0,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_server_is_running",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_returns_json",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_has_correct_structure",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_valid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_invalid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_requirements_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_app_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_server_handles_multiple_requests",
+          "status": "passed"
+        },
+        {
+          "name": "test_data_file_valid_json",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 9,
+      "total_tests": 9,
+      "started_at": "2026-10-17T02:15:22.412550+00:00",
+      "finished_at": "2026-10-17T02:18:37.402866+00:00",
+      "duration_sec": 194.99,
+      "agent_duration_sec": 156.1,
+      "test_duration_sec": 20.39,
+      "input_tokens": 311653,
+      "output_tokens": 4959,
+      "artifacts_dir": "submissions/4d4ede004e8d/runs/attempt-0/4d4ede004e8d-attempt-0/broken-flask-api/broken-flask-api.1-of-1.4d4ede004e8d-attempt-0",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 9 items\n\n../tests/test_outputs.py .........                                                                                                                       [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_server_is_running\nPASSED ../tests/test_outputs.py::test_users_endpoint_returns_json\nPASSED ../tests/test_outputs.py::test_users_endpoint_has_correct_structure\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_valid_id\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_invalid_id\nPASSED ../tests/test_outputs.py::test_requirements_file_exists\nPASSED ../tests/test_outputs.py::test_app_file_exists\nPASSED ../tests/test_outputs.py::test_server_handles_multiple_requests\nPASSED ../tests/test_outputs.py::test_data_file_valid_json\n====================================================================== 9 passed in 0.13s =======================================================================\nroot@9b68b8a4b36d:/app#"
+    },
+    {
+      "attempt": 1,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_server_is_running",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_returns_json",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_has_correct_structure",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_valid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_invalid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_requirements_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_app_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_server_handles_multiple_requests",
+          "status": "passed"
+        },
+        {
+          "name": "test_data_file_valid_json",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 9,
+      "total_tests": 9,
+      "started_at": "2026-10-17T02:15:22.411848+00:00",
+      "finished_at": "2026-10-17T02:19:42.049976+00:00",
+      "duration_sec": 259.64,
+      "agent_duration_sec": 228.79,
+      "test_duration_sec": 12.59,
+      "input_tokens": 872000,
+      "output_tokens": 5609,
+      "artifacts_dir": "submissions/4d4ede004e8d/runs/attempt-1/4d4ede004e8d-attempt-1/broken-flask-api/broken-flask-api.1-of-1.4d4ede004e8d-attempt-1",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 9 items\n\n../tests/test_outputs.py .........                                                                                                                       [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_server_is_running\nPASSED ../tests/test_outputs.py::test_users_endpoint_returns_json\nPASSED ../tests/test_outputs.py::test_users_endpoint_has_correct_structure\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_valid_id\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_invalid_id\nPASSED ../tests/test_outputs.py::test_requirements_file_exists\nPASSED ../tests/test_outputs.py::test_app_file_exists\nPASSED ../tests/test_outputs.py::test_server_handles_multiple_requests\nPASSED ../tests/test_outputs.py::test_data_file_valid_json\n====================================================================== 9 passed in 0.20s =======================================================================\nroot@dcf6149afda3:/app#"
+    },
+    {
+      "attempt": 2,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_server_is_running",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_returns_json",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_has_correct_structure",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_valid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_invalid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_requirements_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_app_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_server_handles_multiple_requests",
+          "status": "passed"
+        },
+        {
+          "name": "test_data_file_valid_json",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 9,
+      "total_tests": 9,
+      "started_at": "2026-10-17T02:15:22.412259+00:00",
+      "finished_at": "2026-10-17T02:18:49.301538+00:00",
+      "duration_sec": 206.89,
+      "agent_duration_sec": 168.04,
+      "test_duration_sec": 20.28,
+      "input_tokens": 506526,
+      "output_tokens": 5010,
+      "artifacts_dir": "submissions/4d4ede004e8d/runs/attempt-2/4d4ede004e8d-attempt-2/broken-flask-api/broken-flask-api.1-of-1.4d4ede004e8d-attempt-2",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 9 items\n\n../tests/test_outputs.py .........                                                                                                                       [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_server_is_running\nPASSED ../tests/test_outputs.py::test_users_endpoint_returns_json\nPASSED ../tests/test_outputs.py::test_users_endpoint_has_correct_structure\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_valid_id\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_invalid_id\nPASSED ../tests/test_outputs.py::test_requirements_file_exists\nPASSED ../tests/test_outputs.py::test_app_file_exists\nPASSED ../tests/test_outputs.py::test_server_handles_multiple_requests\nPASSED ../tests/test_outputs.py::test_data_file_valid_json\n====================================================================== 9 passed in 0.22s =======================================================================\nroot@cefbfd39e4bf:/app#"
+    },
+    {
+      "attempt": 3,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_server_is_running",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_returns_json",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_has_correct_structure",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_valid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_invalid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_requirements_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_app_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_server_handles_multiple_requests",
+          "status": "passed"
+        },
+        {
+          "name": "test_data_file_valid_json",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 9,
+      "total_tests": 9,
+      "started_at": "2026-10-17T02:15:22.409655+00:00",
+      "finished_at": "2026-10-17T02:17:12.362540+00:00",
+      "duration_sec": 109.95,
+      "agent_duration_sec": 77.76,
+      "test_duration_sec": 13.72,
+      "input_tokens": 120815,
+      "output_tokens": 3127,
+      "artifacts_dir": "submissions/4d4ede004e8d/runs/attempt-3/4d4ede004e8d-attempt-3/broken-flask-api/broken-flask-api.1-of-1.4d4ede004e8d-attempt-3",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 9 items\n\n../tests/test_outputs.py .........                                                                                                                       [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_server_is_running\nPASSED ../tests/test_outputs.py::test_users_endpoint_returns_json\nPASSED ../tests/test_outputs.py::test_users_endpoint_has_correct_structure\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_valid_id\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_invalid_id\nPASSED ../tests/test_outputs.py::test_requirements_file_exists\nPASSED ../tests/test_outputs.py::test_app_file_exists\nPASSED ../tests/test_outputs.py::test_server_handles_multiple_requests\nPASSED ../tests/test_outputs.py::test_data_file_valid_json\n====================================================================== 9 passed in 0.19s =======================================================================\nroot@47d302821d4d:/app#"
+    },
+    {
+      "attempt": 4,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_server_is_running",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_returns_json",
+          "status": "passed"
+        },
+        {
+          "name": "test_users_endpoint_has_correct_structure",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_valid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_user_by_id_endpoint_invalid_id",
+          "status": "passed"
+        },
+        {
+          "name": "test_requirements_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_app_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_server_handles_multiple_requests",
+          "status": "passed"
+        },
+        {
+          "name": "test_data_file_valid_json",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 9,
+      "total_tests": 9,
+      "started_at": "2026-10-17T02:15:22.397608+00:00",
+      "finished_at": "2026-10-17T02:18:04.910017+00:00",
+      "duration_sec": 162.51,
+      "agent_duration_sec": 128.55,
+      "test_duration_sec": 15.74,
+      "input_tokens": 313796,
+      "output_tokens": 3604,
+      "artifacts_dir": "submissions/4d4ede004e8d/runs/attempt-4/4d4ede004e8d-attempt-4/broken-flask-api/broken-flask-api.1-of-1.4d4ede004e8d-attempt-4",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 9 items\n\n../tests/test_outputs.py .........                                                                                                                       [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_server_is_running\nPASSED ../tests/test_outputs.py::test_users_endpoint_returns_json\nPASSED ../tests/test_outputs.py::test_users_endpoint_has_correct_structure\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_valid_id\nPASSED ../tests/test_outputs.py::test_user_by_id_endpoint_invalid_id\nPASSED ../tests/test_outputs.py::test_requirements_file_exists\nPASSED ../tests/test_outputs.py::test_app_file_exists\nPASSED ../tests/test_outputs.py::test_server_handles_multiple_requests\nPASSED ../tests/test_outputs.py::test_data_file_valid_json\n====================================================================== 9 passed in 0.24s =======================================================================\nroot@b398b8bbeaa9:/app#"
+    }
+  ],
+  "status": "completed"
+}

@@ -1,0 +1,40 @@
+  }
+  {
+    "id": 4,
+    "name": "Alice Brown",
+    "email": "alice@example.com",
+    "role": "moderator"
+  }
+root@dcf6149afda3:/app# cat > requirements.txt << 'EOF'
+> flask==3.0.0
+> requests==2.31.0
+> EOF
+root@dcf6149afda3:/app# cat > data/users.json << 'EOF'
+> [
+>   {
+>     "id": 1,
+>     "name": "John Doe",
+>     "email": "john@example.com",
+>     "role": "admin"
+>   },
+>   {
+>     "id": 2,
+>     "name": "Jane Smith",
+>     "email": "jane@example.com",
+>     "role": "user"
+>   },
+>   {
+>     "id": 3,
+>     "name": "Bob Johnson",
+>     "email": "bob@example.com",
+>     "role": "user"
+>   },
+>   {
+>     "id": 4,
+>     "name": "Alice Brown",
+>     "email": "alice@example.com",
+>     "role": "moderator"
+>   }
+> ]
+> EOF
+root@dcf6149afda3:/app#

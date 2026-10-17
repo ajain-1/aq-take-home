@@ -1,0 +1,40 @@
+>             f.write(f"    postrotate\n")
+>             f.write(f"        # Reload service if needed (uncomment as appropriate)\n")
+>             f.write(f"        # /usr/bin/systemctl reload {log['application']} > /dev/null 2>&1 || true\n")
+>             f.write(f"        /usr/bin/logger -t logrotate \"{log['path']} rotated\"\n")
+>             f.write(f"    endscript\n")
+>
+>         f.write(f"}}\n\n")
+>
+>     f.write("# End of optimized configuration\n")
+>
+> print("Generated: optimized_logrotate.conf")
+>
+> # Generate rotation_summary.csv
+> with open('/app/rotation_summary.csv', 'w', newline='') as f:
+>     writer = csv.writer(f)
+>     writer.writerow(['log_path', 'current_size_mb', 'days_since_rotation', 'recommended_schedule', 'estimated_savings_mb'])
+>
+>     for log in analysis_results:
+>         writer.writerow([
+>             log['path'],
+>             f"{log['current_size_mb']:.3f}",
+>             log['days_since_rotation'],
+>             f"{log['optimal_schedule']} (rotate {log['optimal_rotate']})",
+>             f"{log['savings_mb']:.2f}"
+>         ])
+>
+> print("Generated: rotation_summary.csv")
+>
+> # Summary
+> print(f"\nAnalysis complete!")
+> print(f"Total potential savings: {total_projected_savings:.1f} MB ({(total_projected_savings/total_current_size*100):.1f}% reduction)")
+> EOF
+root@ac550e797a3d:/app# python3 /app/log_analyzer.py; tmux wait -S done
+Generated: analysis_report.txt
+Generated: optimized_logrotate.conf
+Generated: rotation_summary.csv
+
+Analysis complete!
+Total potential savings: 548.9 MB (68.2% reduction)
+root@ac550e797a3d:/app#

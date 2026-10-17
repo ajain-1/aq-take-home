@@ -1,0 +1,28 @@
+{
+    "id": "44d6ee23-1ba4-486f-a402-bac027ed26d2",
+    "trial_name": "broken-flask-api.1-of-1.4d4ede004e8d-attempt-0",
+    "task_id": "broken-flask-api",
+    "instruction": "You have been given a broken Python Flask API service that should provide user data endpoints.\n\n**Files in the project:**\n- `app.py`: Main Flask application file\n- `requirements.txt`: Python dependencies configuration\n- `data/users.json`: User data file\n\n**Expected API Behavior:**\n1. Start an HTTP server on port 3000 and bind to 0.0.0.0 (server accessible via localhost)\n2. Serve GET /users endpoint that returns an array of at least 4 user objects in JSON format\n3. Serve GET /users/<id> endpoint that returns a specific user by ID or 404 error\n4. Handle multiple sequential requests successfully\n\n**User Object Schema:**\nEach user object must contain these exact fields:\n```json\n{\n  \"id\": <integer>,\n  \"name\": <string>,\n  \"email\": <string>,\n  \"role\": <string>\n}\n```\n\n**Current Issues:**\n- Missing Flask dependency in requirements.txt\n- Python syntax errors in application files\n- Data file formatting problems\n- Logic errors preventing proper user ID matching\n- Import statement errors\n\n**Success Criteria:**\n- Server starts and runs on port 3000\n- Both API endpoints return proper JSON responses\n- The /users endpoint returns at least 4 user objects with correct schema\n- The /users/<id> endpoint returns correct user or 404 with error message\n- Flask dependency is properly installed (pip install -r requirements.txt works)\n- Server can handle multiple consecutive requests\n\nFix the existing files to meet these requirements.\n",
+    "is_resolved": true,
+    "failure_mode": "unset",
+    "parser_results": {
+        "test_server_is_running": "passed",
+        "test_users_endpoint_returns_json": "passed",
+        "test_users_endpoint_has_correct_structure": "passed",
+        "test_user_by_id_endpoint_valid_id": "passed",
+        "test_user_by_id_endpoint_invalid_id": "passed",
+        "test_requirements_file_exists": "passed",
+        "test_app_file_exists": "passed",
+        "test_server_handles_multiple_requests": "passed",
+        "test_data_file_valid_json": "passed"
+    },
+    "recording_path": "4d4ede004e8d-attempt-0/broken-flask-api/broken-flask-api.1-of-1.4d4ede004e8d-attempt-0/sessions/agent.cast",
+    "total_input_tokens": 311653,
+    "total_output_tokens": 4959,
+    "trial_started_at": "2026-10-17T02:15:22.412550+00:00",
+    "trial_ended_at": "2026-10-17T02:18:37.402866+00:00",
+    "agent_started_at": "2026-10-17T02:15:26.153209+00:00",
+    "agent_ended_at": "2026-10-17T02:18:02.249119+00:00",
+    "test_started_at": "2026-10-17T02:18:05.980889+00:00",
+    "test_ended_at": "2026-10-17T02:18:26.366033+00:00"
+}

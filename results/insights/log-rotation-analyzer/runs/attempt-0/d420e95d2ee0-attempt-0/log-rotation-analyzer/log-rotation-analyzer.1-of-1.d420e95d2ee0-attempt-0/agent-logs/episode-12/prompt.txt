@@ -1,0 +1,40 @@
+CURRENT LOG ROTATION STATUS
+----------------------------------------
+
+/var/log/samples/app.log
+  Type: application | Importance: high
+  Current size: 253.8 KB
+  Growth rate: 15.2 MB/day
+  Retention requirement: 30 days
+  Current config: weekly, rotate 4, compress: True
+
+/var/log/samples/system.log
+  Type: system | Importance: critical
+  Current size: 0.2 KB
+  Growth rate: 2.1 MB/day
+  Retention requirement: 90 days
+  Current config: weekly, rotate 4, compress: True
+  Rotated files: 1
+    - system.log.1.gz: 0.5 KB (compressed: True)
+
+/var/log/samples/access.log
+  Type: access | Importance: medium
+  Current size: 157.4 KB
+  Growth rate: 45.7 MB/day
+  Retention requirement: 14 days
+  Current config: monthly, rotate 2, compress: True
+  Rotated files: 1
+    - access.log.old: 39.6 KB (compressed: False)
+
+/var/log/samples/error.log
+  Type: error | Importance: critical
+  Current size: 233.5 KB
+  Growth rate: 8.9 MB/day
+  Retention requirement: 60 days
+  Current config: NONE
+
+/var/log/samples/debug.log
+  Type: debug | Importance: low
+  Current size: 53.0 KB
+  Growth rate: 5.3 MB/day
+root@6a3736b1a6ac:/app#

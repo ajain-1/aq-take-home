@@ -1,0 +1,40 @@
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+}
+
+# ERROR LOG - web-server
+# Importance: critical | Growth: 8.9 MB/day
+# Retention requirement: 60 days
+/var/log/samples/error.log {
+    daily
+    rotate 60
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    postrotate
+        # Signal application to reopen log files if needed
+        # Add application-specific reload command here
+    endscript
+}
+
+# DEBUG LOG - web-server
+# Importance: low | Growth: 5.3 MB/day
+# Retention requirement: 7 days
+/var/log/samples/debug.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+}
+
+root@6a3736b1a6ac:/app#

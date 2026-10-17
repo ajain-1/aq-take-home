@@ -1,0 +1,40 @@
+>         return jsonify({'error': 'User not found'}), 404
+>
+> if __name__ == '__main__':
+>     app.run(host='0.0.0.0', port=3000, debug=False)
+> EOF
+root@cefbfd39e4bf:/app# python3 app.py &
+[1] 785
+root@cefbfd39e4bf:/app#  * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://172.25.0.2:3000
+Press CTRL+C to quit
+sleep 2; tmux wait -S done
+root@cefbfd39e4bf:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users'); print('Status:', r.status_code); print('Response:', r.json
+())"; tmux wait -S done
+127.0.0.1 - - [17/Oct/2026 02:17:36] "GET /users HTTP/1.1" 200 -
+Status: 200
+Response: [{'email': 'john@example.com', 'id': 1, 'name': 'John Doe', 'role': 'admin'}, {'email': 'jane@example.com', 'id': 2, 'name': 'Jane Smith', 'role': 'us
+er'}, {'email': 'bob@example.com', 'id': 3, 'name': 'Bob Johnson', 'role': 'user'}, {'email': 'alice@example.com', 'id': 4, 'name': 'Alice Brown', 'role': 'mode
+rator'}]
+root@cefbfd39e4bf:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users/1'); print('User 1 Status:', r.status_code); print('User 1:',
+ r.json())"; tmux wait -S done
+127.0.0.1 - - [17/Oct/2026 02:17:40] "GET /users/1 HTTP/1.1" 200 -
+User 1 Status: 200
+User 1: {'email': 'john@example.com', 'id': 1, 'name': 'John Doe', 'role': 'admin'}
+root@cefbfd39e4bf:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users/999'); print('User 999 Status:', r.status_code); print('Respo
+nse:', r.json())"; tmux wait -S done
+127.0.0.1 - - [17/Oct/2026 02:17:43] "GET /users/999 HTTP/1.1" 404 -
+User 999 Status: 404
+Response: {'error': 'User not found'}
+root@cefbfd39e4bf:/app# python3 -c "import requests; [print(requests.get('http://localhost:3000/users').status_code) for _ in range(3)]"; tmux wait -S done
+127.0.0.1 - - [17/Oct/2026 02:17:47] "GET /users HTTP/1.1" 200 -
+200
+127.0.0.1 - - [17/Oct/2026 02:17:47] "GET /users HTTP/1.1" 200 -
+200
+127.0.0.1 - - [17/Oct/2026 02:17:47] "GET /users HTTP/1.1" 200 -
+200
+root@cefbfd39e4bf:/app#
