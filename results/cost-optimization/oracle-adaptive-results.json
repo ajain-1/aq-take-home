@@ -1,0 +1,487 @@
+{
+  "submission_id": "a5ae908181c8",
+  "task_id": "config-manifest-validator",
+  "agent": "oracle",
+  "model": null,
+  "passed": true,
+  "passed_tests": 7,
+  "total_tests": 7,
+  "summary": {
+    "n_attempts": 8,
+    "completed_attempts": 8,
+    "errored_attempts": 0,
+    "resolved_attempts": 8,
+    "pass_rate": 1.0
+  },
+  "tests": [
+    {
+      "name": "test_manifest_file_exists",
+      "passed": 8,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_content",
+      "passed": 8,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_is_file",
+      "passed": 8,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_size",
+      "passed": 8,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_permissions",
+      "passed": 8,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_encoding",
+      "passed": 8,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_exact_content",
+      "passed": 8,
+      "failed": 0,
+      "pass_rate": 1.0
+    }
+  ],
+  "learnability": {
+    "strategy": "adaptive",
+    "confidence": 1.0,
+    "target_runs": 10,
+    "classification": "too_easy",
+    "passing_runs": 8,
+    "failing_runs": 0,
+    "attempts_used": 8,
+    "tokens": {
+      "input": 0,
+      "output": 0
+    },
+    "estimated_cost_usd": 0.0,
+    "estimated_savings_vs_target": {
+      "attempts": 2,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": 0.0
+    }
+  },
+  "started_at": "2026-10-17T02:15:31.925172+00:00",
+  "finished_at": "2026-10-17T02:18:55.182020+00:00",
+  "execution_time_sec": 203.26,
+  "waves": [
+    {
+      "index": 0,
+      "offset": 0,
+      "size": 4
+    },
+    {
+      "index": 1,
+      "offset": 4,
+      "size": 3
+    },
+    {
+      "index": 2,
+      "offset": 7,
+      "size": 1
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 0,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:15:37.295112+00:00",
+      "finished_at": "2026-10-17T02:16:12.976370+00:00",
+      "duration_sec": 35.68,
+      "agent_duration_sec": 0.11,
+      "test_duration_sec": 18.03,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/a5ae908181c8/runs/attempt-0/a5ae908181c8-attempt-0/config-manifest-validator/config-manifest-validator.1-of-1.a5ae908181c8-attempt-0",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.02s =======================================================================\nroot@a180f4356d0b:/app#"
+    },
+    {
+      "attempt": 1,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:16:15.290601+00:00",
+      "finished_at": "2026-10-17T02:16:47.529397+00:00",
+      "duration_sec": 32.24,
+      "agent_duration_sec": 0.15,
+      "test_duration_sec": 14.5,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/a5ae908181c8/runs/attempt-1/a5ae908181c8-attempt-1/config-manifest-validator/config-manifest-validator.1-of-1.a5ae908181c8-attempt-1",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.01s =======================================================================\nroot@7efc61684cf7:/app#"
+    },
+    {
+      "attempt": 2,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:15:37.291109+00:00",
+      "finished_at": "2026-10-17T02:16:09.197413+00:00",
+      "duration_sec": 31.91,
+      "agent_duration_sec": 0.11,
+      "test_duration_sec": 14.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/a5ae908181c8/runs/attempt-2/a5ae908181c8-attempt-2/config-manifest-validator/config-manifest-validator.1-of-1.a5ae908181c8-attempt-2",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.01s =======================================================================\nroot@675a73f7b988:/app#"
+    },
+    {
+      "attempt": 3,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:16:19.093607+00:00",
+      "finished_at": "2026-10-17T02:16:53.321433+00:00",
+      "duration_sec": 34.23,
+      "agent_duration_sec": 0.06,
+      "test_duration_sec": 16.72,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/a5ae908181c8/runs/attempt-3/a5ae908181c8-attempt-3/config-manifest-validator/config-manifest-validator.1-of-1.a5ae908181c8-attempt-3",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.01s =======================================================================\nroot@374428fefd8f:/app#"
+    },
+    {
+      "attempt": 4,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:17:03.965975+00:00",
+      "finished_at": "2026-10-17T02:17:52.634513+00:00",
+      "duration_sec": 48.67,
+      "agent_duration_sec": 0.12,
+      "test_duration_sec": 30.55,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/a5ae908181c8/runs/attempt-4/a5ae908181c8-attempt-4/config-manifest-validator/config-manifest-validator.1-of-1.a5ae908181c8-attempt-4",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.02s =======================================================================\nroot@bb091b1a0908:/app#"
+    },
+    {
+      "attempt": 5,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:17:21.959773+00:00",
+      "finished_at": "2026-10-17T02:18:04.393987+00:00",
+      "duration_sec": 42.43,
+      "agent_duration_sec": 0.19,
+      "test_duration_sec": 23.02,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/a5ae908181c8/runs/attempt-5/a5ae908181c8-attempt-5/config-manifest-validator/config-manifest-validator.1-of-1.a5ae908181c8-attempt-5",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.04s =======================================================================\nroot@8a2a819307b2:/app#"
+    },
+    {
+      "attempt": 6,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:17:21.919913+00:00",
+      "finished_at": "2026-10-17T02:18:00.856054+00:00",
+      "duration_sec": 38.94,
+      "agent_duration_sec": 0.19,
+      "test_duration_sec": 18.57,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/a5ae908181c8/runs/attempt-6/a5ae908181c8-attempt-6/config-manifest-validator/config-manifest-validator.1-of-1.a5ae908181c8-attempt-6",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.02s =======================================================================\nroot@950b515d70f3:/app#"
+    },
+    {
+      "attempt": 7,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:18:13.587148+00:00",
+      "finished_at": "2026-10-17T02:18:50.033040+00:00",
+      "duration_sec": 36.45,
+      "agent_duration_sec": 0.13,
+      "test_duration_sec": 18.25,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/a5ae908181c8/runs/attempt-7/a5ae908181c8-attempt-7/config-manifest-validator/config-manifest-validator.1-of-1.a5ae908181c8-attempt-7",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.04s =======================================================================\nroot@872f920de821:/app#"
+    }
+  ],
+  "status": "completed"
+}

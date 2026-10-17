@@ -93,8 +93,8 @@ The first submission builds the Job pod image (a few minutes); later submissions
 
 #### Verification
 - `tests/test_learnability.py` (31 tests): boundary cases; exactness against the 10-run rule for every sequence and wave cap; the stopping point is the first decidable prefix; parallel cost equals sequential cost; class probabilities sum to 1; replacement of errored attempts is bounded.
-- **End-to-end oracle run** (always passes) on `config-manifest-validator` with at most 4 attempts in flight: waves of 4, 3 and 1 → `too_easy` after 8 attempts, with all Jobs, containers and images cleaned up.
-- **End-to-end terminus-1 run** on `csv-to-json-cli-fix` with `confidence=0.9`: see `results/cost-optimization/terminus-adaptive-results.json`.
+- **End-to-end oracle run** (always passes) on `config-manifest-validator` with at most 4 attempts in flight: waves of 4, 3 and 1 → `too_easy` after 8 attempts, with all Jobs, containers and images cleaned up (`results/cost-optimization/oracle-adaptive-results.json`).
+- **End-to-end terminus-1 run** on `csv-to-json-cli-fix` with `confidence=0.9`: waves of 4 and 1, all 5 passed → `too_easy` after 5 attempts. It used 139,551 input / 8,777 output tokens (about $0.92) and saved an estimated 5 attempts (about $0.92) versus running all 10 (`results/cost-optimization/terminus-adaptive-results.json`).
 
 #### Design decisions
 - **Exact by default.** "Learnable" is defined on 10 actual runs, so the default never changes a label; the probabilistic mode is opt-in and its error rate is published alongside its savings.
