@@ -1,0 +1,40 @@
+    {
+      "path": "/var/log/samples/debug.log",
+      "type": "debug",
+      "importance": "low",
+      "growth_rate_mb_per_day": 5.3,
+      "retention_requirement_days": 7,
+      "application": "web-server",
+      "owner": "www-data"
+    }
+  ],
+  "system_info": {
+    "available_disk_gb": 50,
+    "log_partition_usage_percent": 78,
+    "backup_frequency": "daily",
+    "compliance_requirements": [
+      "PCI-DSS",
+      "SOX"
+    ],
+    "peak_traffic_hours": [
+      "09:00-11:00",
+      "14:00-16:00",
+      "20:00-22:00"
+    ]
+  },
+  "current_issues": [
+    "High disk usage on log partition",
+    "Inconsistent rotation schedules",
+    "Missing compression on some logs",
+    "Some critical logs lack rotation configuration"
+  ]
+}
+root@538a382ae791:/app# python3 -c "import json; data=json.load(open('/app/log_metadata.json')); print(len(data['logs'])); [print(l['path']) for l in data['logs
+']]"; tmux wait -S done
+5
+/var/log/samples/app.log
+/var/log/samples/system.log
+/var/log/samples/access.log
+/var/log/samples/error.log
+/var/log/samples/debug.log
+root@538a382ae791:/app#

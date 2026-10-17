@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The port 3000 is still in use by another program. I need to kill any process using that port and restart the server.",
+    "explanation": "Kill any process using port 3000 and restart the server.",
+    "commands": [
+        {
+            "keystrokes": "fuser -k 3000/tcp 2>/dev/null; sleep 1; nohup python3 app.py > /tmp/flask.log 2>&1 &\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

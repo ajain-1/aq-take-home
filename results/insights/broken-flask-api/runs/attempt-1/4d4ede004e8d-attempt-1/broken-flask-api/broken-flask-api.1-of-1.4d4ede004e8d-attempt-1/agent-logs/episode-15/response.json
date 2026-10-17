@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The command is running. Let me wait a moment and check the output.",
+    "explanation": "Wait for the server to start and check if there are any errors.",
+    "commands": [
+        {
+            "keystrokes": "\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        }
+    ],
+    "is_task_complete": false
+}

@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The port is still in use. Let me find what process is using port 3000 and kill it properly.",
+    "explanation": "Find and kill the process using port 3000 using netstat or lsof.",
+    "commands": [
+        {
+            "keystrokes": "ps aux | grep python\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

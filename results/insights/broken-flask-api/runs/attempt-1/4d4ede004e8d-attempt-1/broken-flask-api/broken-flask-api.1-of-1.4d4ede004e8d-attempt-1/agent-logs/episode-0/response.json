@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The terminal is at a bash prompt in the /app directory. This is the starting state and I need to examine the existing files to understand what needs to be fixed.",
+    "explanation": "First, I'll examine the project structure and view the contents of all relevant files to understand what issues need to be fixed.",
+    "commands": [
+        {
+            "keystrokes": "ls -la\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

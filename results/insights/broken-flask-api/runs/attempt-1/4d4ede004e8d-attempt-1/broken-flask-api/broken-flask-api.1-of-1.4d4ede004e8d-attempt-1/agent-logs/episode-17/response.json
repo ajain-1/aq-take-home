@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The terminal seems to be in a strange state. Let me send Ctrl+C to interrupt any running processes and get back to a clean prompt.",
+    "explanation": "Send Ctrl+C to interrupt and get a clean prompt.",
+    "commands": [
+        {
+            "keystrokes": "C-c",
+            "is_blocking": false,
+            "timeout_sec": 2
+        }
+    ],
+    "is_task_complete": false
+}

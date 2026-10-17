@@ -1,0 +1,40 @@
+    dateformat -%Y%m%d
+    sharedscripts
+    postrotate
+        # Reload service if needed (uncomment as appropriate)
+        # /usr/bin/systemctl reload systemd > /dev/null 2>&1 || true
+        /usr/bin/logger -t logrotate "/var/log/samples/system.log rotated"
+    endscript
+}
+
+# ACCESS LOG - nginx
+# Importance: medium | Growth: 45.7 MB/day
+# Retention requirement: 14 days
+/var/log/samples/access.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    size 100M
+    maxsize 500M
+    create 640 www-data adm
+    dateext
+    dateformat -%Y%m%d
+}
+
+# End of optimized configuration
+root@ac550e797a3d:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/error.log,0.228,0,weekly (rotate 9),202.92
+/var/log/samples/debug.log,0.052,0,weekly (rotate 1),150.52
+/var/log/samples/app.log,0.248,0,daily (rotate 30),-3.04
+/var/log/samples/system.log,0.000,0,weekly (rotate 12),-11.76
+/var/log/samples/access.log,0.154,0,daily (rotate 14),210.22
+root@ac550e797a3d:/app# wc -l /app/analysis_report.txt /app/optimized_logrotate.conf /app/rotation_summary.csv; tmux wait -S done
+ 235 /app/analysis_report.txt
+ 100 /app/optimized_logrotate.conf
+   6 /app/rotation_summary.csv
+ 341 total
+root@ac550e797a3d:/app#

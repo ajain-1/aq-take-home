@@ -1,0 +1,40 @@
+root@d0ec239fff97:/app# ls -la /etc/logrotate.d/samples/; tmux wait -S done
+total 24
+drwxr-xr-x 1 root root 4096 Oct 17 01:55 .
+drwxr-xr-x 1 root root 4096 Oct 17 01:55 ..
+-rw-r--r-- 1 root root   84 Oct 17 01:55 access
+-rw-r--r-- 1 root root   95 Oct 17 01:55 app
+-rw-r--r-- 1 root root  125 Oct 17 01:55 system
+root@d0ec239fff97:/app# cat /etc/logrotate.d/samples/access; tmux wait -S done
+/var/log/samples/access.log {
+    monthly
+    rotate 2
+    compress
+    missingok
+}
+root@d0ec239fff97:/app# cat /etc/logrotate.d/samples/app; tmux wait -S done
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+root@d0ec239fff97:/app# cat /etc/logrotate.d/samples/system; tmux wait -S done
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@d0ec239fff97:/app#
+
+
+
+
+
+
+
+

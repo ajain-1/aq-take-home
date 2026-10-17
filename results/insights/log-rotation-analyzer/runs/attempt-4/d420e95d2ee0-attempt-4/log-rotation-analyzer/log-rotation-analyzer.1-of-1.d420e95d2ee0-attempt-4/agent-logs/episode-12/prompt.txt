@@ -1,0 +1,40 @@
+> # Low volume, standard retention
+> /var/log/samples/system.log {{
+>     weekly
+>     rotate 8
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     maxsize 50M
+>     dateext
+>     dateformat -%Y%m%d
+>     create 0644 root root
+> }}
+> '''
+>
+> with open('/app/optimized_logrotate.conf', 'w') as f:
+>     f.write(logrotate_conf)
+>
+> # Generate CSV summary
+> with open('/app/rotation_summary.csv', 'w', newline='') as f:
+>     writer = csv.DictWriter(f, fieldnames=['log_path', 'current_size_mb', 'days_since_rotation', 'recommended_schedule', 'estimated_savings_mb'])
+>     writer.writeheader()
+>     for row in sorted(csv_data, key=lambda x: -x['current_size_mb']):
+>         writer.writerow(row)
+>
+> print('Analysis complete!')
+> print(f'Generated files:')
+> print(f'  - /app/analysis_report.txt')
+> print(f'  - /app/optimized_logrotate.conf')
+> print(f'  - /app/rotation_summary.csv')
+> print(f'')
+> print(f'Summary:')
+> print(f'  Total issues found: {len(issues)}')
+> print(f'  High severity: {len(high_issues)}')
+> print(f'  Medium severity: {len(medium_issues)}')
+> print(f'  Potential savings: {total_potential_savings / (1024*1024):.2f} MB ({savings_pct:.1f}%)')
+> ENDSCRIPT; tmux wait -S done
+> ; tmux wait -S done
+> ^C
+root@538a382ae791:/app#

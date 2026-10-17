@@ -1,0 +1,40 @@
+
+1. /var/log/samples/app.log
+   Current Size: 0.25 MB
+   Growth Rate: 125.3 MB/day
+   Retention Requirement: 30 days
+   Current Config: Weekly rotation, 4 copies, compressed
+   Status: SUBOPTIMAL
+   Issue: Weekly rotation with 125 MB/day growth = 875 MB before rotation
+          4 rotations = potential 3.5 GB uncompressed at peak
+
+2. /var/log/samples/access.log
+   Current Size: 0.15 MB
+   Growth Rate: 45.7 MB/day
+   Retention Requirement: 14 days
+   Current Config: Monthly rotation, 2 copies, compressed
+   Status: CRITICAL
+   Issue: Monthly rotation with 45.7 MB/day = 1.4 GB before rotation!
+          Only 2 rotations = insufficient for 14-day retention
+
+3. /var/log/samples/error.log
+   Current Size: 0.23 MB
+   Growth Rate: 8.9 MB/day
+   Retention Requirement: 60 days (compliance critical)
+   Current Config: NONE
+   Status: CRITICAL
+   Issue: No rotation configuration for critical error logs!
+          Compliance risk: SOX/PCI-DSS require error log retention
+
+4. /var/log/samples/debug.log
+   Current Size: 0.05 MB
+   Growth Rate: 5.3 MB/day
+   Retention Requirement: 7 days
+   Current Config: NONE
+   Status: WARNING
+root@d0ec239fff97:/app# wc -l /app/analysis_report.txt /app/optimized_logrotate.conf /app/rotation_summary.csv; tmux wait -S done
+  210 /app/analysis_report.txt
+  219 /app/optimized_logrotate.conf
+    7 /app/rotation_summary.csv
+  436 total
+root@d0ec239fff97:/app#

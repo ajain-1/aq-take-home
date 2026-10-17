@@ -1,0 +1,40 @@
+root@ac550e797a3d:/app# echo '=== ACCESS CONFIG ===' && cat /etc/logrotate.d/samples/access && echo '\n=== APP CONFIG ===' && cat /etc/logrotate.d/samples/app &
+& echo '\n=== SYSTEM CONFIG ===' && cat /etc/logrotate.d/samples/system; tmux wait -S done
+=== ACCESS CONFIG ===
+/var/log/samples/access.log {
+    monthly
+    rotate 2
+    compress
+    missingok
+}
+\n=== APP CONFIG ===
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+\n=== SYSTEM CONFIG ===
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@ac550e797a3d:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+

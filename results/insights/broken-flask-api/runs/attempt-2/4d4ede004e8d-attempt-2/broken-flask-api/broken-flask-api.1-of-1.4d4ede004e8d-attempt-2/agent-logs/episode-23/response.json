@@ -1,0 +1,12 @@
+{
+    "state_analysis": "Good, I now have a clean prompt. I need to kill the stopped Flask process and restart it properly. The issue is there's a stopped process holding port 3000.",
+    "explanation": "Kill all python processes and restart the Flask server without debug mode to avoid the reloader issues.",
+    "commands": [
+        {
+            "keystrokes": "kill %2 2>/dev/null; pkill -9 -f python3; sleep 1\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

@@ -1,0 +1,40 @@
+  File "/usr/lib/python3.12/http/client.py", line 1457, in getresponse
+    response.begin()
+  File "/usr/lib/python3.12/http/client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 707, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+root@dcf6149afda3:/app# ; tmux wait -S done
+bash: syntax error near unexpected token `;'
+root@dcf6149afda3:/app# kill %2 2>/dev/null; kill %3 2>/dev/null; kill %4 2>/dev/null; tmux wait -S done
+root@dcf6149afda3:/app# sed -i 's/debug=True/debug=False/' app.py && python3 app.py &
+[3] 645
+[2]   Done                    python3 app.py
+root@dcf6149afda3:/app#  * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://172.24.0.2:3000
+Press CTRL+C to quit
+sleep 2; tmux wait -S done
+root@dcf6149afda3:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users'); print('Status:', r.status_code); print('Response:', r.json
+())"; tmux wait -S done
+127.0.0.1 - - [17/Oct/2026 02:17:13] "GET /users HTTP/1.1" 200 -
+Status: 200
+Response: [{'email': 'john@example.com', 'id': 1, 'name': 'John Doe', 'role': 'admin'}, {'email': 'jane@example.com', 'id': 2, 'name': 'Jane Smith', 'role': 'us
+er'}, {'email': 'bob@example.com', 'id': 3, 'name': 'Bob Johnson', 'role': 'user'}, {'email': 'alice@example.com', 'id': 4, 'name': 'Alice Brown', 'role': 'mode
+rator'}]
+root@dcf6149afda3:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users/1'); print('Status:', r.status_code); print('Response:', r.js
+on())"; tmux wait -S done
+127.0.0.1 - - [17/Oct/2026 02:17:18] "GET /users/1 HTTP/1.1" 200 -
+Status: 200
+Response: {'email': 'john@example.com', 'id': 1, 'name': 'John Doe', 'role': 'admin'}
+root@dcf6149afda3:/app#
