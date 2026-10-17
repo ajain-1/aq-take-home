@@ -178,9 +178,7 @@ class TaskRunner:
         if size == 0:
             return None
 
-        # A fixed-strategy submission launched before waves existed re-attaches to its Job.
-        legacy_launch = submission.launched_at if not waves else None
-        wave = Wave(index=len(waves), offset=launched, size=size, launched_at=legacy_launch)
+        wave = Wave(index=len(waves), offset=launched, size=size)
 
         def mutate(s: Submission) -> None:
             s.progress.waves.append(wave)
