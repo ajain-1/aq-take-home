@@ -42,7 +42,7 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
 - **`task.yaml` drives execution.**
   - `resource_class` maps to pod resource requests, so the scheduler queues work when the node is full, and to `cpus`/`mem_limit` on the task container.
   - The agent and test timeouts are enforced by `tb`.
-  - The Job's `activeDeadlineSeconds` (`(agent + test + overhead) × (1 + retries)`) is the backstop for hangs.
+  - Each attempt pod has `activeDeadlineSeconds` = `agent + test + overhead` as the backstop for hangs. A pod's deadline counts from when it starts, so time spent queued for cluster capacity never counts against it.
 - **Shared storage is a hostPath at the same absolute path** in the API, the pods, and the task containers. This is the local stand-in for a bucket. Docker Desktop's daemon sees macOS paths under `/host_mnt`, so the compose bind mounts are prefixed with it (`AQ_HOST_PATH_PREFIX`).
 - **Passing, across N attempts.** `passed` means every attempt resolved the task. `summary.resolved_attempts`/`pass_rate` and per-test `pass_rate` give the distribution, which is what the "learnable data point" classification needs.
 
@@ -61,7 +61,12 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
   - Pods that can never start fail the submission immediately instead of waiting out the deadline: container-level errors (`ErrImageNeverPull`, `CreateContainerConfigError`, …) and volume failures (`FailedMount`, read from pod events after 3 repeats so a transient hiccup doesn't count).
 - **Task container memory.** `resource_class` caps the task container through compose `mem_limit`, with `memswap_limit` set to the same value (otherwise Docker silently adds an equal amount of swap and the limit doubles). If a task exceeds it, Docker kills the task container rather than the pod. terminal-bench would report that as a plain agent or test failure, so the pod watches Docker's `oom` events for its task container, and the attempt's `infrastructure_issues` says it was OOM-killed.
 - **Partial results.** Each attempt has one of three statuses: `completed` (tests ran), `tests_not_run` (the trial finished but produced no parseable test results, e.g. a test timeout), or `error` (no results at all, reported with the pod's reason, e.g. `OOMKilled (exit code 137)`). The other attempts still report either way. The submission is `failed` only if every attempt errored.
-- **Timeouts everywhere.** Docker builds (`AQ_BUILD_TIMEOUT_SEC`), the Job deadline, and an executor-side wait deadline (Job deadline plus a grace period) after which the Job is deleted.
+- **Timeouts everywhere.**
+  - **Docker builds:** limited by `AQ_BUILD_TIMEOUT_SEC`.
+  - **Per-pod deadline:** each try of an attempt has its own deadline.
+  - **Executor backstop:** it charges only time while attempts are actually running, persisted per wave so it survives restarts. Past every try's budget plus a grace period, it deletes the Job.
+  - **Queue cap:** a wave whose attempts only wait for capacity fails after `AQ_MAX_QUEUE_SEC` (default 1 hour) with a clear "waited for cluster capacity" error, and `/status` shows queued attempts as `Unschedulable` with the scheduler's message.
+  - **Verified live:** on an N=10 run, 7 attempts queued as `Unschedulable: Insufficient memory` while the wave clock charged only running time.
 - **Cleanup always runs** after a terminal outcome: the Job is deleted, then labelled task containers and networks (which can be orphaned when a pod is killed before compose teardown), then the task images. `ttlSecondsAfterFinished` is a fallback. Each pod log is saved next to its attempt before the Job is deleted.
 - **Bounded concurrency.** A worker pool caps active submissions and a semaphore caps concurrent Docker builds. Pod resource requests let Kubernetes queue attempts rather than overcommit the node.
 - **Secrets.** The OpenRouter key is read from `.env` (gitignored) and reaches pods only through a Kubernetes Secret; it is never written to disk by the executor or logged.
@@ -76,7 +81,6 @@ bash scripts/run_all.sh                           # API_URL=... to use another p
 The first submission builds the Job pod image (a few minutes); later submissions reuse it. Per-submission artifacts live under `data/submissions/<id>/`.
 
 #### Known limitations
-- The Job's `activeDeadlineSeconds` starts when the Job is created, so time spent `Pending` on a saturated node counts against it.
 - Docker builds are not interruptible, so a clean API shutdown waits for in-flight builds to finish.
 
 #### Fixes from code reviews
