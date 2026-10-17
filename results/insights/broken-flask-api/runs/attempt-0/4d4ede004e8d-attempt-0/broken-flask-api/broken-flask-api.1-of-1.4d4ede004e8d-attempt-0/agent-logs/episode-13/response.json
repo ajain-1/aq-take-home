@@ -1,0 +1,12 @@
+{
+    "state_analysis": "Port 3000 is already in use by another program, likely the previously stopped Flask server. The current request is hanging. I need to cancel it, kill all processes on port 3000, and restart the server.",
+    "explanation": "Cancel the hanging command, kill any process using port 3000, and restart the Flask server.",
+    "commands": [
+        {
+            "keystrokes": "C-c",
+            "is_blocking": false,
+            "timeout_sec": 2
+        }
+    ],
+    "is_task_complete": false
+}

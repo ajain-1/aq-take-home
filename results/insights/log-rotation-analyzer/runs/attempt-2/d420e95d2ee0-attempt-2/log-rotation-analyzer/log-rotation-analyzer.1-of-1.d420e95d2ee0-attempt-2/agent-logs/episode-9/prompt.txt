@@ -1,0 +1,40 @@
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@633112936ae8:/app# stat /var/log/samples/* 2>/dev/null | grep -E '(File:|Size:|Modify:)' && echo '---' && du -h /var/log/samples/* && echo '---' && df -h /
+var/log/; tmux wait -S done
+  File: /var/log/samples/access.log
+  Size: 161214          Blocks: 320        IO Block: 4096   regular file
+Modify: 2026-10-17 01:55:09.254016013 +0000
+  File: /var/log/samples/access.log.old
+  Size: 40500           Blocks: 80         IO Block: 4096   regular file
+Modify: 2026-10-17 01:55:09.648016013 +0000
+  File: /var/log/samples/app.log
+  Size: 259893          Blocks: 512        IO Block: 4096   regular file
+Modify: 2026-10-17 01:55:07.525016012 +0000
+  File: /var/log/samples/debug.log
+  Size: 54292           Blocks: 112        IO Block: 4096   regular file
+Modify: 2026-10-17 01:55:13.337238000 +0000
+  File: /var/log/samples/error.log
+  Size: 239071          Blocks: 472        IO Block: 4096   regular file
+Modify: 2026-10-17 01:55:12.695238000 +0000
+  File: /var/log/samples/system.log
+  Size: 219             Blocks: 8          IO Block: 4096   regular file
+Modify: 2026-10-17 01:55:07.528016012 +0000
+  File: /var/log/samples/system.log.1.gz
+  Size: 551             Blocks: 8          IO Block: 4096   regular file
+Modify: 2026-10-17 01:55:07.615016012 +0000
+---
+160K    /var/log/samples/access.log
+40K     /var/log/samples/access.log.old
+256K    /var/log/samples/app.log
+56K     /var/log/samples/debug.log
+236K    /var/log/samples/error.log
+4.0K    /var/log/samples/system.log
+4.0K    /var/log/samples/system.log.1.gz
+---
+Filesystem      Size  Used Avail Use% Mounted on
+overlay        1007G   13G  943G   2% /
+root@633112936ae8:/app#

@@ -1,0 +1,40 @@
+    "owner": "www-data"
+  },
+  {
+    "path": "/var/log/samples/system.log",
+    "type": "system",
+    "importance": "critical",
+    "growth_rate_mb_per_day": 2.1,
+    "retention_requirement_days": 90,
+    "application": "systemd",
+    "owner": "root"
+  },
+  {
+    "path": "/var/log/samples/access.log",
+    "type": "access",
+    "importance": "medium",
+    "growth_rate_mb_per_day": 45.7,
+    "retention_requirement_days": 14,
+    "application": "nginx",
+    "owner": "www-data"
+  },
+  {
+    "path": "/var/log/samples/error.log",
+    "type": "error",
+    "importance": "critical",
+    "growth_rate_mb_per_day": 8.9,
+    "retention_requirement_days": 60,
+    "application": "web-server",
+    "owner": "www-data"
+  },
+  {
+    "path": "/var/log/samples/debug.log",
+    "type": "debug",
+    "importance": "low",
+    "growth_rate_mb_per_day": 5.3,
+    "retention_requirement_days": 7,
+    "application": "web-server",
+    "owner": "www-data"
+  }
+]
+root@ac550e797a3d:/app#

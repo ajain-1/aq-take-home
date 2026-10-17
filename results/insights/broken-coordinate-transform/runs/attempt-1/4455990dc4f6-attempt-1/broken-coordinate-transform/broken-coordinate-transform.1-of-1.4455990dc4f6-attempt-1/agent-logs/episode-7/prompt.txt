@@ -1,0 +1,40 @@
+>     }
+>
+>     for(int i=0; i<r1; i++) {
+>         for(int j=0; j<c2; j++) {
+>             C[i][j] = 0;
+>             for(int k=0; k<c1; k++) {
+>                 C[i][j] += A[i][k] * B[k][j];
+>             }
+>         }
+>     }
+>
+>     for(int i=0; i<r1; i++) {
+>         for(int j=0; j<c2; j++) {
+>             if (j > 0) cout << " ";
+>             cout << C[i][j];
+>         }
+>         cout << endl;
+>     }
+>
+>     return 0;
+> }
+> EOF
+root@6f5f76a60b88:/app# g++ -o buggy /app/buggy.cpp; tmux wait -S done
+root@6f5f76a60b88:/app# echo '2 3
+> 3 2
+> 1 2 3
+> 4 5 6
+> 7 8
+> 9 10
+> 11 12' | ./buggy; tmux wait -S done
+58 64
+139 154
+root@6f5f76a60b88:/app# echo '2 3
+> 2 2
+> 1 2 3
+> 4 5 6
+> 7 8
+> 9 10' | ./buggy; tmux wait -S done
+Matrix multiplication not possible
+root@6f5f76a60b88:/app#

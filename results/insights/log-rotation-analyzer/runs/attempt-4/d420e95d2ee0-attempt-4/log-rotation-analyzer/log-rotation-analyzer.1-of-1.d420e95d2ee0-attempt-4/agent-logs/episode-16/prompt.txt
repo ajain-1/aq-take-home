@@ -1,0 +1,50 @@
+Previous command:
+keystrokes="rm -f /app/analyzer.py 2>/dev/null; echo '#!/usr/bin/env python3' > /app/analyzer.py\n" is_blocking=True timeout_sec=5.0
+
+The previous command timed out after 5.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+>     if '.old' in l['name'] or '.gz' in l['name']:
+>         continue
+>     info = log_info.get(l['path'], {})
+>     growth = info.get('growth_rate_mb_per_day', 0)
+>     base = l['name'].replace('.log', '')
+>     days = int(l['size_mb']/growth) if growth > 0 else 0
+>     sched = 'daily' if growth > 10 else 'weekly'
+>     savings = l['size_mb'] * 0.5
+>     total_savings += savings
+>
+>     if l['size_mb'] > 200:
+>         issues.append(('HIGH', l['name'], f'File critically large ({l["size_mb"]:.1f}MB)'))
+>     elif l['size_mb'] > 100:
+>         issues.append(('HIGH', l['name'], f'File too large ({l["size_mb"]:.1f}MB)'))
+>     if base not in configs:
+>         issues.append(('HIGH', l['name'], 'No logrotate config'))
+>
+>     csv_rows.append([l['path'], round(l['size_mb'],2), days, sched, round(savings,2)])
+>
+> # Check uncompressed old files
+> for l in logs:
+>     if '.old' in l['name']:
+>         issues.append(('MEDIUM', l['name'], f'Rotated log not compressed ({l["size_mb"]:.1f}MB)'))
+>         total_savings += l['size_mb'] * 0.85
+>
+> savings_pct = (total_savings*1024*1024/total_size*100) if total_size > 0 else 0
+>
+> # Write CSV
+> with open('/app/rotation_summary.csv', 'w', newline='') as f:
+>     w = csv.writer(f)
+>     w.writerow(['log_path','current_size_mb','days_since_rotation','recommended_schedule','estimated_savings_mb'])
+>     for r in sorted(csv_rows, key=lambda x: -x[1]):
+>         w.writerow(r)
+>
+> print(f'CSV written. Issues: {len(issues)}, Savings: {savings_pct:.1f}%')
+> PY; tmux wait -S done
+> ; tmux wait -S done
+> ^C
+root@538a382ae791:/app# rm -f /app/analyzer.py 2>/dev/null; echo '#!/usr/bin/env python3' > /app/analyzer.py; tmux wait -S done
+root@538a382ae791:/app#
+

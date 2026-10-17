@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The program compiled successfully without any errors. Now let me test it with a simple matrix multiplication example.",
+    "explanation": "Testing the program with a simple 2x2 matrix multiplication: A is 2x3 and B is 3x2.",
+    "commands": [
+        {
+            "keystrokes": "echo '2 3 3 2 1 2 3 4 5 6 7 8 9 10 11 12' | ./matrix\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

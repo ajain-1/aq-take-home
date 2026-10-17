@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The file is complete and correct. Now let me compile and test it to make sure it works properly.",
+    "explanation": "Compile the program and test with sample input for matrix multiplication.",
+    "commands": [
+        {
+            "keystrokes": "g++ -o /app/test_matrix /app/buggy.cpp\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

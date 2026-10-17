@@ -1,0 +1,40 @@
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 12.9 MB/s eta 0:00:00
+Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 135.7/135.7 kB 18.6 MB/s eta 0:00:00
+Downloading werkzeug-3.1.9-py3-none-any.whl (228 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 228.7/228.7 kB 13.2 MB/s eta 0:00:00
+Downloading markupsafe-3.0.4-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (24 kB)
+WARNING: Skipping /usr/lib/python3.12/dist-packages/asciinema-2.4.0.dist-info due to invalid metadata entry 'name'
+Installing collected packages: urllib3, MarkupSafe, itsdangerous, idna, click, charset-normalizer, certifi, blinker, Werkzeug, requests, Jinja2, Flask
+Successfully installed Flask-3.0.0 Jinja2-3.1.6 MarkupSafe-3.0.4 Werkzeug-3.1.9 blinker-1.9.0 certifi-2026.7.22 charset-normalizer-3.5.2 click-8.5.0 idna-3.20 i
+tsdangerous-2.2.0 requests-2.31.0 urllib3-2.8.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a v
+irtual environment instead: https://pip.pypa.io/warnings/venv
+root@47d302821d4d:/app# python app.py &
+[1] 338
+root@47d302821d4d:/app# bash: python: command not found
+python3 app.py &
+[2] 360
+[1]   Exit 127                python app.py
+root@47d302821d4d:/app#  * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://172.23.0.2:3000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 953-638-376
+sleep 2; tmux wait -S done
+
+[2]+  Stopped                 python3 app.py
+root@47d302821d4d:/app# curl http://localhost:3000/users; tmux wait -S done
+bash: curl: command not found
+root@47d302821d4d:/app# python3 app.py > /dev/null 2>&1 &
+[3] 430
+root@47d302821d4d:/app# sleep 2 && wget -qO- http://localhost:3000/users; tmux wait -S done
+[3]-  Exit 1                  python3 app.py > /dev/null 2>&1
+bash: wget: command not found
+root@47d302821d4d:/app#

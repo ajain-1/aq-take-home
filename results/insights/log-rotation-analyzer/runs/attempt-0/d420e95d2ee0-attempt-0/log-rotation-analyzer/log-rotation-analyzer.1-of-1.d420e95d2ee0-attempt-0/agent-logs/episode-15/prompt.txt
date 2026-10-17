@@ -1,0 +1,40 @@
+# Generated: 2026-10-17 02:11:12
+# Compliance: PCI-DSS, SOX compliant retention policies
+#============================================================
+
+# APPLICATION LOG - web-server
+# Importance: high | Growth: 15.2 MB/day
+# Retention requirement: 30 days
+/var/log/samples/app.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    size 50M
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    postrotate
+        # Signal application to reopen log files if needed
+        # Add application-specific reload command here
+    endscript
+}
+
+# SYSTEM LOG - systemd
+# Importance: critical | Growth: 2.1 MB/day
+# Retention requirement: 90 days
+/var/log/samples/system.log {
+    weekly
+    rotate 13
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    dateext
+    dateformat -%Y%m%d
+    postrotate
+        # Signal application to reopen log files if needed
+root@6a3736b1a6ac:/app#

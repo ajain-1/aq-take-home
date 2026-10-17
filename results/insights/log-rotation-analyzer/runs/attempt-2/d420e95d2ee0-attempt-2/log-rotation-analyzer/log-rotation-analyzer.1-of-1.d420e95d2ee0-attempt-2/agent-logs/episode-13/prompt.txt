@@ -1,0 +1,40 @@
+> import datetime
+>
+> # Load metadata
+> with open('/app/log_metadata.json') as f:
+>     metadata = json.load(f)
+>
+> logs_meta = {l['path']: l for l in metadata['logs']}
+> system_info = metadata['system_info']
+>
+> # Analyze actual log files
+> log_dir = '/var/log/samples/'
+> log_files = {}
+>
+> for fname in os.listdir(log_dir):
+>     filepath = os.path.join(log_dir, fname)
+>     if os.path.isfile(filepath):
+>         stat = os.stat(filepath)
+>         size_mb = stat.st_size / (1024 * 1024)
+>         mtime = datetime.datetime.fromtimestamp(stat.st_mtime)
+>         days_since_mod = (datetime.datetime.now() - mtime).days
+>         log_files[filepath] = {
+>             'name': fname,
+>             'size_mb': size_mb,
+>             'days_since_mod': days_since_mod,
+>             'is_compressed': fname.endswith('.gz')
+>         }
+>
+> print("Log files found:")
+> for p, info in log_files.items():
+>     print(f"  {p}: {info['size_mb']:.2f} MB")
+> EOF
+Log files found:
+  /var/log/samples/error.log: 0.23 MB
+  /var/log/samples/access.log: 0.15 MB
+  /var/log/samples/system.log: 0.00 MB
+  /var/log/samples/system.log.1.gz: 0.00 MB
+  /var/log/samples/debug.log: 0.05 MB
+  /var/log/samples/app.log: 0.25 MB
+  /var/log/samples/access.log.old: 0.04 MB
+root@633112936ae8:/app#

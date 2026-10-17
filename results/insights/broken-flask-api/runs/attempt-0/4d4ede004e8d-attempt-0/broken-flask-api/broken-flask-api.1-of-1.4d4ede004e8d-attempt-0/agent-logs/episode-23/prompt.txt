@@ -1,0 +1,40 @@
+>     return jsonify(users_data)
+>
+> @app.route('/users/<user_id>', methods=['GET'])
+> def get_user(user_id):
+>     # Convert user_id to integer for comparison
+>     try:
+>         user = next((u for u in users_data if u['id'] == int(user_id)), None)
+>     except ValueError:
+>         return jsonify({'error': 'User not found'}), 404
+>
+>     if user:
+>         return jsonify(user)
+>     else:
+>         return jsonify({'error': 'User not found'}), 404
+>
+> if __name__ == '__main__':
+>     app.run(host='0.0.0.0', port=3000, debug=True)
+> EOF
+root@9b68b8a4b36d:/app# python3 app.py > /tmp/flask.log 2>&1 &
+[1] 903
+root@9b68b8a4b36d:/app# sleep 3; tmux wait -S done
+root@9b68b8a4b36d:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users'); print('Status:', r.status_code); print(r.json())"; tmux wa
+it -S done
+Status: 200
+[{'email': 'john@example.com', 'id': 1, 'name': 'John Doe', 'role': 'admin'}, {'email': 'jane@example.com', 'id': 2, 'name': 'Jane Smith', 'role': 'user'}, {'em
+ail': 'bob@example.com', 'id': 3, 'name': 'Bob Johnson', 'role': 'user'}, {'email': 'alice@example.com', 'id': 4, 'name': 'Alice Brown', 'role': 'moderator'}]
+root@9b68b8a4b36d:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users/1'); print('User 1:', r.status_code, r.json())"; tmux wait -S
+ done
+User 1: 200 {'email': 'john@example.com', 'id': 1, 'name': 'John Doe', 'role': 'admin'}
+root@9b68b8a4b36d:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users/999'); print('User 999:', r.status_code, r.json())"; tmux wai
+t -S done
+User 999: 404 {'error': 'User not found'}
+root@9b68b8a4b36d:/app# python3 -c "import requests; print('Multiple requests:'); [print(f'User {i}:', requests.get(f'http://localhost:3000/users/{i}').status_c
+ode) for i in [1,2,3,4]]"; tmux wait -S done
+Multiple requests:
+User 1: 200
+User 2: 200
+User 3: 200
+User 4: 200
+root@9b68b8a4b36d:/app#

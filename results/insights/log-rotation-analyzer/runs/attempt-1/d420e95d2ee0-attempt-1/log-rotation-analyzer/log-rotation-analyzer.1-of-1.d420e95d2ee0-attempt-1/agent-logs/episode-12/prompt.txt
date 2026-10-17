@@ -1,0 +1,40 @@
+>     compressoptions -9
+>     delaycompress
+>
+>     # Handle edge cases
+>     missingok
+>     notifempty
+>
+>     # Create new file with proper permissions
+>     create 644 root adm
+>
+>     # Use date extension
+>     dateext
+>     dateformat -%Y%m%d
+> }
+>
+> #============================================================================
+> # GLOBAL DEFAULTS (can be placed in /etc/logrotate.conf)
+> #============================================================================
+> # These settings apply to all logs unless overridden:
+> #
+> # weekly              - Default rotation frequency
+> # rotate 4            - Default number of rotations to keep
+> # create              - Create new log file after rotation
+> # compress            - Compress rotated logs
+> # delaycompress       - Don't compress the most recent rotated log
+> # notifempty          - Don't rotate empty logs
+> # missingok           - Don't error if log file is missing
+> # dateext             - Use date extension instead of numbers
+> #============================================================================
+> EOF
+root@d0ec239fff97:/app# cat > /app/rotation_summary.csv << 'EOF'
+> log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+> /var/log/samples/app.log,0.25,0,daily,2800.00
+> /var/log/samples/access.log,0.15,0,daily,1200.00
+> /var/log/samples/error.log,0.23,never,weekly,180.00
+> /var/log/samples/debug.log,0.05,never,daily,140.00
+> /var/log/samples/system.log,0.0002,0,weekly,0.00
+> /var/log/samples/access.log.old,0.04,unknown,remove,0.04
+> EOF
+root@d0ec239fff97:/app#

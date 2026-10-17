@@ -1,0 +1,72 @@
++ docker build -q -t aq-verify-csv-to-json-cli-fix /Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/tasks/csv-to-json-cli-fix
+sha256:21272ca2d7c0e217f7f1c7eb445f281f10b815e7c9e7fc0d23ea8beb8bed57de
++ docker rm -f aq-verify-csv-to-json-cli-fix-oracle
++ docker run -d --name aq-verify-csv-to-json-cli-fix-oracle -e TEST_DIR=/tests aq-verify-csv-to-json-cli-fix sh -c 'sleep infinity'
+7ba3276fb020712cdb174209cca2b5267381368c00b09bede181787d99a04e18
++ '[' oracle = oracle ']'
++ docker exec aq-verify-csv-to-json-cli-fix-oracle mkdir -p /oracle
++ docker cp /Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/tasks/csv-to-json-cli-fix/solution.sh aq-verify-csv-to-json-cli-fix-oracle:/oracle/solution.sh
++ '[' csv-to-json-cli-fix = broken-flask-api ']'
++ docker exec aq-verify-csv-to-json-cli-fix-oracle bash /oracle/solution.sh
++ docker exec aq-verify-csv-to-json-cli-fix-oracle mkdir -p /tests
++ docker cp /Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/tasks/csv-to-json-cli-fix/run-tests.sh aq-verify-csv-to-json-cli-fix-oracle:/tests/run-tests.sh
++ docker cp /Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/tasks/csv-to-json-cli-fix/tests/. aq-verify-csv-to-json-cli-fix-oracle:/tests/
+++ date +%s
++ START=1792202073
++ docker exec aq-verify-csv-to-json-cli-fix-oracle bash /tests/run-tests.sh
+Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8689 kB]
+Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [6936 B]
+Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [351 kB]
+Fetched 9288 kB in 2s (4666 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+curl is already the newest version (7.88.1-10+deb12u15).
+0 upgraded, 0 newly installed, 0 to remove and 49 not upgraded.
+downloading uv 0.7.13 aarch64-unknown-linux-gnu
+no checksums to verify
+installing to /root/.local/bin
+  uv
+  uvx
+everything's installed!
+
+To add $HOME/.local/bin to your PATH, either restart your shell or run:
+
+    source $HOME/.local/bin/env (sh, bash, zsh)
+    source $HOME/.local/bin/env.fish (fish)
+Initialized project `app`
+Using CPython 3.12.7 interpreter at: /usr/local/bin/python3.12
+Creating virtual environment at: .venv
+Resolved 7 packages in 567ms
+Downloading pygments (1.2MiB)
+ Downloading pygments
+Prepared 5 packages in 1.60s
+Installed 5 packages in 42ms
+ + iniconfig==2.3.1
+ + packaging==26.3
+ + pluggy==1.7.0
+ + pygments==2.21.0
+ + pytest==8.4.1
+============================= test session starts ==============================
+platform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.7.0
+rootdir: /tests
+collected 5 items
+
+../tests/test_outputs.py .....                                           [100%]
+
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_commas_records_as_objects
+PASSED ../tests/test_outputs.py::test_default_delimiter_is_comma
+PASSED ../tests/test_outputs.py::test_utf8_stdout_encoding
+PASSED ../tests/test_outputs.py::test_semicolons_with_env_delim
+PASSED ../tests/test_outputs.py::test_pretty_flag_changes_format_only
+============================== 5 passed in 0.05s ===============================
+++ date +%s
++ echo TEST_DURATION_SEC=18
+TEST_DURATION_SEC=18
++ docker rm -f aq-verify-csv-to-json-cli-fix-oracle

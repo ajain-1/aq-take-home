@@ -1,0 +1,12 @@
+{
+    "state_analysis": "Port 3000 is already in use by another process. I need to kill the existing process and restart the server. Let me check for processes using port 3000.",
+    "explanation": "Kill any existing processes using port 3000 and restart the Flask server.",
+    "commands": [
+        {
+            "keystrokes": "pkill -f 'python3 app.py' ; sleep 1 ; lsof -i :3000 || echo 'port is free'\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

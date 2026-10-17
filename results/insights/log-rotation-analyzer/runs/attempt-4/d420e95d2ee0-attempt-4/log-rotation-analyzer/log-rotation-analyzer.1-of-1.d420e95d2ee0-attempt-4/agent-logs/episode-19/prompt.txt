@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='python3 -c "\nimport json, os\nfrom datetime import datetime\n\nwith open(\'/app/log_metadata.json\') as f:\n    meta = json.load(f)\n\nlog_info = {l[\'path\']: l for l in meta[\'logs\']}\nsys_info = meta[\'system_info\']\ncurrent_issues = meta[\'current_issues\']\n\nlogs = []\nfor fn in os.listdir(\'/var/log/samples\'):\n    fp = \'/var/log/samples/\' + fn\n    if os.path.isfile(fp):\n        st = os.stat(fp)\n        logs.append({\'name\': fn, \'path\': fp, \'size_mb\': st.st_size/(1024*1024), \'size_bytes\': st.st_size})\n\nconfigs = set(os.listdir(\'/etc/logrotate.d/samples\'))\ntotal_size = sum(l[\'size_bytes\'] for l in logs)\ntotal_savings = 0\nissues = []\n\nfor l in logs:\n    if \'.old\' in l[\'name\'] or \'.gz\' in l[\'name\']:\n        if \'.old\' in l[\'name\']:\n            issues.append((\'MEDIUM\', l[\'name\'], \'Rotated log not compressed\', l[\'size_mb\']*0.85))\n            total_savings += l[\'size_mb\']*0.85\n        continue\n    info = log_info.get(l[\'path\'], {})\n    growth = info.get(\'growth_rate_mb_per_day\', 0)\n    base = l[\'name\'].replace(\'.log\', \'\')\n    if l[\'size_mb\'] > 0.2:\n        issues.append((\'HIGH\', l[\'name\'], \'File large - rotation needed\', l[\'size_mb\']*0.5))\n    if base not in configs:\n        issues.append((\'HIGH\', l[\'name\'], \'No logrotate configuration\', 0))\n    total_savings += l[\'size_mb\']*0.5\n\nsavings_pct = (total_savings/(total_size/(1024*1024))*100) if total_size > 0 else 0\n\nreport = \'\'\'======================================================================\nLOG ROTATION ANALYSIS REPORT\n======================================================================\nGenerated: {}\n\n----------------------------------------------------------------------\nEXECUTIVE SUMMARY\n----------------------------------------------------------------------\nTotal log files analyzed: {}\nTotal current disk usage: {:.2f} MB\nPotential savings with optimization: {:.2f} MB\nEstimated reduction: {:.1f}%\n\nLog partition usage: {}%\nAvailable disk space: {} GB\nCompliance requirements: {}\n\n----------------------------------------------------------------------\nCURRENT LOG STATUS\n----------------------------------------------------------------------\n\'\'\'.format(\n    datetime.now().strftime(\'%Y-%m-%d %H:%M:%S\'),\n    len([l for l in logs if l[\'name\'].endswith(\'.log\')]),\n    total_size/(1024*1024),\n    total_savings,\n    savings_pct,\n    sys_info[\'log_partition_usage_percent\'],\n    sys_info[\'available_disk_gb\'],\n    \', \'.join(sys_info[\'compliance_requirements\'])\n)\n\nfor l in sorted(logs, key=lambda x: -x[\'size_bytes\']):\n    info = log_info.get(l[\'path\'], {})\n    lt = info.get(\'type\', \'rotated\' if \'.old\' in l[\'name\'] or \'.gz\' in l[\'name\'] else \'unknown\')\n    imp = info.get(\'importance\', \'-\')\n    report += \'  {:25} {:8.2f} MB  Type: {:10} Importance: {}\\n\'.format(l[\'name\'], l[\'size_mb\'], lt, imp)\n\nreport += \'\'\'\\n----------------------------------------------------------------------\nKNOWN ISSUES FROM SYSTEM\n----------------------------------------------------------------------\n\'\'\'\nfor iss in current_issues:\n    report += \'  * {}\\n\'.format(iss)\n\nreport += \'\'\'\\n----------------------------------------------------------------------\nIDENTIFIED ISSUES\n----------------------------------------------------------------------\n\'\'\'\nhigh = [i for i in issues if i[0]==\'HIGH\']\nmed = [i for i in issues if i[0]==\'MEDIUM\']\n\nreport += \'\\nHIGH SEVERITY ({} issues):\\n\'.format(len(high))\nfor sev, fn, desc, sav in high:\n    report += \'  [HIGH] {}: {}\\n\'.format(fn, desc)\n\nreport += \'\\nMEDIUM SEVERITY ({} issues):\\n\'.format(len(med))\nfor sev, fn, desc, sav in med:\n    report += \'  [MEDIUM] {}: {}\\n\'.format(fn, desc)\n\nreport += \'\'\'\\n----------------------------------------------------------------------\nDISK SPACE IMPACT ANALYSIS\n----------------------------------------------------------------------\nCurrent total log size: {:.2f} MB\nCombined daily growth rate: {:.2f} MB/day\nProjected monthly growth: {:.2f} MB\nEstimated savings with optimization: {:.2f} MB ({:.1f}%)\n\nGrowth rate by log file:\n\'\'\'.format(\n    total_size/(1024*1024),\n    sum(log_info.get(l[\'path\'],{}).get(\'growth_rate_mb_per_day\',0) for l in logs if l[\'name\'].endswith(\'.log\')),\n    sum(log_info.get(l[\'path\'],{}).get(\'growth_rate_mb_per_day\',0) for l in logs if l[\'name\'].endswith(\'.log\'))*30,\n    total_savings,\n    savings_pct\n)\n\nfor l in logs:\n    if l[\'name\'].endswith(\'.log\'):\n        info = log_info.get(l[\'path\'], {})\n        growth = info.get(\'growth_rate_mb_per_day\', 0)\n        report += \'  {:25} Growth rate: {:6.2f} MB/day\\n\'.format(l[\'name\'], growth)\n\nreport += \'\'\'\\n----------------------------------------------------------------------\nRECOMMENDATIONS\n----------------------------------------------------------------------\n\n1. IMMEDIATE ACTIONS (Priority: Critical):\n   - Create logrotate configs for error.log and debug.log (currently missing)\n   - Enable compression for all rotated logs (access.log.old is uncompressed)\n   - Force rotation of large log files immediately\n\n2. ROTATION SCHEDULE OPTIMIZATION:\n   - access.log: Daily rotation (45.7 MB/day growth rate)\n   - app.log: Daily rotation with 100M size limit\n   - error.log: Daily rotation (critical importance)\n   - debug.log: Daily rotation, short retention (7 days)\n   - system.log: Weekly rotation (low volume)\n\n3. COMPRESSION SETTINGS:\n   - Enable gzip compression on all rotated logs\n   - Use delaycompress to keep most recent rotation uncompressed\n   - Expected compression ratio: 85-90% for text logs\n\n4. RETENTION POLICY (Compliance-aware for PCI-DSS, SOX):\n   - Access logs: 14 days (PCI-DSS minimum)\n   - Application logs: 14 days (operational needs)\n   - Error logs: 60 days (SOX compliance)\n   - Debug logs: 7 days (low importance)\n   - System logs: 8 weeks (audit trail)\n\n5. SIZE-BASED TRIGGERS:\n   - Implement maxsize directive for rapidly growing logs\n   - access.log: maxsize 100M\n   - app.log: maxsize 100M\n   - error.log: maxsize 50M\n\n6. MONITORING RECOMMENDATIONS:\n   - Set up alerts when log partition exceeds 80% usage\n   - Monitor for logs exceeding expected daily growth\n   - Implement log shipping to central server for compliance\n\n======================================================================\nEND OF REPORT\n======================================================================\n\'\'\'\n\nwith open(\'/app/analysis_report.txt\', \'w\') as f:\n    f.write(report)\nprint(\'Report created\')\n"\n' is_blocking=True timeout_sec=20.0
+
+The previous command timed out after 20.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+>    - access.log: Daily rotation (45.7 MB/day growth rate)
+>    - app.log: Daily rotation with 100M size limit
+>    - error.log: Daily rotation (critical importance)
+>    - debug.log: Daily rotation, short retention (7 days)
+>    - system.log: Weekly rotation (low volume)
+>
+> 3. COMPRESSION SETTINGS:
+>    - Enable gzip compression on all rotated logs
+>    - Use delaycompress to keep most recent rotation uncompressed
+>    - Expected compression ratio: 85-90% for text logs
+>
+> 4. RETENTION POLICY (Compliance-aware for PCI-DSS, SOX):
+>    - Access logs: 14 days (PCI-DSS minimum)
+>    - Application logs: 14 days (operational needs)
+>    - Error logs: 60 days (SOX compliance)
+>    - Debug logs: 7 days (low importance)
+>    - System logs: 8 weeks (audit trail)
+>
+> 5. SIZE-BASED TRIGGERS:
+>    - Implement maxsize directive for rapidly growing logs
+>    - access.log: maxsize 100M
+>    - app.log: maxsize 100M
+>    - error.log: maxsize 50M
+>
+> 6. MONITORING RECOMMENDATIONS:
+>    - Set up alerts when log partition exceeds 80% usage
+>    - Monitor for logs exceeding expected daily growth
+>    - Implement log shipping to central server for compliance
+>
+> ======================================================================
+> END OF REPORT
+> ======================================================================
+> '''
+>
+> with open('/app/analysis_report.txt', 'w') as f:
+>     f.write(report)
+> print('Report created')
+> "; tmux wait -S done
+Report created
+root@538a382ae791:/app#
+

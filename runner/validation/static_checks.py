@@ -18,8 +18,27 @@ from runner.models import TaskSpec
 from runner.validation.models import Finding, Severity, Stage
 
 SYSTEM_ROOTS = {
-    "tmp", "usr", "etc", "var", "proc", "dev", "bin", "sbin", "lib", "lib64", "opt",
-    "root", "home", "sys", "run", "srv", "mnt", "tests", "logs", "agent-logs", "oracle",
+    "tmp",
+    "usr",
+    "etc",
+    "var",
+    "proc",
+    "dev",
+    "bin",
+    "sbin",
+    "lib",
+    "lib64",
+    "opt",
+    "root",
+    "home",
+    "sys",
+    "run",
+    "srv",
+    "mnt",
+    "tests",
+    "logs",
+    "agent-logs",
+    "oracle",
 }
 FILE_EXTENSIONS = (
     "txt|json|csv|conf|py|cpp|hpp|cc|c|h|java|xml|jar|html|log|yaml|yml|md|sh|toml|ini|cfg|js|ts|go|rs|so"
@@ -62,8 +81,16 @@ class TaskContext:
 
     def corpus(self) -> str:
         """Everything except task.yaml: where an instruction's references should appear."""
-        return "\n".join([self.run_tests, self.tests, self.solution or "", self.dockerfile.run_text,
-                          *self.other_files.values(), *self.other_files])
+        return "\n".join(
+            [
+                self.run_tests,
+                self.tests,
+                self.solution or "",
+                self.dockerfile.run_text,
+                *self.other_files.values(),
+                *self.other_files,
+            ]
+        )
 
 
 def parse_dockerfile(text: str) -> DockerfileFacts:
@@ -132,7 +159,11 @@ def load_context(task_dir: Path) -> tuple[TaskContext, list[Finding]]:
         return path.read_text(errors="replace") if path.is_file() else ""
 
     tests_dir = task_dir / "tests"
-    tests = "\n".join(p.read_text(errors="replace") for p in sorted(tests_dir.rglob("*.py"))) if tests_dir.is_dir() else ""
+    tests = (
+        "\n".join(p.read_text(errors="replace") for p in sorted(tests_dir.rglob("*.py")))
+        if tests_dir.is_dir()
+        else ""
+    )
     excluded = {"task.yaml", "Dockerfile", "run-tests.sh", "solution.sh", "docker-compose.yaml"}
     other_files = {
         str(path.relative_to(task_dir)): _read_text_or_empty(path)
@@ -161,7 +192,9 @@ def _read_text_or_empty(path: Path) -> str:
 
 
 def _finding(check: str, severity: Severity, message: str, **details) -> Finding:
-    return Finding(check=check, stage=Stage.STATIC, severity=severity, message=message, details=details or None)
+    return Finding(
+        check=check, stage=Stage.STATIC, severity=severity, message=message, details=details or None
+    )
 
 
 def check_duplicated_instruction(ctx: TaskContext) -> Iterator[Finding]:
@@ -175,7 +208,8 @@ def check_duplicated_instruction(ctx: TaskContext) -> Iterator[Finding]:
                 run += 1
             if run >= MIN_REPEATED_LINES:
                 yield _finding(
-                    "duplicated_instruction", Severity.WARNING,
+                    "duplicated_instruction",
+                    Severity.WARNING,
                     f"instruction repeats a {run}-line block (starting {line[:60]!r}); "
                     "the agent sees the requirements twice and may treat them as conflicting",
                     repeated_lines=run,
@@ -189,7 +223,8 @@ def check_pytest_summary_flag(ctx: TaskContext) -> Iterator[Finding]:
         yield _finding("pytest_invocation", Severity.ERROR, "run-tests.sh never invokes pytest")
     elif not any(re.search(r"-r\w*A", call) for call in calls):
         yield _finding(
-            "pytest_invocation", Severity.ERROR,
+            "pytest_invocation",
+            Severity.ERROR,
             "pytest is not run with -rA; terminal-bench's parser needs the PASSED/FAILED short summary",
         )
 
@@ -202,24 +237,31 @@ def check_tests_present(ctx: TaskContext) -> Iterator[Finding]:
 def check_workdir(ctx: TaskContext) -> Iterator[Finding]:
     if ctx.dockerfile.workdir in (None, "/"):
         yield _finding(
-            "workdir", Severity.ERROR,
-            "Dockerfile sets no WORKDIR; the agent and tests start in / and run-tests.sh refuses to run there",
+            "workdir",
+            Severity.ERROR,
+            "Dockerfile sets no WORKDIR; the agent and tests start in / "
+            "and run-tests.sh refuses to run there",
         )
 
 
 def check_test_paths_inside_image(ctx: TaskContext) -> Iterator[Finding]:
     known_roots = ctx.dockerfile.roots | SYSTEM_ROOTS
-    missing = sorted({
-        path for path in ABSOLUTE_PATH_LITERAL.findall(ctx.tests)
-        if _top_level(path) and _top_level(path) not in known_roots
-    })
+    missing = sorted(
+        {
+            path
+            for path in ABSOLUTE_PATH_LITERAL.findall(ctx.tests)
+            if _top_level(path) and _top_level(path) not in known_roots
+        }
+    )
     if missing:
         yield _finding(
-            "test_paths_outside_image", Severity.ERROR,
+            "test_paths_outside_image",
+            Severity.ERROR,
             f"tests read {', '.join(missing)} but the image never creates "
             f"{', '.join(sorted({'/' + _top_level(p) for p in missing}))} "
             f"(WORKDIR is {ctx.dockerfile.workdir or 'unset'})",
-            paths=missing, workdir=ctx.dockerfile.workdir,
+            paths=missing,
+            workdir=ctx.dockerfile.workdir,
         )
 
 
@@ -232,26 +274,32 @@ def check_copy_renames_referenced_dir(ctx: TaskContext) -> Iterator[Finding]:
             continue
         if re.search(rf"(?<![\w.-]){re.escape(source_name)}/", corpus):
             yield _finding(
-                "copy_renames_directory", Severity.ERROR,
+                "copy_renames_directory",
+                Severity.ERROR,
                 f"Dockerfile copies {source}/ to {destination}, but task files refer to it as {source_name}/",
-                source=source, destination=destination,
+                source=source,
+                destination=destination,
             )
 
 
 def check_tested_files_in_instruction(ctx: TaskContext) -> Iterator[Finding]:
     """A file the tests read must either ship with the task or be named in the instruction."""
-    unexplained = sorted({
-        PurePosixPath(literal).name
-        for literal in FILE_ACCESS_LITERAL.findall(ctx.tests)
-        if FILENAME.fullmatch(PurePosixPath(literal).name)
-        and PurePosixPath(literal).name not in ctx.task_file_names
-        and PurePosixPath(literal).name not in ctx.instruction
-        and PurePosixPath(literal).name not in ctx.run_tests
-    })
+    unexplained = sorted(
+        {
+            PurePosixPath(literal).name
+            for literal in FILE_ACCESS_LITERAL.findall(ctx.tests)
+            if FILENAME.fullmatch(PurePosixPath(literal).name)
+            and PurePosixPath(literal).name not in ctx.task_file_names
+            and PurePosixPath(literal).name not in ctx.instruction
+            and PurePosixPath(literal).name not in ctx.run_tests
+        }
+    )
     if unexplained:
         yield _finding(
-            "tested_files_not_in_instruction", Severity.ERROR,
-            f"tests check {', '.join(unexplained)}, which the instruction never asks for and the task does not provide",
+            "tested_files_not_in_instruction",
+            Severity.ERROR,
+            f"tests check {', '.join(unexplained)}, which the instruction never asks for "
+            "and the task does not provide",
             files=unexplained,
         )
 
@@ -263,23 +311,30 @@ def check_instruction_files_exist(ctx: TaskContext) -> Iterator[Finding]:
     unused = [name for name in named if name not in corpus]
     if len(unused) > MAX_UNUSED_INSTRUCTION_FILES:
         yield _finding(
-            "instruction_describes_other_project", Severity.ERROR,
+            "instruction_describes_other_project",
+            Severity.ERROR,
             f"instruction names {len(unused)} files that appear nowhere in the environment, tests, "
             f"or solution ({', '.join(unused[:8])}); it likely describes a different project",
             files=unused,
         )
     elif unused:
         yield _finding(
-            "instruction_files_unused", Severity.WARNING,
+            "instruction_files_unused",
+            Severity.WARNING,
             f"instruction names {', '.join(unused)}, which no test, solution, or task file references",
             files=unused,
         )
 
 
 def check_test_timeout_budget(ctx: TaskContext) -> Iterator[Finding]:
-    if ctx.spec and NETWORK_SETUP.search(ctx.run_tests) and ctx.spec.max_test_timeout_sec < MIN_TEST_TIMEOUT_WITH_NETWORK_SETUP_SEC:
+    if (
+        ctx.spec
+        and NETWORK_SETUP.search(ctx.run_tests)
+        and ctx.spec.max_test_timeout_sec < MIN_TEST_TIMEOUT_WITH_NETWORK_SETUP_SEC
+    ):
         yield _finding(
-            "test_timeout_budget", Severity.WARNING,
+            "test_timeout_budget",
+            Severity.WARNING,
             f"run-tests.sh installs packages over the network but max_test_timeout_sec is "
             f"{ctx.spec.max_test_timeout_sec:.0f}s; setup alone can exceed that under load",
             max_test_timeout_sec=ctx.spec.max_test_timeout_sec,

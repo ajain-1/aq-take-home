@@ -1,0 +1,40 @@
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    dateext
+    dateformat -%Y%m%d
+    postrotate
+        # Signal application to reopen log files if needed
+        /usr/bin/systemctl kill -s HUP rsyslog.service 2>/dev/null || true
+    endscript
+}
+
+# ACCESS LOG - nginx
+# Importance: medium | Growth: 45.7 MB/day
+# Retention requirement: 14 days
+/var/log/samples/access.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    size 100M
+    maxsize 200M
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+}
+
+# ERROR LOG - web-server
+# Importance: critical | Growth: 8.9 MB/day
+# Retention requirement: 60 days
+/var/log/samples/error.log {
+    daily
+    rotate 60
+    compress
+    delaycompress
+    missingok
+root@6a3736b1a6ac:/app#

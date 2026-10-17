@@ -1,0 +1,40 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://172.23.0.2:3000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 953-638-376
+sleep 2; tmux wait -S done
+
+[2]+  Stopped                 python3 app.py
+root@47d302821d4d:/app# curl http://localhost:3000/users; tmux wait -S done
+bash: curl: command not found
+root@47d302821d4d:/app# python3 app.py > /dev/null 2>&1 &
+[3] 430
+root@47d302821d4d:/app# sleep 2 && wget -qO- http://localhost:3000/users; tmux wait -S done
+[3]-  Exit 1                  python3 app.py > /dev/null 2>&1
+bash: wget: command not found
+root@47d302821d4d:/app# jobs; tmux wait -S done
+[2]+  Stopped                 python3 app.py
+root@47d302821d4d:/app# kill %2 2>/dev/null; fg 2>/dev/null
+python3 app.py
+^C
+root@47d302821d4d:/app# pkill -f 'python3 app.py' 2>/dev/null; tmux wait -S done
+root@47d302821d4d:/app# python3 -c "import app; app.app.run(host='0.0.0.0', port=3000, debug=False)" &
+[1] 526
+root@47d302821d4d:/app# sleep 2; tmux wait -S done
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://172.23.0.2:3000
+Press CTRL+C to quit
+root@47d302821d4d:/app# python3 -c "import requests; r = requests.get('http://localhost:3000/users'); print(r.status_code); print(r.json())"; tmux wait -S done
+127.0.0.1 - - [17/Oct/2026 02:16:24] "GET /users HTTP/1.1" 200 -
+200
+[{'email': 'john@example.com', 'id': 1, 'name': 'John Doe', 'role': 'admin'}, {'email': 'jane@example.com', 'id': 2, 'name': 'Jane Smith', 'role': 'user'}, {'em
+ail': 'bob@example.com', 'id': 3, 'name': 'Bob Johnson', 'role': 'user'}, {'email': 'alice@example.com', 'id': 4, 'name': 'Alice Brown', 'role': 'moderator'}]
+root@47d302821d4d:/app#

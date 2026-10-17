@@ -34,15 +34,21 @@ def post_validation(archive: bytes, filename: str, mode: str, force: bool) -> di
     boundary = uuid.uuid4().hex
     fields = {"mode": mode, "force": str(force).lower()}
     body = b"".join(
-        f"--{boundary}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n".encode()
+        f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode()
         for k, v in fields.items()
     )
     body += (
-        f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{filename}\"\r\n"
-        "Content-Type: application/zip\r\n\r\n"
-    ).encode() + archive + f"\r\n--{boundary}--\r\n".encode()
+        (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+            "Content-Type: application/zip\r\n\r\n"
+        ).encode()
+        + archive
+        + f"\r\n--{boundary}--\r\n".encode()
+    )
     request = urllib.request.Request(
-        f"{API_URL}/validate", data=body, headers={"Content-Type": f"multipart/form-data; boundary={boundary}"}
+        f"{API_URL}/validate",
+        data=body,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
     )
     with urllib.request.urlopen(request) as response:
         return json.load(response)
@@ -60,13 +66,17 @@ def wait_for(validation_id: str) -> dict:
 def summarize(reports: dict[str, dict]) -> str:
     lines = ["| Task | Verdict | Stages run | Errors | Warnings | Findings |", "|---|---|---|---|---|---|"]
     for task, report in reports.items():
-        findings = "<br>".join(
-            f"**{f['severity']}** `{f['stage']}/{f['check']}`: {f['message']}" for f in report["findings"]
-        ) or "—"
+        findings = (
+            "<br>".join(
+                f"**{f['severity']}** `{f['stage']}/{f['check']}`: {f['message']}" for f in report["findings"]
+            )
+            or "—"
+        )
         verdict = "PASS" if report["passed"] else "FAIL"
         counts = report["counts"]
         lines.append(
-            f"| {task} | {verdict} | {', '.join(report['stages_run'])} | {counts['error']} | {counts['warning']} | {findings} |"
+            f"| {task} | {verdict} | {', '.join(report['stages_run'])} "
+            f"| {counts['error']} | {counts['warning']} | {findings} |"
         )
     return "\n".join(lines) + "\n"
 

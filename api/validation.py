@@ -4,16 +4,11 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from enum import StrEnum
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-
 from runner import bundle
 from runner.config import Settings
 from runner.models import Submission
 from runner.validation.models import Validation, ValidationMode
 from runner.validation.pipeline import Validator
-from runner.validation.store import ValidationNotFound
 
 logger = logging.getLogger(__name__)
 MAX_CONCURRENT_VALIDATIONS = 2
@@ -35,7 +30,9 @@ class ValidationService:
     def __init__(self, validator: Validator, settings: Settings):
         self._validator = validator
         self._settings = settings
-        self._pool = ThreadPoolExecutor(max_workers=MAX_CONCURRENT_VALIDATIONS, thread_name_prefix="validation")
+        self._pool = ThreadPoolExecutor(
+            max_workers=MAX_CONCURRENT_VALIDATIONS, thread_name_prefix="validation"
+        )
 
     def validate(self, archive: bytes, mode: ValidationMode, force: bool = False) -> Validation:
         if len(archive) > self._settings.max_upload_bytes:
@@ -71,6 +68,9 @@ class ValidationService:
         if submission.validation_id:
             self._validator.mark_gating(submission.validation_id, submission.id)
 
+    def get(self, validation_id: str) -> Validation:
+        return self._validator.get(validation_id)
+
     def resume_unfinished(self) -> None:
         for validation in self._validator.list_unfinished():
             if validation.gates_submission_id is None:
@@ -79,36 +79,3 @@ class ValidationService:
 
     def shutdown(self) -> None:
         self._pool.shutdown(wait=False, cancel_futures=True)
-
-
-router = APIRouter()
-
-
-@router.post("/validate")
-def validate_task(
-    request: Request,
-    file: UploadFile = File(...),
-    mode: ValidationMode = Form(ValidationMode.FULL),
-    force: bool = Form(False),
-):
-    """
-    Check a task before spending agent compute on it.
-
-    `static` returns the report immediately. `full` (202) also builds and probes the
-    image and runs the oracle (twice) and nop agents as Jobs; poll /validations/{id}.
-    `force` runs the dynamic stages even when static checks report errors.
-    """
-    try:
-        validation = request.app.state.validations.validate(file.file.read(), mode, force)
-    except ValidationRejected as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    status_code = 200 if validation.status.is_terminal else 202
-    return JSONResponse(status_code=status_code, content=jsonable_encoder(validation.report()))
-
-
-@router.get("/validations/{validation_id}")
-def get_validation(request: Request, validation_id: str):
-    try:
-        return request.app.state.validator.get(validation_id).report()
-    except ValidationNotFound:
-        raise HTTPException(status_code=404, detail=f"validation {validation_id} not found")

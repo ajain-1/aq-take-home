@@ -13,7 +13,9 @@ class GatedTaskRunner(TaskRunner):
     """A TaskRunner that, for submissions linked to a full validation, runs the
     validation first and only spends agent compute if it passes."""
 
-    def __init__(self, store: SubmissionStore, kube: KubeClient, validations: ValidationStore, settings: Settings):
+    def __init__(
+        self, store: SubmissionStore, kube: KubeClient, validations: ValidationStore, settings: Settings
+    ):
         super().__init__(store, kube, settings)
         self.validator = Validator(validations, self, settings)
 

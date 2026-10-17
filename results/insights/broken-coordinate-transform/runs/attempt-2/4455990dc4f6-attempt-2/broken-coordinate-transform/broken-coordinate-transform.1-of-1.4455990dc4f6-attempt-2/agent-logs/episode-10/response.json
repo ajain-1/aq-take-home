@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The matrix multiplication test passed. For 2x2 matrices:\nA = [[1,2],[3,4]] and B = [[5,6],[7,8]]\nResult = [[1*5+2*7, 1*6+2*8], [3*5+4*7, 3*6+4*8]] = [[19,22],[43,50]]\n\nThis is correct! Let me also test the invalid multiplication case.",
+    "explanation": "Test the invalid matrix multiplication case where dimensions don't match.",
+    "commands": [
+        {
+            "keystrokes": "echo '2 3 2 2 1 2 3 4 5 6 7 8 9 10' | /app/test_matrix\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

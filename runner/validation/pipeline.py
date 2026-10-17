@@ -91,10 +91,14 @@ class Validator:
             return
 
         if Stage.IMAGE_PROBE not in validation.stages_run:
-            findings = list(image_probe.probe_image(
-                context, f"aq-validate-{validation_id}:latest",
-                self.root(validation_id) / "build.log", self._settings.build_timeout_sec,
-            ))
+            findings = list(
+                image_probe.probe_image(
+                    context,
+                    f"aq-validate-{validation_id}:latest",
+                    self.root(validation_id) / "build.log",
+                    self._settings.build_timeout_sec,
+                )
+            )
             self._record(validation_id, [Stage.IMAGE_PROBE], findings)
 
         oracle_id, nop_id = self._reference_submissions(validation_id, context.solution is not None)
@@ -107,9 +111,11 @@ class Validator:
             return  # runner is shutting down; the validation resumes on restart
 
         if oracle:
-            self._record(validation_id, [Stage.ORACLE], list(
-                reference_runs.oracle_findings(oracle_results, context.spec.max_test_timeout_sec)
-            ))
+            self._record(
+                validation_id,
+                [Stage.ORACLE],
+                list(reference_runs.oracle_findings(oracle_results, context.spec.max_test_timeout_sec)),
+            )
         self._record(validation_id, [Stage.NOP], list(reference_runs.nop_findings(nop_results)))
         self._finish(validation_id)
 
@@ -136,6 +142,7 @@ class Validator:
 
     def _finish(self, validation_id: str, note: str | None = None, error: str | None = None) -> Validation:
         """`note` explains skipped stages; `error` means the validation itself broke."""
+
         def mutate(v: Validation) -> None:
             v.status = Status.FAILED if error else Status.COMPLETED
             v.note, v.error = note, error

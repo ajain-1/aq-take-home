@@ -1,0 +1,40 @@
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    size 50M
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    postrotate
+        # Signal application to reopen log files if needed
+        # Add application-specific reload command here
+    endscript
+}
+
+# SYSTEM LOG - systemd
+# Importance: critical | Growth: 2.1 MB/day
+# Retention requirement: 90 days
+/var/log/samples/system.log {
+    weekly
+    rotate 13
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    dateext
+    dateformat -%Y%m%d
+    postrotate
+        # Signal application to reopen log files if needed
+root@6a3736b1a6ac:/app# ls -la /app/analysis_report.txt /app/optimized_logrotate.conf /app/rotation_summary.csv; tmux wait -S done
+-rw-r--r-- 1 root root 4029 Oct 17 02:11 /app/analysis_report.txt
+-rw-r--r-- 1 root root 2092 Oct 17 02:11 /app/optimized_logrotate.conf
+-rw-r--r-- 1 root root  404 Oct 17 02:11 /app/rotation_summary.csv
+root@6a3736b1a6ac:/app# wc -l /app/analysis_report.txt /app/optimized_logrotate.conf /app/rotation_summary.csv; tmux wait -S done
+ 132 /app/analysis_report.txt
+  95 /app/optimized_logrotate.conf
+   6 /app/rotation_summary.csv
+ 233 total
+root@6a3736b1a6ac:/app#

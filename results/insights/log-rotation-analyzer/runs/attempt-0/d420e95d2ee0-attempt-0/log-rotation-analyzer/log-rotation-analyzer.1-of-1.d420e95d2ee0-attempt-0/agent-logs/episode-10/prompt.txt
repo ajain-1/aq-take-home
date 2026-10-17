@@ -1,0 +1,40 @@
+  Without optimization: +2316.0 MB
+  With optimization: +347.4 MB (compressed, rotated)
+
+Potential Savings:
+  Immediate (compression): 0.03 MB
+  Monthly (proper rotation): ~1968.6 MB avoided
+
+
+RECOMMENDATIONS FOR IMPROVEMENT
+----------------------------------------
+
+1. CRITICAL ACTIONS (Immediate):
+   - Add logrotate configuration for /var/log/samples/error.log
+     Recommended: weekly, rotate 9
+   - Add logrotate configuration for /var/log/samples/debug.log
+     Recommended: weekly, rotate 1
+
+2. HIGH PRIORITY ACTIONS:
+   - Change /var/log/samples/access.log from monthly to daily
+
+3. MEDIUM PRIORITY ACTIONS:
+   - Enable compression for /var/log/samples/access.log rotated files
+
+4. COMPLIANCE CONSIDERATIONS (PCI-DSS, SOX):
+   - Ensure error.log retention meets 60-day requirement
+   - Ensure system.log retention meets 90-day requirement
+   - Implement log integrity checks (consider using dateext)
+   - Avoid rotating during peak traffic hours
+
+5. GENERAL BEST PRACTICES:
+   - Use delaycompress to keep most recent rotated file readable
+   - Set appropriate file permissions (644 for logs)
+   - Use notifempty to avoid rotating empty log files
+   - Consider size-based rotation for high-growth logs
+   - Schedule rotation during off-peak hours (e.g., 03:00-05:00)
+
+================================================================================
+END OF REPORT
+================================================================================
+root@6a3736b1a6ac:/app#

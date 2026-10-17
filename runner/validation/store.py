@@ -18,7 +18,8 @@ class ValidationStore:
         self._conn = sqlite3.connect(db_path, check_same_thread=False, isolation_level=None)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute(
-            "CREATE TABLE IF NOT EXISTS validations (id TEXT PRIMARY KEY, status TEXT NOT NULL, doc TEXT NOT NULL)"
+            "CREATE TABLE IF NOT EXISTS validations"
+            " (id TEXT PRIMARY KEY, status TEXT NOT NULL, doc TEXT NOT NULL)"
         )
 
     def save(self, validation: Validation) -> None:

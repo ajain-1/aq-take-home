@@ -8,6 +8,9 @@ from typing import Any
 from runner.models import AttemptProgress
 
 PYTEST_SESSION_MARKER = "test session starts"
+TASK_CONTAINER_EVENTS_FILE = "task-container-events.jsonl"
+# terminal-bench leaves failure_mode "unset" when nothing went wrong.
+NO_FAILURE_MODES = {"unset", "none"}
 
 
 def _seconds_between(start: str | None, end: str | None) -> float | None:
@@ -24,12 +27,25 @@ def _pytest_output(pane_path: Path) -> str | None:
     return "\n".join(lines[start:]).strip()
 
 
+def infrastructure_issues(attempt_dir: Path) -> list[str]:
+    """Problems outside the agent's control, recorded by the pod while the attempt ran."""
+    events_path = attempt_dir / TASK_CONTAINER_EVENTS_FILE
+    if not events_path.exists():
+        return []
+    events = [json.loads(line) for line in events_path.read_text().splitlines() if line.strip()]
+    if any(event.get("status") == "oom" or event.get("Action") == "oom" for event in events):
+        return ["task container was OOM-killed (exceeded its resource_class memory limit)"]
+    return []
+
+
 def find_trial_dir(attempt_dir: Path, task_id: str) -> Path | None:
     matches = sorted(attempt_dir.glob(f"*/{task_id}/*/results.json"))
     return matches[-1].parent if matches else None
 
 
-def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, data_dir: Path) -> dict[str, Any]:
+def collect_attempt(
+    attempt_dir: Path, task_id: str, progress: AttemptProgress, data_dir: Path
+) -> dict[str, Any]:
     trial_dir = find_trial_dir(attempt_dir, task_id)
     if trial_dir is None:
         return {
@@ -38,22 +54,25 @@ def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, 
             "resolved": False,
             "error": progress.reason or f"attempt produced no results (pod state: {progress.state})",
             "retries": progress.retries,
+            "infrastructure_issues": infrastructure_issues(attempt_dir),
             "tests": [],
             "passed_tests": 0,
             "total_tests": 0,
         }
 
     trial = json.loads((trial_dir / "results.json").read_text())
-    tests = [
-        {"name": name, "status": status}
-        for name, status in (trial.get("parser_results") or {}).items()
-    ]
+    parser_results = trial.get("parser_results")
+    tests = [{"name": name, "status": status} for name, status in (parser_results or {}).items()]
+    failure_mode = trial.get("failure_mode")
     return {
         "attempt": progress.index,
-        "status": "completed",
+        # "tests_not_run": the trial finished but produced no parseable test results
+        # (e.g. the agent crashed or the test run timed out).
+        "status": "completed" if parser_results is not None else "tests_not_run",
         "resolved": bool(trial.get("is_resolved")),
-        "failure_mode": trial.get("failure_mode"),
+        "failure_mode": "none" if failure_mode in NO_FAILURE_MODES else failure_mode,
         "retries": progress.retries,
+        "infrastructure_issues": infrastructure_issues(attempt_dir),
         "tests": tests,
         "passed_tests": sum(1 for test in tests if test["status"] == "passed"),
         "total_tests": len(tests),
@@ -69,6 +88,10 @@ def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, 
     }
 
 
+def _rate(numerator: int, denominator: int) -> float:
+    return round(numerator / denominator, 3) if denominator else 0.0
+
+
 def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     """Summarize N attempts. The task counts as passed only if every attempt resolved it;
     per-test pass counts show how consistently each test was satisfied."""
@@ -81,7 +104,7 @@ def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
 
     resolved = sum(1 for a in attempts if a["resolved"])
     tests = [
-        {"name": name, **counts, "pass_rate": round(counts["passed"] / len(completed), 3)}
+        {"name": name, **counts, "pass_rate": _rate(counts["passed"], counts["passed"] + counts["failed"])}
         for name, counts in per_test.items()
     ]
     return {
@@ -91,7 +114,8 @@ def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
         "summary": {
             "n_attempts": len(attempts),
             "completed_attempts": len(completed),
-            "errored_attempts": len(attempts) - len(completed),
+            "tests_not_run_attempts": sum(1 for a in attempts if a["status"] == "tests_not_run"),
+            "errored_attempts": sum(1 for a in attempts if a["status"] == "error"),
             "resolved_attempts": resolved,
             "pass_rate": round(resolved / len(attempts), 3) if attempts else 0.0,
         },

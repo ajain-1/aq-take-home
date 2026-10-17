@@ -19,7 +19,8 @@ FROM {base}
 USER root
 RUN if command -v tmux >/dev/null && command -v asciinema >/dev/null; then exit 0; \\
     elif command -v apt-get >/dev/null; then \\
-        apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tmux asciinema \\
+        apt-get update \\
+        && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tmux asciinema \\
         && rm -rf /var/lib/apt/lists/*; \\
     elif command -v apk >/dev/null; then apk add --no-cache bash tmux asciinema; \\
     elif command -v dnf >/dev/null; then dnf install -y tmux asciinema && dnf clean all; \\

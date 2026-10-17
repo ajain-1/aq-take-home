@@ -1,0 +1,40 @@
+    if user:
+        return jsonify(user)
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+if __name__ == '__main__'
+    # Missing colon - syntax error
+    app.run(host='0.0.0.0', port=3000, debug=True)root@b398b8bbeaa9:/app# cat requirements.txt; tmux wait -S done
+# Missing Flask dependency - this is part of the bug
+requests==2.31.0root@b398b8bbeaa9:/app# cat data/users.json; tmux wait -S done
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "role": "user"
+  },
+  {
+    "id": 3,
+    "name": "Bob Johnson",
+    "email": "bob@example.com",
+    "role": "user"
+  }
+  {
+    "id": 4,
+    "name": "Alice Brown",
+    "email": "alice@example.com",
+    "role": "moderator"
+  }
+root@b398b8bbeaa9:/app# cat > requirements.txt << 'EOF'
+> flask==3.0.0
+> requests==2.31.0
+> EOF
+root@b398b8bbeaa9:/app#

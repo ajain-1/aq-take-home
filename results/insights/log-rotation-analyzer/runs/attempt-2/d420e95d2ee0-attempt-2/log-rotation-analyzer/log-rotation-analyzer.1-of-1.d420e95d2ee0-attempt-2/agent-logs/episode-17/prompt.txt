@@ -1,0 +1,40 @@
+>     config = current_configs.get(path)
+>     if config:
+>         if config['schedule'] == 'monthly':
+>             current_monthly = growth_rate * 30 * config['rotate'] * 0.2
+>         else:
+>             current_monthly = growth_rate * 7 * config['rotate'] * 0.2
+>     else:
+>         current_monthly = growth_rate * 30 * 3
+>
+>     if schedule == 'daily':
+>         opt_monthly = growth_rate * rotate_count * 0.2
+>     else:
+>         opt_monthly = growth_rate * 7 * rotate_count * 0.2
+>
+>     savings = max(0, current_monthly - opt_monthly)
+>
+>     file_info = log_files.get(path, {})
+>     size_mb = file_info.get('size_mb', 0)
+>     days_since = file_info.get('days_since_mod', 0)
+>
+>     csv_lines.append(f'{path},{size_mb:.2f},{days_since},{schedule},{savings:.2f}')
+>
+> with open('/app/rotation_summary.csv', 'w') as f:
+>     f.write('\n'.join(csv_lines))
+>
+> print("Created: rotation_summary.csv")
+> print("\nCSV Contents:")
+> for line in csv_lines:
+>     print(line)
+> EOF
+Created: rotation_summary.csv
+
+CSV Contents:
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.25,0,daily,0.00
+/var/log/samples/system.log,0.00,0,weekly,0.00
+/var/log/samples/access.log,0.15,0,daily,420.44
+/var/log/samples/error.log,0.23,0,weekly,688.86
+/var/log/samples/debug.log,0.05,0,weekly,469.58
+root@633112936ae8:/app#

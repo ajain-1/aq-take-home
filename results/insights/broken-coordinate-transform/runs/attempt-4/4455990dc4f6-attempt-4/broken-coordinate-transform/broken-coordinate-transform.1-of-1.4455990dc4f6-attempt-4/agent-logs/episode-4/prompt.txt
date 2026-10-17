@@ -1,0 +1,40 @@
+    16              cin >> A[i][j];
+    17          }
+    18      }
+    19
+    20      cout << "Enter elements of B:\n";
+    21      for(int i=0; i<r2; i++) {
+    22          for(int j=0; j<c2; j++) {
+    23              cin >> B[i][j];
+    24          }
+    25      }
+    26
+    27      for(int i=0; i<r1; i++) {
+    28          for(int j=0; i<c2; j++) {
+    29              C[i][j] = 0;
+    30              for(int k=0; k<r2; k++) {
+    31                  C[i][j] = A[i][k] * B[k][j];
+    32              }
+    33          }
+    34      }
+    35
+    36      cout << "Result matrix C:\n";
+    37      for(int i=0; i<r1; i++) {
+    38          for(int j=0; j<c2; j++)
+    39              cout << C[i][j] << " "
+    40          cout << endl;
+    41      }
+    42
+    43      return 0;
+    44  }root@b4dc2eade153:/app# head -10 buggy.cpp; tmux wait -S done
+#include <iostream>
+using namespace std;
+
+int main() {
+    int r1, c1, r2, c2;
+    cout << "Enter rows and cols for matrix A: ";
+    cin >> c1 >> r1;
+    cout << "Enter rows and cols for matrix B: ";
+    cin >> r2 >> c2;
+
+root@b4dc2eade153:/app#

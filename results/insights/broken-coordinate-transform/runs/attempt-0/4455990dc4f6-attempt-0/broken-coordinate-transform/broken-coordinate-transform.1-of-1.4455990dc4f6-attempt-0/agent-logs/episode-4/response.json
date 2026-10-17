@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The program compiled successfully. Now I need to test it with some test cases to verify the matrix multiplication works correctly.",
+    "explanation": "Test the program with a simple 2x3 * 3x2 matrix multiplication case.",
+    "commands": [
+        {
+            "keystrokes": "echo '2 3\n3 2\n1 2 3\n4 5 6\n7 8\n9 10\n11 12' | ./buggy\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

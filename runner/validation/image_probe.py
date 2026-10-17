@@ -22,10 +22,13 @@ def _instruction_paths(ctx: TaskContext) -> list[str]:
     created = set(re.findall(r">\s*(/[\w./-]+)", ctx.run_tests))
     for text in (ctx.instruction, ctx.solution or ""):
         created.update(re.findall(r"mkdir\s+(?:-\w+\s+)*(/[\w./-]+)", text))
-    return sorted({
-        path for path in INSTRUCTION_PATH.findall(ctx.instruction)
-        if path.rstrip("/") and path not in created
-    })
+    return sorted(
+        {
+            path
+            for path in INSTRUCTION_PATH.findall(ctx.instruction)
+            if path.rstrip("/") and path not in created
+        }
+    )
 
 
 def _test_tools(ctx: TaskContext) -> list[str]:
@@ -46,7 +49,9 @@ def _probe_script(paths: list[str], tools: list[str]) -> str:
 
 
 def _finding(check: str, severity: Severity, message: str, **details) -> Finding:
-    return Finding(check=check, stage=Stage.IMAGE_PROBE, severity=severity, message=message, details=details or None)
+    return Finding(
+        check=check, stage=Stage.IMAGE_PROBE, severity=severity, message=message, details=details or None
+    )
 
 
 def probe_image(ctx: TaskContext, tag: str, build_log: Path, build_timeout: float) -> Iterator[Finding]:
@@ -59,8 +64,21 @@ def probe_image(ctx: TaskContext, tag: str, build_log: Path, build_timeout: floa
     paths, tools = _instruction_paths(ctx), _test_tools(ctx)
     try:
         result = subprocess.run(
-            ["docker", "run", "--rm", "--network", "none", "--entrypoint", "sh", tag, "-c", _probe_script(paths, tools)],
-            capture_output=True, text=True, timeout=PROBE_TIMEOUT_SEC,
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--entrypoint",
+                "sh",
+                tag,
+                "-c",
+                _probe_script(paths, tools),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=PROBE_TIMEOUT_SEC,
         )
     except subprocess.TimeoutExpired:
         yield _finding("image_probe", Severity.WARNING, "image probe timed out")
@@ -72,16 +90,22 @@ def probe_image(ctx: TaskContext, tag: str, build_log: Path, build_timeout: floa
         kind, _, subject = line.partition(" ")
         if kind == "empty":
             yield _finding(
-                "instruction_path_empty", Severity.ERROR,
-                f"instruction points the agent at {subject}, but it is empty in the image", path=subject,
+                "instruction_path_empty",
+                Severity.ERROR,
+                f"instruction points the agent at {subject}, but it is empty in the image",
+                path=subject,
             )
         elif kind == "missing":
             yield _finding(
-                "instruction_path_missing", Severity.WARNING,
-                f"instruction mentions {subject}, which does not exist in the image", path=subject,
+                "instruction_path_missing",
+                Severity.WARNING,
+                f"instruction mentions {subject}, which does not exist in the image",
+                path=subject,
             )
         elif kind == "tool":
             yield _finding(
-                "test_tool_missing", Severity.ERROR,
-                f"tests run `{subject}`, which is not installed in the image or by run-tests.sh", tool=subject,
+                "test_tool_missing",
+                Severity.ERROR,
+                f"tests run `{subject}`, which is not installed in the image or by run-tests.sh",
+                tool=subject,
             )

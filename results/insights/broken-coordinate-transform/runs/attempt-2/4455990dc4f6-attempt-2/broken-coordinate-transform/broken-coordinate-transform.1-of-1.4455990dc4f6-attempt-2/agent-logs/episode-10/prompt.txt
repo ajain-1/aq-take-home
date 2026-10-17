@@ -1,0 +1,40 @@
+    23          for(int j=0; j<c2; j++) {
+    24              cin >> B[i][j];
+    25          }
+    26      }
+    27
+    28      for(int i=0; i<r1; i++) {
+    29          for(int j=0; j<c2; j++) {
+    30              C[i][j] = 0;
+    31              for(int k=0; k<c1; k++) {
+    32                  C[i][j] += A[i][k] * B[k][j];
+    33              }
+    34          }
+    35      }
+    36
+    37      for(int i=0; i<r1; i++) {
+    38          for(int j=0; j<c2; j++) {
+    39              if (j > 0) cout << " ";
+    40              cout << C[i][j];
+    41          }
+    42          cout << endl;
+    43      }
+    44
+    45      return 0;
+    46  }
+root@bbf0cca2d1fe:/app# head -10 /app/buggy.cpp; tmux wait -S done
+#include <iostream>
+using namespace std;
+
+int main() {
+    int r1, c1, r2, c2;
+    cin >> r1 >> c1;
+    cin >> r2 >> c2;
+
+    if (c1 != r2) {
+        cout << "Matrix multiplication not possible" << endl;
+root@bbf0cca2d1fe:/app# g++ -o /app/test_matrix /app/buggy.cpp; tmux wait -S done
+root@bbf0cca2d1fe:/app# echo '2 2 2 2 1 2 3 4 5 6 7 8' | /app/test_matrix; tmux wait -S done
+19 22
+43 50
+root@bbf0cca2d1fe:/app#

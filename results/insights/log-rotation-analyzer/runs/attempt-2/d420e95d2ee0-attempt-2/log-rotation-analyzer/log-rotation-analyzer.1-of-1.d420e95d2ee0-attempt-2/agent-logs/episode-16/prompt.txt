@@ -1,0 +1,40 @@
+>     f.write(f'# Date: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
+>     f.write('#\n')
+>     f.write('# This configuration implements best practices for log rotation\n')
+>     f.write('# based on analysis of current log patterns and requirements.\n\n')
+>
+>     for rec in recommendations:
+>         meta = rec['meta']
+>         f.write(f'# {meta.get("type", "unknown").upper()} LOG - {meta.get("application", "unknown")}\n')
+>         f.write(f'# Importance: {rec["importance"]} | Growth: {meta.get("growth_rate_mb_per_day", 0)} MB/day\n')
+>         f.write(f'{rec["path"]} {{\n')
+>         f.write(f'    {rec["schedule"]}\n')
+>         f.write(f'    rotate {rec["rotate"]}\n')
+>         f.write('    compress\n')
+>         if rec['delaycompress']:
+>             f.write('    delaycompress\n')
+>         f.write('    missingok\n')
+>         f.write('    notifempty\n')
+>         if rec['size_trigger']:
+>             f.write(f'    size {rec["size_trigger"]}\n')
+>         f.write(f'    maxage {rec["maxage"]}\n')
+>         owner = meta.get('owner', 'root')
+>         f.write(f'    create 640 {owner} adm\n')
+>         f.write('    dateext\n')
+>         f.write('    dateformat -%Y%m%d\n')
+>         app = meta.get('application', '')
+>         if app in ['nginx', 'web-server']:
+>             f.write('    sharedscripts\n')
+>             f.write('    postrotate\n')
+>             if app == 'nginx':
+>                 f.write('        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true\n')
+>             else:
+>                 f.write('        # Signal application to reopen log files if needed\n')
+>                 f.write('        true\n')
+>             f.write('    endscript\n')
+>         f.write('}\n\n')
+>
+> print("Created: optimized_logrotate.conf")
+> EOF
+Created: optimized_logrotate.conf
+root@633112936ae8:/app#

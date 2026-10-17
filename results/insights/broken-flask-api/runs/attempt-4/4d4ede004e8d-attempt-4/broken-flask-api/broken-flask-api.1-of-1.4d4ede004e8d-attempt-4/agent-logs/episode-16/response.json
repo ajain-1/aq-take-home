@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The terminal appears to be in a strange state with leftover commands. Let me send Ctrl+C to clear and get a fresh prompt.",
+    "explanation": "Send Ctrl+C to clear the current state and get a fresh prompt.",
+    "commands": [
+        {
+            "keystrokes": "C-c",
+            "is_blocking": false,
+            "timeout_sec": 2
+        }
+    ],
+    "is_task_complete": false
+}

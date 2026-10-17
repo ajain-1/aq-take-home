@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The Ctrl-C interrupted a hanging request. Now I need to get a clean prompt and kill the stopped process that's holding port 3000.",
+    "explanation": "Get a clean prompt and kill the stopped Flask process, then restart the server properly.",
+    "commands": [
+        {
+            "keystrokes": "\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        }
+    ],
+    "is_task_complete": false
+}

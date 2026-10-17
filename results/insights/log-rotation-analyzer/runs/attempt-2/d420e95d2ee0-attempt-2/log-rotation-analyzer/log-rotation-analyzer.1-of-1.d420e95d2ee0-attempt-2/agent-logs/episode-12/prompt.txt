@@ -1,0 +1,40 @@
+>         logrotate_conf.append('    create 640 root adm')
+>     logrotate_conf.append('    dateext')
+>     logrotate_conf.append('    dateformat -%Y%m%d')
+>     # Add postrotate for critical services
+>     if meta.get('application') in ['nginx', 'web-server']:
+>         logrotate_conf.append('    sharedscripts')
+>         logrotate_conf.append('    postrotate')
+>         if meta.get('application') == 'nginx':
+>             logrotate_conf.append('        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true')
+>         else:
+>             logrotate_conf.append('        # Signal application to reopen log files if needed')
+>             logrotate_conf.append('        true')
+>         logrotate_conf.append('    endscript')
+>     logrotate_conf.append('}')
+>     logrotate_conf.append('')
+>
+> with open('/app/optimized_logrotate.conf', 'w') as f:
+>     f.write('\n'.join(logrotate_conf))
+>
+> # Generate rotation_summary.csv
+> csv_lines = ['log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb']
+> for rec in recommendations:
+>     path = rec['path']
+>     file_info = log_files.get(path, {})
+>     saving = next((s for s in savings if s['path'] == path), {})
+>
+>     csv_lines.append(f'{path},{file_info.get("size_mb", 0):.2f},{file_info.get("days_since_mod", 0)},{rec["schedule"]},{saving.get("estimated_savings_mb", 0):
+.2f}')
+>
+> with open('/app/rotation_summary.csv', 'w') as f:
+>     f.write('\n'.join(csv_lines))
+>
+> print('Analysis complete!')
+> print(f'Generated: analysis_report.txt, optimized_logrotate.conf, rotation_summary.csv')
+> print(f'Total issues found: {len(issues)}')
+> print(f'Estimated monthly savings: {total_savings:.2f} MB ({(total_savings/total_current_monthly*100) if total_current_monthly > 0 else 0:.1f}%)')
+> ENDSCRIPT; tmux wait -S done
+> ; tmux wait -S done
+> ^C
+root@633112936ae8:/app#
