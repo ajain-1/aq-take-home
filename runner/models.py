@@ -22,6 +22,7 @@ class Status(StrEnum):
 
 class Phase(StrEnum):
     QUEUED = "queued"
+    VALIDATING = "validating"
     PREPARING = "preparing"
     BUILDING_IMAGE = "building_image"
     LAUNCHING = "launching"
@@ -74,6 +75,7 @@ class Submission(BaseModel):
     progress: Progress
     error: str | None = None
     results: dict[str, Any] | None = None
+    validation_id: str | None = None
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     started_at: datetime | None = None
