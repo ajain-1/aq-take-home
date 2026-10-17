@@ -66,8 +66,11 @@ def build_ui_router(store: SubmissionStore, settings: Settings) -> APIRouter:
             raise HTTPException(status_code=404, detail=f"submission {submission_id} not found")
         if not 0 <= attempt < submission.n_attempts or submission.task_id is None:
             raise HTTPException(status_code=404, detail=f"attempt {attempt} not found")
-        paths = SubmissionPaths(settings.submissions_dir / submission.id)
-        found = find_trial_dir(paths.attempt(attempt), submission.task_id)
+        attempt_dir = SubmissionPaths(settings.submissions_dir / submission.id).attempt(attempt)
+        # A running trial has no results.json yet, but its agent logs already stream in.
+        found = find_trial_dir(attempt_dir, submission.task_id) or next(
+            (p for p in sorted(attempt_dir.glob(f"*/{submission.task_id}/*")) if p.is_dir()), None
+        )
         if found is None:
             raise HTTPException(status_code=404, detail="attempt has no artifacts yet")
         return found

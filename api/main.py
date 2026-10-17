@@ -13,6 +13,7 @@ Endpoints:
     GET  /status/{id}    - Check execution status
     GET  /results/{id}   - Get final test results
     GET  /health         - Health check
+    GET  /ui             - Web UI (see api/ui_routes.py for its read-only endpoints)
 """
 
 import logging

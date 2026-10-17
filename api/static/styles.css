@@ -80,7 +80,7 @@ button.link { background: none; border: none; color: var(--accent); width: auto;
 .detail-header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .detail-header h2 { margin: 0; font-size: 18px; color: var(--text); text-transform: none; letter-spacing: 0; }
 .kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px 16px; margin: 12px 0; }
-.kv div { display: flex; flex-direction: column; }
+.kv div { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
 .kv span:first-child { color: var(--muted); font-size: 12px; }
 
 .attempt-chips { display: flex; flex-wrap: wrap; gap: 8px; }

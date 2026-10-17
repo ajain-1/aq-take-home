@@ -14,11 +14,16 @@ function h(tag, props = {}, ...children) {
     else if (key.startsWith("on")) el.addEventListener(key.slice(2), value);
     else if (value !== false && value != null) el.setAttribute(key, value === true ? "" : value);
   }
-  for (const child of children.flat()) {
+  for (const child of children.flat(Infinity)) {
     if (child == null || child === false) continue;
     el.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
   return el;
+}
+
+/** Replace an element's children, skipping empty slots (replaceChildren would print "null"). */
+function render(el, ...children) {
+  el.replaceChildren(...children.flat(Infinity).filter((child) => child != null && child !== false));
 }
 
 async function api(path, options) {
@@ -86,7 +91,7 @@ function setupUpload() {
 async function refreshList() {
   const { data } = await api("/submissions");
   const list = document.getElementById("submission-list");
-  list.replaceChildren(...(data ?? []).map((s) => {
+  render(list, ...(data ?? []).map((s) => {
     const outcome = s.summary ? `${s.summary.resolved_attempts}/${s.summary.n_attempts} resolved` : s.phase;
     return h("li", { class: s.submission_id === state.selectedId ? "selected" : "", onclick: () => select(s.submission_id) },
       h("div", {}, h("strong", {}, s.task_id ?? s.submission_id), " ", badge(s.status)),
@@ -99,7 +104,7 @@ function select(id) {
   if (location.hash !== `#${id}`) location.hash = id;
   clearTimeout(state.statusTimer);
   const detail = document.getElementById("detail");
-  detail.replaceChildren(
+  render(detail,
     h("div", { id: "progress" }, h("p", { class: "empty" }, "Loading…")),
     h("div", { id: "results" }),
     h("div", { id: "trajectory" }),
@@ -112,7 +117,7 @@ async function pollStatus(id) {
   const { ok, data } = await api(`/status/${id}`);
   if (id !== state.selectedId) return;
   if (!ok) {
-    document.getElementById("progress").replaceChildren(h("p", { class: "error" }, data?.detail ?? "Not found"));
+    render(document.getElementById("progress"), h("p", { class: "error" }, data?.detail ?? "Not found"));
     return;
   }
   renderProgress(data);
@@ -128,7 +133,7 @@ async function pollStatus(id) {
 
 function renderProgress(s) {
   const p = s.progress;
-  document.getElementById("progress").replaceChildren(
+  render(document.getElementById("progress"),
     h("div", { class: "detail-header" }, h("h2", {}, s.task_id ?? s.submission_id), badge(s.status), badge(p.phase, "phase")),
     kv([
       ["Submission", s.submission_id], ["Agent", s.agent], ["Model", s.model],
@@ -145,19 +150,19 @@ function renderProgress(s) {
 function renderResults(r) {
   const container = document.getElementById("results");
   if (!r.summary) {
-    container.replaceChildren(h("h3", {}, "Results"), h("p", { class: "error" }, r.error ?? "No results"));
+    render(container, h("h3", {}, "Results"), h("p", { class: "error" }, r.error ?? "No results"));
     return;
   }
   const attemptPanel = h("div", {});
   const tabs = h("div", { class: "tabs" });
   const showAttempt = (index) => {
     [...tabs.children].forEach((tab, i) => tab.classList.toggle("active", i === index));
-    attemptPanel.replaceChildren(renderAttempt(r.attempts[index]));
+    render(attemptPanel, renderAttempt(r.attempts[index]));
   };
   tabs.append(...r.attempts.map((a, i) =>
     h("button", { type: "button", onclick: () => showAttempt(i) }, `Attempt ${a.attempt} `, badge(a.status === "error" ? "error" : a.resolved ? "passed" : "failed"))));
 
-  container.replaceChildren(
+  render(container,
     h("h3", {}, "Results ", badge(r.passed ? "passed" : "failed")),
     kv([
       ["Resolved attempts", `${r.summary.resolved_attempts}/${r.summary.n_attempts}`],
@@ -196,13 +201,13 @@ function renderTrajectoryPicker(status) {
   const tabs = h("div", { class: "tabs" });
   const load = async (index) => {
     [...tabs.children].forEach((tab, i) => tab.classList.toggle("active", i === index));
-    body.replaceChildren(h("p", { class: "empty" }, "Loading trajectory…"));
+    render(body, h("p", { class: "empty" }, "Loading trajectory…"));
     const { ok, data } = await api(`/submissions/${status.submission_id}/attempts/${index}/episodes`);
-    body.replaceChildren(ok ? renderTrajectory(data) : h("p", { class: "empty" }, data?.detail ?? "Unavailable"));
+    render(body, ok ? renderTrajectory(data) : h("p", { class: "empty" }, data?.detail ?? "Unavailable"));
   };
   tabs.append(...Array.from({ length: status.n_attempts }, (_, i) =>
     h("button", { type: "button", onclick: () => load(i) }, `Attempt ${i}`)));
-  container.replaceChildren(
+  render(container,
     h("h3", {}, "Agent trajectory ", h("button", { type: "button", class: "link", onclick: () => load(Math.max(0, [...tabs.children].findIndex((t) => t.classList.contains("active")))) }, "refresh")),
     tabs, body,
   );
