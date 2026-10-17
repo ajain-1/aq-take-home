@@ -1,0 +1,57 @@
+{
+  "validation_id": "4cf88c813530",
+  "task_id": "config-manifest-validator",
+  "mode": "full",
+  "status": "completed",
+  "passed": false,
+  "counts": {
+    "error": 1,
+    "warning": 2,
+    "info": 0
+  },
+  "stages_run": [
+    "static",
+    "image_probe",
+    "oracle",
+    "nop"
+  ],
+  "findings": [
+    {
+      "check": "duplicated_instruction",
+      "stage": "static",
+      "severity": "warning",
+      "message": "instruction repeats a 9-line block (starting 'Our deployment pipeline needs a manifest file for the build '); the agent sees the requirements twice and may treat them as conflicting",
+      "details": {
+        "repeated_lines": 9
+      }
+    },
+    {
+      "check": "tested_files_not_in_instruction",
+      "stage": "static",
+      "severity": "error",
+      "message": "tests check hello.txt, which the instruction never asks for and the task does not provide",
+      "details": {
+        "files": [
+          "hello.txt"
+        ]
+      }
+    },
+    {
+      "check": "instruction_files_unused",
+      "stage": "static",
+      "severity": "warning",
+      "message": "instruction names manifest.txt, which no test, solution, or task file references",
+      "details": {
+        "files": [
+          "manifest.txt"
+        ]
+      }
+    }
+  ],
+  "oracle_submission_id": "e2c7f6535e9e",
+  "nop_submission_id": "13959ce8abc3",
+  "note": null,
+  "error": null,
+  "created_at": "2026-10-17T02:26:56.427617+00:00",
+  "finished_at": "2026-10-17T02:27:50.188695+00:00"
+}

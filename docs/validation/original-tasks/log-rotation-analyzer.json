@@ -1,0 +1,44 @@
+{
+  "validation_id": "6eda6cd59f77",
+  "task_id": "log-rotation-analyzer",
+  "mode": "full",
+  "status": "completed",
+  "passed": false,
+  "counts": {
+    "error": 2,
+    "warning": 0,
+    "info": 0
+  },
+  "stages_run": [
+    "static",
+    "image_probe",
+    "oracle",
+    "nop"
+  ],
+  "findings": [
+    {
+      "check": "instruction_path_empty",
+      "stage": "image_probe",
+      "severity": "error",
+      "message": "instruction points the agent at /etc/logrotate.d/samples/, but it is empty in the image",
+      "details": {
+        "path": "/etc/logrotate.d/samples/"
+      }
+    },
+    {
+      "check": "instruction_path_empty",
+      "stage": "image_probe",
+      "severity": "error",
+      "message": "instruction points the agent at /var/log/samples/, but it is empty in the image",
+      "details": {
+        "path": "/var/log/samples/"
+      }
+    }
+  ],
+  "oracle_submission_id": "ff20da98bb95",
+  "nop_submission_id": "7d08483964f6",
+  "note": null,
+  "error": null,
+  "created_at": "2026-10-17T02:29:56.981733+00:00",
+  "finished_at": "2026-10-17T02:31:15.248599+00:00"
+}
