@@ -28,6 +28,7 @@ from terminal_bench.llms.base_llm import (
     ContextLengthExceededError,
     OutputLengthExceededError,
 )
+from terminal_bench.utils.anthropic_caching import add_anthropic_caching
 from terminal_bench.utils.logger import logger
 
 

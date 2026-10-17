@@ -25,6 +25,7 @@ from terminal_bench.agents.agent_name import AgentName
 from terminal_bench.agents.base_agent import AgentResult, BaseAgent
 from terminal_bench.config import config as terminal_bench_config
 from terminal_bench.dataset.dataset import Dataset
+from terminal_bench.handlers.asciinema_handler import AsciinemaHandler
 from terminal_bench.handlers.trial_handler import TrialHandler
 from terminal_bench.harness.models import (
     BenchmarkResults,
@@ -42,6 +43,13 @@ from terminal_bench.terminal.docker_compose_manager import DockerComposeManager
 from terminal_bench.terminal.terminal import Terminal, spin_up_terminal
 from terminal_bench.terminal.tmux_session import TmuxSession
 from terminal_bench.utils.logger import logger
+from terminal_bench.utils.run_lock import (
+    AgentLock,
+    DatasetLock,
+    LocalConfig,
+    RunConfigLock,
+    RunLock,
+)
 
 
 class Harness:
