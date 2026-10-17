@@ -1,0 +1,4 @@
+*
+!terminal_bench/**
+!runner/trial_entrypoint.py
+**/__pycache__
