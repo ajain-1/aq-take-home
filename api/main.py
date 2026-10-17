@@ -15,28 +15,55 @@ Endpoints:
     GET  /health         - Health check
 """
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-import uuid
-import os
-import shutil
-from datetime import datetime
+import logging
+import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-app = FastAPI(title="AQ Task Executor")
+# Allow `cd api && uvicorn main:app` as well as `uvicorn api.main:app` from the repo root.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-# Storage paths
-UPLOAD_DIR = Path("./uploads")
-RESULTS_DIR = Path("./results")
-UPLOAD_DIR.mkdir(exist_ok=True)
-RESULTS_DIR.mkdir(exist_ok=True)
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 
-# You'll need to track submissions. How you store them — and whether
-# they survive restarts — is a design decision you should make.
+from api.service import SubmissionRejected, SubmissionService
+from runner import docker_ops
+from runner.config import settings
+from runner.k8s import KubeClient
+from runner.models import AttemptState, Submission
+from runner.run_task import TaskRunner
+from runner.store import SubmissionNotFound, SubmissionStore
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
+store = SubmissionStore(settings.db_path)
+kube = KubeClient(settings.namespace)
+service = SubmissionService(store, TaskRunner(store, kube, settings), settings)
 
 
-@app.post("/submit")
-async def submit_task(file: UploadFile = File(...)):
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    service.resume_unfinished()
+    yield
+    service.shutdown()
+
+
+app = FastAPI(title="AQ Task Executor", lifespan=lifespan)
+
+
+def _get_submission(submission_id: str) -> Submission:
+    try:
+        return store.get(submission_id)
+    except SubmissionNotFound:
+        raise HTTPException(status_code=404, detail=f"submission {submission_id} not found")
+
+
+@app.post("/submit", status_code=202)
+def submit_task(
+    file: UploadFile = File(...),
+    n_attempts: int | None = Form(None),
+    agent: str | None = Form(None),
+):
     """
     Accept a task ZIP and execute it as a K8s Job.
 
@@ -48,83 +75,79 @@ async def submit_task(file: UploadFile = File(...)):
         - task.yaml
         - [task-specific files]
 
-    Returns a submission_id and URLs for polling status/results.
+    Optional form fields: `n_attempts` (parallel agent runs) and `agent`
+    (terminus-1, or oracle/nop for infrastructure checks).
     """
-    # TODO: Implement
-    return JSONResponse(
-        status_code=501,
-        content={"error": "Not implemented"},
-    )
-
-
-@app.get("/status/{submission_id}")
-async def get_status(submission_id: str):
-    """
-    Return execution status for a submission.
-
-    Should include: submission identity, current status, timestamps,
-    and a progress object with the current phase and — for parallel
-    runs — completion counts. Design the response shape yourself.
-    """
-    # TODO: Implement
-    return JSONResponse(
-        status_code=501,
-        content={"error": "Not implemented"},
-    )
-
-
-@app.get("/results/{submission_id}")
-async def get_results(submission_id: str):
-    """
-    Return final test results for a completed submission.
-
-    Should include per-test pass/fail granularity, summary counts,
-    execution time, and the raw pytest output. Design the response
-    shape yourself.
-    """
-    # TODO: Implement
-    return JSONResponse(
-        status_code=501,
-        content={"error": "Not implemented"},
-    )
-
-
-@app.get("/health")
-async def health():
-    """Health check - verify API, Docker, and K8s are available."""
+    try:
+        submission = service.submit(file.file.read(), n_attempts, agent)
+    except SubmissionRejected as e:
+        raise HTTPException(status_code=422, detail=str(e))
     return {
-        "status": "ok",
-        "docker_available": _check_docker(),
-        "k8s_available": _check_k8s(),
-        "submissions_tracked": 0,  # TODO: wire up to your tracking store
+        "submission_id": submission.id,
+        "task_id": submission.task_id,
+        "status": submission.status,
+        "n_attempts": submission.n_attempts,
+        "agent": submission.agent,
+        "status_url": f"/status/{submission.id}",
+        "results_url": f"/results/{submission.id}",
     }
 
 
-def _check_docker() -> bool:
-    """Check if Docker daemon is reachable."""
-    try:
-        import subprocess
+@app.get("/status/{submission_id}")
+def get_status(submission_id: str):
+    """Current status, timestamps, and per-attempt progress for a submission."""
+    submission = _get_submission(submission_id)
+    progress = submission.progress
+    return {
+        "submission_id": submission.id,
+        "task_id": submission.task_id,
+        "status": submission.status,
+        "agent": submission.agent,
+        "model": submission.model,
+        "n_attempts": submission.n_attempts,
+        "error": submission.error,
+        "created_at": submission.created_at,
+        "started_at": submission.started_at,
+        "finished_at": submission.finished_at,
+        "updated_at": submission.updated_at,
+        "progress": {
+            "phase": progress.phase,
+            "attempts_total": progress.attempts_total,
+            **{state.value: progress.count(state) for state in AttemptState},
+            "attempts": [attempt.model_dump() for attempt in progress.attempts],
+        },
+    }
 
-        result = subprocess.run(
-            ["docker", "info"],
-            capture_output=True,
-            timeout=5,
+
+@app.get("/results/{submission_id}")
+def get_results(submission_id: str):
+    """Per-test pass/fail for every attempt, aggregate counts, timing, and raw pytest output."""
+    submission = _get_submission(submission_id)
+    if not submission.status.is_terminal:
+        return JSONResponse(
+            status_code=409,
+            content={"submission_id": submission.id, "status": submission.status, "detail": "results not ready"},
         )
-        return result.returncode == 0
-    except Exception:
-        return False
+    if submission.results is None:
+        return {
+            "submission_id": submission.id,
+            "task_id": submission.task_id,
+            "status": submission.status,
+            "error": submission.error,
+            "passed": False,
+            "passed_tests": 0,
+            "total_tests": 0,
+            "attempts": [],
+        }
+    return {**submission.results, "error": submission.error}
 
 
-def _check_k8s() -> bool:
-    """Check if Kubernetes cluster is reachable."""
-    try:
-        import subprocess
-
-        result = subprocess.run(
-            ["kubectl", "cluster-info"],
-            capture_output=True,
-            timeout=5,
-        )
-        return result.returncode == 0
-    except Exception:
-        return False
+@app.get("/health")
+def health():
+    """Health check - verify API, Docker, and K8s are available."""
+    return {
+        "status": "ok",
+        "docker_available": docker_ops.docker_available(),
+        "k8s_available": kube.available(),
+        "submissions_tracked": store.count(),
+    }
