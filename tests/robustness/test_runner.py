@@ -7,7 +7,7 @@ from conftest import FakeKube, finished_snapshot, running_snapshot, task_zip
 
 from runner import docker_ops, run_task
 from runner.k8s import JobSnapshot
-from runner.models import AttemptProgress, Status, Submission, Wave, utcnow
+from runner.models import AttemptProgress, Status, Strategy, Submission, Wave, utcnow
 from runner.run_task import TaskRunner
 from runner.store import SubmissionStore
 
@@ -250,3 +250,100 @@ def test_failed_indexes_keep_each_attempts_own_failure_reason(harness):
     outcome = h.runner.run("sub1")
     assert outcome["attempts"][0]["error"] == "OOMKilled (exit code 137)"
     assert outcome["attempts"][0]["retries"] == 1
+
+
+class WaveCompletingKube(FakeKube):
+    """Every launched wave finishes at once; its attempts write the scripted outcomes."""
+
+    def __init__(self, write_result, outcomes):
+        super().__init__([finished_snapshot()])
+        self.write_result = write_result
+        self.outcomes = outcomes
+
+    def create_job(self, manifest):
+        super().create_job(manifest)
+        container = manifest["spec"]["template"]["spec"]["containers"][0]
+        offset = int(next(e["value"] for e in container["env"] if e["name"] == "AQ_ATTEMPT_OFFSET"))
+        for attempt in range(offset, offset + manifest["spec"]["completions"]):
+            self.write_result(attempt, self.outcomes[attempt])
+
+    def snapshot(self, name, wave):
+        attempts = [
+            AttemptProgress(index=i, state="succeeded", pods=[f"{name}-{i}"])
+            for i in range(wave.offset, wave.offset + wave.size)
+        ]
+        return JobSnapshot(exists=True, finished=True, attempts=attempts)
+
+
+def test_adaptive_strategy_stops_once_the_class_is_decided(settings, monkeypatch):
+    holder = {}
+    kube = WaveCompletingKube(
+        lambda attempt, resolved: holder["h"].write_trial_result(attempt=attempt, resolved=resolved),
+        outcomes=[True] * 13,
+    )
+    h = holder["h"] = Harness(settings, kube, monkeypatch)
+    paths = h.runner.paths("sub1")
+    paths.root.mkdir(parents=True)
+    paths.upload.write_bytes(task_zip())
+    h.store.save(Submission.create("sub1", 10, "oracle", None, strategy=Strategy.ADAPTIVE))
+
+    outcome = h.runner.run("sub1")
+    waves = h.store.get("sub1").progress.waves
+    assert sum(w.size for w in waves) == 8  # 8 passes decide "too_easy"; nothing more is launched
+    assert outcome["learnability"]["classification"] == "too_easy"
+    assert outcome["learnability"]["estimated_savings_vs_target"]["attempts"] == 2
+    assert all(w.deadline_at is not None and w.done for w in waves)
+
+
+def test_a_submission_never_runs_in_two_threads_at_once(harness):
+    h = harness([running_snapshot()])
+    h.submit()
+    first = threading.Thread(target=h.runner.run, args=("sub1",))
+    first.start()
+    time.sleep(0.2)
+    assert h.runner.run("sub1") is None  # turned away while the first call is running
+    h.runner.stop()
+    first.join()
+    assert len(h.kube.created) == 1
+
+
+def test_waves_are_planned_once_under_concurrent_callers(harness):
+    h = harness([finished_snapshot()])
+    h.submit(n_attempts=3)
+    paths = h.runner.paths("sub1")
+    spec = h.runner._prepare(h.store.get("sub1"), paths)
+    planned = []
+    threads = [
+        threading.Thread(target=lambda: planned.append(h.runner._next_wave("sub1", spec, paths)))
+        for _ in range(8)
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert len(h.store.get("sub1").progress.waves) == 1
+    assert {(w.index, w.offset, w.size) for w in planned} == {(0, 0, 3)}
+
+
+def test_resumed_wave_keeps_its_original_deadline(harness):
+    h = harness([running_snapshot()])
+    h.submit()
+    expired = Wave(index=0, offset=0, size=1, launched_at=utcnow(), deadline_at=utcnow())
+    h.store.update("sub1", lambda s: s.progress.waves.append(expired))
+    outcome = h.runner.run("sub1")
+    assert h.kube.created == []  # re-attached, not relaunched
+    assert "aq-sub1-w0" in h.kube.deleted  # the persisted deadline had passed: stopped at once
+    assert outcome["status"] == "failed"
+
+
+def test_corrupt_trial_results_fail_only_that_attempt(harness):
+    h = harness([finished_snapshot(2)])
+    h.submit(n_attempts=2)
+    h.write_trial_result(attempt=0)
+    broken = h.runner.paths("sub1").attempt(1) / "run" / "tiny-task" / "trial"
+    broken.mkdir(parents=True)
+    (broken / "results.json").write_text('{"is_resol')
+    outcome = h.runner.run("sub1")
+    assert outcome["status"] == "completed"
+    assert [a["status"] for a in outcome["attempts"]] == ["completed", "error"]
+    assert "unreadable" in outcome["attempts"][1]["error"]

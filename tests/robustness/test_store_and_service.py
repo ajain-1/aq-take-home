@@ -2,12 +2,13 @@ import threading
 from dataclasses import replace
 
 import pytest
-from conftest import FakeKube, finished_snapshot, make_zip, task_zip
+from conftest import FakeKube, finished_snapshot, make_zip, task_files, task_zip
 
 from api.service import SubmissionRejected, SubmissionService
-from runner.models import Status, Submission
+from runner.models import Phase, Status, Submission
 from runner.run_task import TaskRunner
 from runner.store import SubmissionNotFound, SubmissionStore
+from runner.validation.models import Finding, Severity, Stage, Validation, ValidationMode
 from runner.validation.pipeline import Validator
 from runner.validation.store import ValidationStore
 
@@ -105,3 +106,62 @@ def test_concurrent_updates_are_not_lost(settings):
     for thread in threads:
         thread.join()
     assert store.get("a").progress.attempts_total == 1 + 8 * 25
+
+
+def zip_without_workdir() -> bytes:
+    files = task_files() | {"Dockerfile": "FROM python:3.12-slim\n"}
+    return make_zip({f"tiny-task/{name}": content for name, content in files.items()})
+
+
+@pytest.mark.parametrize("mode", [ValidationMode.STATIC, ValidationMode.FULL])
+def test_gate_with_static_errors_rejects_and_leaves_nothing_pending(service, mode):
+    svc, store, runner, settings = service
+    with pytest.raises(SubmissionRejected) as rejected:
+        svc.submit(zip_without_workdir(), 1, "oracle", validation=mode)
+    assert any(f["check"] == "workdir" for f in rejected.value.report["findings"])
+    assert store.count() == 0 and runner.ran == []
+    assert ValidationStore(settings.db_path).list_unfinished() == []
+
+
+def test_full_gate_is_linked_to_its_submission_from_creation(service, monkeypatch):
+    svc, store, _, settings = service
+    monkeypatch.setattr(svc, "_enqueue", lambda submission_id: None)
+    submission = svc.submit(task_zip(), 1, "oracle", validation=ValidationMode.FULL)
+    gate = ValidationStore(settings.db_path).get(submission.validation_id)
+    assert gate.gates_submission_id == submission.id and not gate.status.is_terminal
+    assert store.get(submission.id).progress.phase == Phase.VALIDATING
+
+
+def test_failed_gate_fails_the_submission_without_running_agents(service, monkeypatch):
+    svc, store, runner, settings = service
+    monkeypatch.setattr(svc, "_enqueue", lambda submission_id: None)
+    submission = svc.submit(task_zip(), 1, "oracle", validation=ValidationMode.FULL)
+    failed = Validation(
+        id=submission.validation_id,
+        mode=ValidationMode.FULL,
+        status=Status.COMPLETED,
+        findings=[Finding(check="oracle_passes", stage=Stage.ORACLE, severity=Severity.ERROR, message="x")],
+    )
+    monkeypatch.setattr(svc._validator, "run", lambda validation_id: failed)
+    svc._execute(submission.id)
+    stored = store.get(submission.id)
+    assert stored.status == Status.FAILED and "failed validation" in stored.error
+    assert runner.ran == []
+
+
+def test_resume_leaves_validation_children_to_their_validation(service, monkeypatch):
+    svc, store, _, settings = service
+    for submission_id in ("oracle-child", "nop-child", "standalone"):
+        store.save(Submission.create(submission_id, 1, "oracle", None))
+    ValidationStore(settings.db_path).save(
+        Validation(
+            id="v1",
+            mode=ValidationMode.FULL,
+            oracle_submission_id="oracle-child",
+            nop_submission_id="nop-child",
+        )
+    )
+    enqueued = []
+    monkeypatch.setattr(svc, "_enqueue", enqueued.append)
+    svc.resume_unfinished()
+    assert enqueued == ["standalone"]
