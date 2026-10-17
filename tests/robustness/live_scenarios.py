@@ -347,12 +347,16 @@ def job_deadline() -> dict:
     started = time.monotonic()
     results = wait_terminal(sid)
     elapsed = round(time.monotonic() - started)
+    attempt = results["attempts"][0]
     check(results["status"] == "failed", "a hung attempt produces no results")
-    check("DeadlineExceeded" in (results["error"] or ""), f"deadline reason surfaced: {results['error']}")
+    check(
+        (attempt.get("error") or "").startswith("DeadlineExceeded") and attempt["retries"] == 1,
+        f"each try hit its own pod deadline, then the attempt failed: {attempt}",
+    )
     return {
         "submission": sid,
         "elapsed_sec": elapsed,
-        "job_deadline_sec": (10 + 10 + 30) * 2,
+        "pod_deadline_sec_per_try": 10 + 10 + 30,
         "results": summarize(results),
         "leftovers": assert_cleaned_up(sid),
     }
