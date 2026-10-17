@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "Hello, world!" > hello.txt
+echo "Hello, world!" > manifest.txt
