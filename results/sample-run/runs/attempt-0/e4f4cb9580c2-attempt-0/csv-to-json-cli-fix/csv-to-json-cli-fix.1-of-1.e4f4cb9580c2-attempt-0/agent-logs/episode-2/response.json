@@ -1,0 +1,12 @@
+{
+    "state_analysis": "I can see the current csv_to_json.py implementation. It has hardcoded comma delimiter, doesn't treat the first row as header, outputs list-of-lists instead of objects, and has no --pretty option. Now I need to see the input files.",
+    "explanation": "Let me check the input files to understand the data format.",
+    "commands": [
+        {
+            "keystrokes": "ls -la inputs/ && cat inputs/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

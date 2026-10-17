@@ -1,0 +1,37 @@
+{
+    "id": "0f054949-230c-4a1d-aa25-97381ab4f2b4",
+    "results": [
+        {
+            "id": "064b9bf2-b362-4f9c-b5dd-3a35e7d24f7b",
+            "trial_name": "csv-to-json-cli-fix.1-of-1.e4f4cb9580c2-attempt-0",
+            "task_id": "csv-to-json-cli-fix",
+            "instruction": "You are given a small Python CLI `csv_to_json.py` that converts CSV to JSON.\nIt currently:\n - Assumes comma delimiter.\n - Treats all rows as data (no header handling).\n - Emits a JSON array of lists (not objects).\nFix it to meet these requirements:\n\nRequirements:\n 1) Read delimiter from environment variable DELIM (default ',').\n 2) Treat the FIRST row as a header row. Output records as JSON objects mapping header->value.\n 3) Write UTF-8 JSON to stdout.\n 4) Add optional flag `--pretty` to pretty-print output with indentation.\n 5) Must work with both inputs provided (commas and semicolons).\nConstraints:\n - Do not change the interface expected by tests (script name, args).\n - No network access.\n - May use only the Python standard library.\n\nSuccess criteria:\n - `python csv_to_json.py inputs/sample_commas.csv` prints a JSON array of objects with keys from the header row.\n - With `DELIM=';'`, running on semicolon sample prints correct objects.\n - `--pretty` produces multi-line indented JSON that parses as the same structure.\n \nNote: Tests will capture outputs to files (/tmp/out_commas.json, /tmp/out_semicolons.json, \n/tmp/out_pretty.json) and validate both file content and direct stdout behavior.",
+            "is_resolved": true,
+            "failure_mode": "unset",
+            "parser_results": {
+                "test_commas_records_as_objects": "passed",
+                "test_default_delimiter_is_comma": "passed",
+                "test_utf8_stdout_encoding": "passed",
+                "test_semicolons_with_env_delim": "passed",
+                "test_pretty_flag_changes_format_only": "passed"
+            },
+            "recording_path": "e4f4cb9580c2-attempt-0/csv-to-json-cli-fix/csv-to-json-cli-fix.1-of-1.e4f4cb9580c2-attempt-0/sessions/agent.cast",
+            "total_input_tokens": 65656,
+            "total_output_tokens": 2626,
+            "trial_started_at": "2026-10-17T02:01:27.585896+00:00",
+            "trial_ended_at": "2026-10-17T02:02:55.136456+00:00",
+            "agent_started_at": "2026-10-17T02:01:31.260542+00:00",
+            "agent_ended_at": "2026-10-17T02:02:31.343311+00:00",
+            "test_started_at": "2026-10-17T02:02:34.709281+00:00",
+            "test_ended_at": "2026-10-17T02:02:44.358193+00:00"
+        }
+    ],
+    "pass_at_k": {},
+    "n_resolved": 1,
+    "n_unresolved": 0,
+    "resolved_ids": [
+        "csv-to-json-cli-fix"
+    ],
+    "unresolved_ids": [],
+    "accuracy": 1.0
+}

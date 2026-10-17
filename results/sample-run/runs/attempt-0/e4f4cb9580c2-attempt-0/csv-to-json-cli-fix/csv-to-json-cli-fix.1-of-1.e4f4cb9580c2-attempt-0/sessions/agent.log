@@ -1,0 +1,423 @@
+[?2004hroot@34c4eaceabc7:/app# asciinema rec --stdin /logs/agent.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@34c4eaceabc7:/app# clear
+[?2004l[H[J[3J[?2004hroot@34c4eaceabc7:/app# ls -la; tmux wait -S done
+[?2004ltotal 16
+drwxr-xr-x 1 root root 4096 Oct 17 01:54 .
+drwxr-xr-x 1 root root 4096 Oct 17 02:01 ..
+-rw-r--r-- 1 root root  669 Oct 17 01:20 csv_to_json.py
+drwxr-xr-x 2 root root 4096 Oct 17 01:20 inputs
+[?2004hroot@34c4eaceabc7:/app# cat csv_to_json.py; tmux wait -S done
+[?2004limport sys
+import json
+# naive: assumes comma delimiter, no header, outputs list-of-lists
+
+def main():
+    if len(sys.argv) != 2 or sys.argv[1].startswith("-"):
+        print("usage: python csv_to_json.py <input.csv>")
+        sys.exit(2)
+
+    path = sys.argv[1]
+    rows = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(",")  # BUG: hard-coded delimiter
+            rows.append(parts)
+
+    # BUG: ignores header; emits lists instead of dicts; no pretty option
+    print(json.dumps(rows))
+
+if __name__ == "__main__":
+    main()
+[?2004hroot@34c4eaceabc7:/app# ls -la inputs/ && cat inputs/*; tmux wait -S done
+[?2004ltotal 16
+drwxr-xr-x 2 root root 4096 Oct 17 01:20 .
+drwxr-xr-x 1 root root 4096 Oct 17 01:54 ..
+-rw-r--r-- 1 root root   44 Oct 17 01:20 sample_commas.csv
+-rw-r--r-- 1 root root   47 Oct 17 01:20 sample_semicolons.csv
+name,age,city
+Asha,29,Mumbai
+Rohit,34,Delhi
+name;age;city
+Meera;27;Bengaluru
+Arjun;31;Pune
+[?2004hroot@34c4eaceabc7:/app# cat > csv_to_json.py << 'EOF'
+[?2004l[?2004h> import sys
+[?2004l[?2004h> import os
+[?2004l[?2004h> import json
+[?2004l[?2004h> 
+[?2004l[?2004h> def main():
+[?2004l[?2004h>     # Parse arguments
+[?2004l[?2004h>     args = sys.argv[1:]
+[?2004l[?2004h>     pretty = False
+[?2004l[?2004h>     path = None
+[?2004l[?2004h>     
+[?2004l[?2004h>     for arg in args:
+[?2004l[?2004h>         if arg == '--pretty':
+[?2004l[?2004h>             pretty = True
+[?2004l[?2004h>         elif not arg.startswith('-'):
+[?2004l[?2004h>             path = arg
+[?2004l[?2004h>     
+[?2004l[?2004h>     if path is None:
+[?2004l[?2004h>         print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)
+[?2004l[?2004h>         sys.exit(2)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Get delimiter from environment variable, default to comma
+[?2004l[?2004h>     delimiter = os.environ.get('DELIM', ',')
+[?2004l[?2004h>     
+[?2004l[?2004h>     rows = []
+[?2004l[?2004h>     with open(path, "r", encoding="utf-8") as f:
+[?2004l[?2004h>         for line in f:
+[?2004l[?2004h>             line = line.strip()
+[?2004l[?2004h>             if not line:
+[?2004l[?2004h>                 continue
+[?2004l[?2004h>             parts = line.split(delimiter)
+[?2004l[?2004h>             rows.append(parts)
+[?2004l[?2004h>     
+[?2004l[?2004h>     if not rows:
+[?2004l[?2004h>         result = []
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         # First row is header
+[?2004l[?2004h>         header = rows[0]
+[?2004l[?2004h>         data_rows = rows[1:]
+[?2004l[?2004h>         
+[?2004l[?2004h>         # Convert to list of dicts
+[?2004l[?2004h>         result = []
+[?2004l[?2004h>         for row in data_rows:
+[?2004l[?2004h>             obj = {}
+[?2004l[?2004h>             for i, key in enumerate(header):
+[?2004l[?2004h>                 if i < len(row):
+[?2004l[?2004h>                     obj[key] = row[i]
+[?2004l[?2004h>                 else:
+[?2004l[?2004h>                     obj[key] = ''
+[?2004l[?2004h>             result.append(obj)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Output JSON
+[?2004l[?2004h>     if pretty:
+[?2004l[?2004h>         output = json.dumps(result, ensure_ascii=False, indent=2)
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         output = json.dumps(result, ensure_ascii=False)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Write to stdout with UTF-8 encoding
+[?2004l[?2004h>     sys.stdout.write(output + '\n')
+[?2004l[?2004h> 
+[?2004l[?2004h> if __name__ == "__main__":
+[?2004l[?2004h>     main()
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@34c4eaceabc7:/app# cat csv_to_json.py; tmux wait -S done
+[?2004limport sys
+import os
+import json
+
+def main():
+    # Parse arguments
+    args = sys.argv[1:]
+    pretty = False
+    path = None
+    
+    for arg in args:
+        if arg == '--pretty':
+            pretty = True
+        elif not arg.startswith('-'):
+            path = arg
+    
+    if path is None:
+        print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)
+        sys.exit(2)
+    
+    # Get delimiter from environment variable, default to comma
+    delimiter = os.environ.get('DELIM', ',')
+    
+    rows = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(delimiter)
+            rows.append(parts)
+    
+    if not rows:
+        result = []
+    else:
+        # First row is header
+        header = rows[0]
+        data_rows = rows[1:]
+        
+        # Convert to list of dicts
+        result = []
+        for row in data_rows:
+            obj = {}
+            for i, key in enumerate(header):
+                if i < len(row):
+                    obj[key] = row[i]
+                else:
+                    obj[key] = ''
+            result.append(obj)
+    
+    # Output JSON
+    if pretty:
+        output = json.dumps(result, ensure_ascii=False, indent=2)
+    else:
+        output = json.dumps(result, ensure_ascii=False)
+    
+    # Write to stdout with UTF-8 encoding
+    sys.stdout.write(output + '\n')
+
+if __name__ == "__main__":
+    main()
+[?2004hroot@34c4eaceabc7:/app# head -100 csv_to_json.py; tmux wait -S done
+[?2004limport sys
+import os
+import json
+
+def main():
+    # Parse arguments
+    args = sys.argv[1:]
+    pretty = False
+    path = None
+    
+    for arg in args:
+        if arg == '--pretty':
+            pretty = True
+        elif not arg.startswith('-'):
+            path = arg
+    
+    if path is None:
+        print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)
+        sys.exit(2)
+    
+    # Get delimiter from environment variable, default to comma
+    delimiter = os.environ.get('DELIM', ',')
+    
+    rows = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(delimiter)
+            rows.append(parts)
+    
+    if not rows:
+        result = []
+    else:
+        # First row is header
+        header = rows[0]
+        data_rows = rows[1:]
+        
+        # Convert to list of dicts
+        result = []
+        for row in data_rows:
+            obj = {}
+            for i, key in enumerate(header):
+                if i < len(row):
+                    obj[key] = row[i]
+                else:
+                    obj[key] = ''
+            result.append(obj)
+    
+    # Output JSON
+    if pretty:
+        output = json.dumps(result, ensure_ascii=False, indent=2)
+    else:
+        output = json.dumps(result, ensure_ascii=False)
+    
+    # Write to stdout with UTF-8 encoding
+    sys.stdout.write(output + '\n')
+
+if __name__ == "__main__":
+    main()
+[?2004hroot@34c4eaceabc7:/app# python3 << 'PYEOF'
+[?2004l[?2004h> script = '''import sys
+[?2004l[?2004h> import os
+[?2004l[?2004h> import json
+[?2004l[?2004h> 
+[?2004l[?2004h> def main():
+[?2004l[?2004h>     # Parse arguments
+[?2004l[?2004h>     args = sys.argv[1:]
+[?2004l[?2004h>     pretty = False
+[?2004l[?2004h>     path = None
+[?2004l[?2004h>     
+[?2004l[?2004h>     for arg in args:
+[?2004l[?2004h>         if arg == '--pretty':
+[?2004l[?2004h>             pretty = True
+[?2004l[?2004h>         elif not arg.startswith('-'):
+[?2004l[?2004h>             path = arg
+[?2004l[?2004h>     
+[?2004l[?2004h>     if path is None:
+[?2004l[?2004h>         print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)
+[?2004l[?2004h>         sys.exit(2)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Get delimiter from environment variable, default to comma
+[?2004l[?2004h>     delimiter = os.environ.get('DELIM', ',')
+[?2004l[?2004h>     
+[?2004l[?2004h>     rows = []
+[?2004l[?2004h>     with open(path, "r", encoding="utf-8") as f:
+[?2004l[?2004h>         for line in f:
+[?2004l[?2004h>             line = line.strip()
+[?2004l[?2004h>             if not line:
+[?2004l[?2004h>                 continue
+[?2004l[?2004h>             parts = line.split(delimiter)
+[?2004l[?2004h>             rows.append(parts)
+[?2004l[?2004h>     
+[?2004l[?2004h>     if not rows:
+[?2004l[?2004h>         result = []
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         # First row is header
+[?2004l[?2004h>         header = rows[0]
+[?2004l[?2004h>         data_rows = rows[1:]
+[?2004l[?2004h>         
+[?2004l[?2004h>         # Convert to list of dicts
+[?2004l[?2004h>         result = []
+[?2004l[?2004h>         for row in data_rows:
+[?2004l[?2004h>             obj = {}
+[?2004l[?2004h>             for i, key in enumerate(header):
+[?2004l[?2004h>                 if i < len(row):
+[?2004l[?2004h>                     obj[key] = row[i]
+[?2004l[?2004h>                 else:
+[?2004l[?2004h>                     obj[key] = ''
+[?2004l[?2004h>             result.append(obj)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Output JSON
+[?2004l[?2004h>     if pretty:
+[?2004l[?2004h>         output = json.dumps(result, ensure_ascii=False, indent=2)
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         output = json.dumps(result, ensure_ascii=False)
+[?2004l[?2004h>     
+[?2004l[?2004h>     # Write to stdout with UTF-8 encoding
+[?2004l[?2004h>     sys.stdout.write(output + '\\n')
+[?2004l[?2004h> 
+[?2004l[?2004h> if __name__ == "__main__":
+[?2004l[?2004h>     main()
+[?2004l[?2004h> '''
+[?2004l[?2004h> with open('csv_to_json.py', 'w') as f:
+[?2004l[?2004h>     f.write(script)
+[?2004l[?2004h> print('Done')
+[?2004l[?2004h> PYEOF
+[?2004lDone
+[?2004hroot@34c4eaceabc7:/app# cat csv_to_json.py; tmux wait -S done
+[?2004limport sys
+import os
+import json
+
+def main():
+    # Parse arguments
+    args = sys.argv[1:]
+    pretty = False
+    path = None
+    
+    for arg in args:
+        if arg == '--pretty':
+            pretty = True
+        elif not arg.startswith('-'):
+            path = arg
+    
+    if path is None:
+        print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)
+        sys.exit(2)
+    
+    # Get delimiter from environment variable, default to comma
+    delimiter = os.environ.get('DELIM', ',')
+    
+    rows = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(delimiter)
+            rows.append(parts)
+    
+    if not rows:
+        result = []
+    else:
+        # First row is header
+        header = rows[0]
+        data_rows = rows[1:]
+        
+        # Convert to list of dicts
+        result = []
+        for row in data_rows:
+            obj = {}
+            for i, key in enumerate(header):
+                if i < len(row):
+                    obj[key] = row[i]
+                else:
+                    obj[key] = ''
+            result.append(obj)
+    
+    # Output JSON
+    if pretty:
+        output = json.dumps(result, ensure_ascii=False, indent=2)
+    else:
+        output = json.dumps(result, ensure_ascii=False)
+    
+    # Write to stdout with UTF-8 encoding
+    sys.stdout.write(output + '\n')
+
+if __name__ == "__main__":
+    main()
+[?2004hroot@34c4eaceabc7:/app# wc -l csv_to_json.py && head -20 csv_to_json.py; tmux wait -S done
+[?2004l61 csv_to_json.py
+import sys
+import os
+import json
+
+def main():
+    # Parse arguments
+    args = sys.argv[1:]
+    pretty = False
+    path = None
+    
+    for arg in args:
+        if arg == '--pretty':
+            pretty = True
+        elif not arg.startswith('-'):
+            path = arg
+    
+    if path is None:
+        print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)
+        sys.exit(2)
+    
+[?2004hroot@34c4eaceabc7:/app# python csv_to_json.py inputs/sample_commas.csv; tmux wait -S done
+[?2004l[{"name": "Asha", "age": "29", "city": "Mumbai"}, {"name": "Rohit", "age": "34", "city": "Delhi"}]
+[?2004hroot@34c4eaceabc7:/app# DELIM=';' python csv_to_json.py inputs/sample_semicolons.csv; tmux wait -S done
+[?2004l[{"name": "Meera", "age": "27", "city": "Bengaluru"}, {"name": "Arjun", "age": "31", "city": "Pune"}]
+[?2004hroot@34c4eaceabc7:/app# python csv_to_json.py --pretty inputs/sample_commas.csv; tmux wait -S done
+[?2004l[
+  {
+    "name": "Asha",
+    "age": "29",
+    "city": "Mumbai"
+  },
+  {
+    "name": "Rohit",
+    "age": "34",
+    "city": "Delhi"
+  }
+]
+[?2004hroot@34c4eaceabc7:/app# python csv_to_json.py inputs/sample_commas.csv --pretty; tmux wait -S done
+[?2004l[
+  {
+    "name": "Asha",
+    "age": "29",
+    "city": "Mumbai"
+  },
+  {
+    "name": "Rohit",
+    "age": "34",
+    "city": "Delhi"
+  }
+]
+[?2004hroot@34c4eaceabc7:/app# python csv_to_json.py inputs/sample_commas.csv > /tmp/out_commas.json && cat /tmp/out_commas.json; tmux wait -S done
+[?2004l[{"name": "Asha", "age": "29", "city": "Mumbai"}, {"name": "Rohit", "age": "34", "city": "Delhi"}]
+[?2004hroot@34c4eaceabc7:/app# [?2004l
+exit
+[0;32masciinema: recording finished[0m
+[0;32masciinema: asciicast saved to /logs/agent.cast[0m
+[?2004hroot@34c4eaceabc7:/app# 

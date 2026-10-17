@@ -1,0 +1,40 @@
+
+    rows = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(delimiter)
+            rows.append(parts)
+
+    if not rows:
+        result = []
+    else:
+        # First row is header
+        header = rows[0]
+        data_rows = rows[1:]
+
+        # Convert to list of dicts
+        result = []
+        for row in data_rows:
+            obj = {}
+            for i, key in enumerate(header):
+                if i < len(row):
+                    obj[key] = row[i]
+                else:
+                    obj[key] = ''
+            result.append(obj)
+
+    # Output JSON
+    if pretty:
+        output = json.dumps(result, ensure_ascii=False, indent=2)
+    else:
+        output = json.dumps(result, ensure_ascii=False)
+
+    # Write to stdout with UTF-8 encoding
+    sys.stdout.write(output + '\n')
+
+if __name__ == "__main__":
+    main()
+root@34c4eaceabc7:/app#

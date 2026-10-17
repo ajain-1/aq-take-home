@@ -1,0 +1,12 @@
+{
+    "state_analysis": "Excellent! The semicolon-delimited file also works correctly with DELIM=';'. Now let me test the --pretty flag.",
+    "explanation": "Test the --pretty flag to ensure it produces indented output.",
+    "commands": [
+        {
+            "keystrokes": "python csv_to_json.py --pretty inputs/sample_commas.csv\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

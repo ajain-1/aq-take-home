@@ -1,0 +1,52 @@
+root@34c4eaceabc7:/app# bash /tests/run-tests.sh; tmux wait -S done
+Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8689 kB]
+Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [6936 B]
+Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [351 kB]
+Fetched 9288 kB in 2s (6115 kB/s)
+Reading package lists... Done
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+curl is already the newest version (7.88.1-10+deb12u15).
+0 upgraded, 0 newly installed, 0 to remove and 49 not upgraded.
+downloading uv 0.7.13 aarch64-unknown-linux-gnu
+no checksums to verify
+installing to /root/.local/bin
+  uv
+  uvx
+everything's installed!
+
+To add $HOME/.local/bin to your PATH, either restart your shell or run:
+
+    source $HOME/.local/bin/env (sh, bash, zsh)
+    source $HOME/.local/bin/env.fish (fish)
+Initialized project `app`
+Using CPython 3.12.7 interpreter at: /usr/local/bin/python3.12
+Creating virtual environment at: .venv
+Resolved 7 packages in 360ms
+Prepared 5 packages in 441ms
+Installed 5 packages in 10ms
+ + iniconfig==2.3.1
+ + packaging==26.3
+ + pluggy==1.7.0
+ + pygments==2.21.0
+ + pytest==8.4.1
+===================================================================== test session starts ======================================================================
+platform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.7.0
+rootdir: /tests
+collected 5 items
+
+../tests/test_outputs.py .....                                                                                                                           [100%]
+
+============================================================================ PASSES ============================================================================
+=================================================================== short test summary info ====================================================================
+PASSED ../tests/test_outputs.py::test_commas_records_as_objects
+PASSED ../tests/test_outputs.py::test_default_delimiter_is_comma
+PASSED ../tests/test_outputs.py::test_utf8_stdout_encoding
+PASSED ../tests/test_outputs.py::test_semicolons_with_env_delim
+PASSED ../tests/test_outputs.py::test_pretty_flag_changes_format_only
+====================================================================== 5 passed in 0.06s =======================================================================
+root@34c4eaceabc7:/app#

@@ -1,0 +1,21 @@
+['asciinema rec --stdin /logs/agent.cast', 'Enter']
+['clear', 'Enter']
+'ls -la\n'
+'cat csv_to_json.py\n'
+'ls -la inputs/ && cat inputs/*\n'
+'cat > csv_to_json.py << \'EOF\'\nimport sys\nimport os\nimport json\n\ndef main():\n    # Parse arguments\n    args = sys.argv[1:]\n    pretty = False\n    path = None\n    \n    for arg in args:\n        if arg == \'--pretty\':\n            pretty = True\n        elif not arg.startswith(\'-\'):\n            path = arg\n    \n    if path is None:\n        print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)\n        sys.exit(2)\n    \n    # Get delimiter from environment variable, default to comma\n    delimiter = os.environ.get(\'DELIM\', \',\')\n    \n    rows = []\n    with open(path, "r", encoding="utf-8") as f:\n        for line in f:\n            line = line.strip()\n            if not line:\n                continue\n            parts = line.split(delimiter)\n            rows.append(parts)\n    \n    if not rows:\n        result = []\n    else:\n        # First row is header\n        header = rows[0]\n        data_rows = rows[1:]\n        \n        # Convert to list of dicts\n        result = []\n        for row in data_rows:\n            obj = {}\n            for i, key in enumerate(header):\n                if i < len(row):\n                    obj[key] = row[i]\n                else:\n                    obj[key] = \'\'\n            result.append(obj)\n    \n    # Output JSON\n    if pretty:\n        output = json.dumps(result, ensure_ascii=False, indent=2)\n    else:\n        output = json.dumps(result, ensure_ascii=False)\n    \n    # Write to stdout with UTF-8 encoding\n    sys.stdout.write(output + \'\\n\')\n\nif __name__ == "__main__":\n    main()\nEOF\n'
+'cat csv_to_json.py\n'
+'head -100 csv_to_json.py\n'
+'python3 << \'PYEOF\'\nscript = \'\'\'import sys\nimport os\nimport json\n\ndef main():\n    # Parse arguments\n    args = sys.argv[1:]\n    pretty = False\n    path = None\n    \n    for arg in args:\n        if arg == \'--pretty\':\n            pretty = True\n        elif not arg.startswith(\'-\'):\n            path = arg\n    \n    if path is None:\n        print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)\n        sys.exit(2)\n    \n    # Get delimiter from environment variable, default to comma\n    delimiter = os.environ.get(\'DELIM\', \',\')\n    \n    rows = []\n    with open(path, "r", encoding="utf-8") as f:\n        for line in f:\n            line = line.strip()\n            if not line:\n                continue\n            parts = line.split(delimiter)\n            rows.append(parts)\n    \n    if not rows:\n        result = []\n    else:\n        # First row is header\n        header = rows[0]\n        data_rows = rows[1:]\n        \n        # Convert to list of dicts\n        result = []\n        for row in data_rows:\n            obj = {}\n            for i, key in enumerate(header):\n                if i < len(row):\n                    obj[key] = row[i]\n                else:\n                    obj[key] = \'\'\n            result.append(obj)\n    \n    # Output JSON\n    if pretty:\n        output = json.dumps(result, ensure_ascii=False, indent=2)\n    else:\n        output = json.dumps(result, ensure_ascii=False)\n    \n    # Write to stdout with UTF-8 encoding\n    sys.stdout.write(output + \'\\\\n\')\n\nif __name__ == "__main__":\n    main()\n\'\'\'\nwith open(\'csv_to_json.py\', \'w\') as f:\n    f.write(script)\nprint(\'Done\')\nPYEOF\n'
+'cat csv_to_json.py\n'
+'wc -l csv_to_json.py && head -20 csv_to_json.py\n'
+'python csv_to_json.py inputs/sample_commas.csv\n'
+"DELIM=';' python csv_to_json.py inputs/sample_semicolons.csv\n"
+'python csv_to_json.py --pretty inputs/sample_commas.csv\n'
+'python csv_to_json.py inputs/sample_commas.csv --pretty\n'
+'python csv_to_json.py inputs/sample_commas.csv > /tmp/out_commas.json && cat /tmp/out_commas.json\n'
+['asciinema rec --stdin /logs/tests.cast', 'Enter']
+['clear', 'Enter']
+['bash ', '/tests/run-tests.sh', 'Enter']
+['C-d']
+['C-d']

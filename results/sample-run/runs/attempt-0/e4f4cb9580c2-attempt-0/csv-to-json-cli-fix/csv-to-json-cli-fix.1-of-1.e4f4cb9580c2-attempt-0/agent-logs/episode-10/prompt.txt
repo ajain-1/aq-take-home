@@ -1,0 +1,40 @@
+                else:
+                    obj[key] = ''
+            result.append(obj)
+
+    # Output JSON
+    if pretty:
+        output = json.dumps(result, ensure_ascii=False, indent=2)
+    else:
+        output = json.dumps(result, ensure_ascii=False)
+
+    # Write to stdout with UTF-8 encoding
+    sys.stdout.write(output + '\n')
+
+if __name__ == "__main__":
+    main()
+root@34c4eaceabc7:/app# wc -l csv_to_json.py && head -20 csv_to_json.py; tmux wait -S done
+61 csv_to_json.py
+import sys
+import os
+import json
+
+def main():
+    # Parse arguments
+    args = sys.argv[1:]
+    pretty = False
+    path = None
+
+    for arg in args:
+        if arg == '--pretty':
+            pretty = True
+        elif not arg.startswith('-'):
+            path = arg
+
+    if path is None:
+        print("usage: python csv_to_json.py [--pretty] <input.csv>", file=sys.stderr)
+        sys.exit(2)
+
+root@34c4eaceabc7:/app# python csv_to_json.py inputs/sample_commas.csv; tmux wait -S done
+[{"name": "Asha", "age": "29", "city": "Mumbai"}, {"name": "Rohit", "age": "34", "city": "Delhi"}]
+root@34c4eaceabc7:/app#
