@@ -19,7 +19,7 @@ from typing import Any
 from runner import bundle, docker_ops, results
 from runner.config import RESOURCE_CLASSES, Settings, settings as default_settings
 from runner.k8s import JobSnapshot, KubeClient, build_job_manifest, job_deadline_sec, job_name
-from runner.models import AttemptProgress, Phase, Progress, Status, Submission, TaskSpec, utcnow
+from runner.models import AttemptProgress, AttemptState, Phase, Progress, Status, Submission, TaskSpec, utcnow
 from runner.store import SubmissionStore
 
 logger = logging.getLogger(__name__)
@@ -192,8 +192,20 @@ class TaskRunner:
                 raise Interrupted
 
     def _record_attempts(self, submission_id: str, snapshot: JobSnapshot) -> None:
+        """Pods vanish when a Job fails (e.g. DeadlineExceeded), so keep the last known pod
+        for each attempt and attribute the Job's failure to attempts that never succeeded."""
+
+        def mutate(s: Submission) -> None:
+            previous = {a.index: a for a in s.progress.attempts}
+            attempts = [a if a.pod or a.index not in previous else previous[a.index] for a in snapshot.attempts]
+            if snapshot.finished and snapshot.reason:
+                for attempt in attempts:
+                    if attempt.state != AttemptState.SUCCEEDED:
+                        attempt.state, attempt.reason = AttemptState.FAILED, f"job failed: {snapshot.reason}"
+            s.progress.attempts = attempts
+
         if snapshot.attempts:
-            self._store.update(submission_id, lambda s: setattr(s.progress, "attempts", snapshot.attempts))
+            self._store.update(submission_id, mutate)
 
     def _collect(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> dict[str, Any]:
         submission = self._set_phase(submission.id, Phase.COLLECTING_RESULTS)
