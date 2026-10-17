@@ -87,8 +87,9 @@ class TaskRunner:
         paths = self.paths(submission_id)
         try:
             spec = self._prepare(submission, paths)
-            self._build(submission, spec, paths)
-            self._launch(submission, spec, paths)
+            if submission.launched_at is None:
+                runner_image = self._build(submission, spec, paths)
+                self._launch(submission, spec, paths, runner_image)
             self._wait(submission, spec)
             outcome = self._collect(submission, spec, paths)
         except Interrupted:
@@ -128,16 +129,19 @@ class TaskRunner:
         self._store.update(submission.id, lambda s: setattr(s, "task_id", spec.task_id))
         return spec
 
-    def _build(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> None:
+    def _build(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> str:
+        """Build the task image and make sure the Job pod image exists; returns the latter."""
         self._set_phase(submission.id, Phase.BUILDING_IMAGE)
         tag = task_image_tag(submission.id)
+        timeout = self._settings.build_timeout_sec
         with self._build_slots:
             self._raise_if_stopping()
-            docker_ops.ensure_runner_image(paths.build_log, self._settings.build_timeout_sec)
+            runner_image = self._settings.runner_image or docker_ops.ensure_runner_image(paths.build_log, timeout)
             if not docker_ops.image_exists(tag):
-                docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, self._settings.build_timeout_sec)
+                docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, timeout)
+        return runner_image
 
-    def _launch(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> None:
+    def _launch(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths, runner_image: str) -> None:
         self._set_phase(submission.id, Phase.LAUNCHING)
         credentials = {k: os.environ[k] for k in self._settings.llm_secret_keys if os.environ.get(k)}
         if credentials:
@@ -148,7 +152,7 @@ class TaskRunner:
             submission_id=submission.id,
             spec=spec,
             n_attempts=submission.n_attempts,
-            runner_image=docker_ops.ensure_runner_image(paths.build_log, self._settings.build_timeout_sec),
+            runner_image=runner_image,
             task_root=paths.tasks,
             output_root=paths.runs,
             agent=submission.agent,
@@ -157,6 +161,9 @@ class TaskRunner:
             settings=self._settings,
         )
         self._kube.create_job(manifest)
+        # Persisted so a resumed run re-attaches instead of re-running paid attempts,
+        # even if the Job has since been garbage-collected.
+        self._store.update(submission.id, lambda s: setattr(s, "launched_at", utcnow()))
 
     def _wait(self, submission: Submission, spec: TaskSpec) -> None:
         self._set_phase(submission.id, Phase.RUNNING_ATTEMPTS)
