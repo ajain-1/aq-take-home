@@ -33,6 +33,7 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
 - `tasks/fix-maven-artifact-dependencies/solution.sh`: The guard that skips adding `add_dependencies` if it is already present also matched that comment, so the oracle never added the line. The guard now only matches an uncommented line.
 - `tasks/log-rotation-analyzer/generate-samples.sh`: The sample logs and logrotate configs were written to `/app/sample_logs` and `/app/sample_configs`, while the instruction points the agent at `/var/log/samples/` and `/etc/logrotate.d/samples/`, which were left empty. The script now writes there; `log_metadata.json` stays in `/app`.
 - `tasks/log-rotation-analyzer/task.yaml`: The tests read `analysis_report.txt`, `optimized_logrotate.conf` and `rotation_summary.csv` from the working directory, but the instruction never said where to write them. It now says `/app`.
+  - **Report format.** The tests also require exact text the instruction never stated: the title `LOG ROTATION ANALYSIS REPORT`, the section headings `SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `SUMMARY` and `RECOMMENDATIONS:`, `ISSUE (HIGH|MEDIUM|LOW)` markers, and the `Total log size:`, `Estimated total savings:` and `Potential space reduction: N%` lines. Stretch goal D's insight report found this (`results/insights/log-rotation-analyzer/insights.md`): 0/5 terminus-1 attempts resolved, with four tests failing in every attempt on exactly these strings. The instruction now states the format, the CSV header and the config expectations; the tests are unchanged. The oracle still passes 7/7 and nop fails 7/7 (`results/task-verification/log-rotation-analyzer.*.log`). The insight runs predate this fix.
 - `tasks/csv-to-json-cli-fix`: Checked; no changes needed.
 
 #### Design decisions
@@ -163,6 +164,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
      - `copy_renames_directory`: a `COPY` renames a directory that other task files still refer to by its old name.
      - `tested_files_not_in_instruction`: the tests open a file that the task doesn't ship and the instruction never names.
      - `instruction_describes_other_project`: the instruction names several files that nothing else in the task contains.
+     - `unstated_test_literals` (warning): text a test requires that the instruction never states and no file the task ships shows, e.g. an exact report heading. It reuses the literal extraction from stretch goal D (`runner/test_literals.py`, shared by both), which skips assertion messages, f-strings, dict keys, set literals (allow-lists), call arguments and `x not in y` checks. Paths and file names are left to the file checks.
      - `test_timeout_budget`: `run-tests.sh` installs packages over the network but the test timeout is under 90s.
      - `solution_present`: the task has a `solution.sh`.
   2. **Image probe** (`image_probe.py`): builds the image exactly as the executor does and runs a shell probe in it with networking off. It flags directories the instruction points the agent at that are missing or empty, and tools the tests call that the image lacks and `run-tests.sh` doesn't install.
@@ -175,7 +177,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
   - `POST /submit` gains `validation=none|static|full`.
     - `static` rejects with a 422 that carries the report.
     - `full` puts the submission in a `validating` phase. `GatedTaskRunner` runs the validation before the agents and fails the submission (pointing at the report) if it finds errors, so no agent compute is spent on a broken task.
-- `scripts/validation_report.py` validates every task in a directory and writes per-task JSON reports and a `SUMMARY.md`.
+- `scripts/validation_report.py` validates every task in a directory and writes per-task JSON reports and a `SUMMARY.md`. `--refresh-static` re-runs only the static checks locally against existing reports, keeping the image-probe and oracle/nop findings, so a new static check doesn't need new Job runs.
 - Unit tests for each static check and for the Dockerfile parser: `tests/test_validation_static_checks.py`.
 
 #### Evidence
@@ -187,9 +189,11 @@ The first submission builds the Job pod image (a few minutes); later submissions
     - `test_timeout_budget` (60s);
     - the oracle fails all 10 tests.
   - **config-manifest-validator:** `tested_files_not_in_instruction` (`hello.txt`) and `instruction_files_unused` (`manifest.txt`).
-  - **log-rotation-analyzer:** `instruction_path_empty` for both `/var/log/samples/` and `/etc/logrotate.d/samples/`.
+  - **log-rotation-analyzer:** `instruction_path_empty` for both `/var/log/samples/` and `/etc/logrotate.d/samples/`, and `unstated_test_literals` for the report headings and summary lines the tests require.
+  - **fix-maven-artifact-dependencies** also gets `unstated_test_literals` for `RUNPATH`, which its Maven/Java instruction never mentions.
   - **Duplicated instructions:** `duplicated_instruction` on all three affected tasks.
 - `docs/validation/fixed-tasks/`: the current tasks. All six pass every stage with no errors or warnings. The only findings are `info` notes on two tests that pass without any work (Flask's `test_requirements_file_exists`, csv's `test_utf8_stdout_encoding`).
+  - **Before the log-rotation instruction fix,** `unstated_test_literals` flagged the fixed log-rotation-analyzer too, matching what stretch goal D found from real runs. The git history keeps both versions of the report.
 
 #### Design decisions
 - **Cheap stages gate expensive ones.** Static errors stop the pipeline before an image is built unless `force` is set, which is the point of validating at all. The image probe only builds the image, which the reference runs then reuse from Docker's layer cache.
@@ -205,7 +209,6 @@ The first submission builds the Job pod image (a few minutes); later submissions
 #### What I'd do next
 - Mutation checks: break the oracle's output (truncate files, flip values) and confirm the tests catch it. Some tests could only be confirmed to pass for the wrong reason, like the original link-order test, by reading the code.
 - Run the oracle under the task's own resource limits with N>2 attempts on a loaded node, to surface timing flakiness before customers see it.
-- An optional LLM reviewer that compares the instruction, tests and solution for unstated requirements, kept advisory and separate from these deterministic checks.
 
 ## Stretch goal D: Beyond pass/fail
 
@@ -216,10 +219,10 @@ The first submission builds the Job pod image (a few minutes); later submissions
   - **Per-test pass rates**, each with its own interval.
   - **Per-attempt failure taxonomy**: `infrastructure_issue` (e.g. task-container OOM, cited from the pod's `task-container-events.jsonl`), `infrastructure_error`, `tests_not_run`, `agent_timeout`, `test_timeout`, `llm_error`, `tests_unparseable`, `stopped_without_completing`, `declared_done_with_failing_tests`, and `declared_done_despite_failure_warning` (terminus showed the agent its "TESTS FAILED! Are you sure" prompt and it declared done anyway).
   - **Consistent failures**: a test that fails in every completed attempt, flagged as systematic when the assertion message is identical each time.
-  - **Hidden requirements (task-quality signal).** The test file is parsed with `ast` to find the literal strings each failing test checks for, skipping assertion messages, docstrings, f-strings, dict keys and call arguments, and taking the literal prefix of regexes. A literal counts as hidden if it is absent from the instruction and was never shown to an agent by the environment before that agent typed it. The agent's own echoed output doesn't count as discovery.
+  - **Hidden requirements (task-quality signal).** The test file is parsed with `ast` (`runner/test_literals.py`, shared with stretch goal C's `unstated_test_literals` static check) to find the literal strings each failing test checks for. It skips assertion messages, docstrings, f-strings, dict keys, set literals, call arguments and `x not in y` checks, and takes the literal prefix of regexes. A literal counts as hidden if it is absent from the instruction and was never shown to an agent by the environment before that agent typed it. The agent's own echoed output doesn't count as discovery.
   - **Divergence**: for tests that pass in some attempts and fail in others, a literal that every passing attempt typed and no failing attempt did.
 - Evidence committed in `results/insights/`:
-  - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files.
+  - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files. This finding led to fixing the task's instruction (see the tasks section); the committed runs predate that fix.
   - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and still gives `insufficient_evidence` for learnability (interval 57–100%) rather than declaring it too easy.
   - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `insufficient_evidence` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
 
