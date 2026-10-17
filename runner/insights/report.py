@@ -39,7 +39,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     ]
     insights = sorted(report["insights"], key=lambda i: SEVERITY_ORDER.get(i["severity"], 9))
     if not insights:
-        lines += ["No findings with verifiable evidence.", ""]
+        all_resolved = outcome["resolved_attempts"] == outcome["n_attempts"]
+        lines += ["No failures to explain: every attempt resolved the task." if all_resolved
+                  else "No findings with verifiable evidence.", ""]
     for insight in insights:
         lines += [f"### [{insight['severity']}] {insight['title']}", "", insight["detail"], "", "Evidence:"]
         lines += [_evidence_line(report["evidence"][e]) for e in insight["evidence"]]
