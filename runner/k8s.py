@@ -19,7 +19,12 @@ FATAL_WAITING_REASONS = {
     "InvalidImageName",
     "CreateContainerConfigError",
     "CreateContainerError",
+    "FailedMount",
 }
+# Volume failures surface only as pod events, which the kubelet keeps retrying; a few
+# repeats rule out a transient hiccup.
+FATAL_EVENT_REASONS = {"FailedMount", "FailedAttachVolume"}
+FATAL_EVENT_MIN_COUNT = 3
 DOCKER_SOCKET = "/var/run/docker.sock"
 
 
@@ -196,7 +201,20 @@ class KubeClient:
                 finished, reason = True, condition.reason if condition.type == "Failed" else None
 
         pods = self._core.list_namespaced_pod(self._namespace, label_selector=f"job-name={name}").items
-        return JobSnapshot(exists=True, finished=finished, reason=reason, attempts=_attempts_from_pods(pods, n_attempts))
+        attempts = _attempts_from_pods(pods, n_attempts)
+        for attempt in attempts:
+            if attempt.state == AttemptState.PENDING and attempt.pod:
+                attempt.reason = self._fatal_pod_event(attempt.pod) or attempt.reason
+        return JobSnapshot(exists=True, finished=finished, reason=reason, attempts=attempts)
+
+    def _fatal_pod_event(self, pod_name: str) -> str | None:
+        events = self._core.list_namespaced_event(
+            self._namespace, field_selector=f"involvedObject.kind=Pod,involvedObject.name={pod_name}"
+        ).items
+        for event in events:
+            if event.reason in FATAL_EVENT_REASONS and (event.count or 1) >= FATAL_EVENT_MIN_COUNT:
+                return f"{event.reason}: {event.message}"
+        return None
 
 
 def _attempts_from_pods(pods: list, n_attempts: int) -> list[AttemptProgress]:
