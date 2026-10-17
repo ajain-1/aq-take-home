@@ -154,3 +154,61 @@ The first submission builds the Job pod image (a few minutes); later submissions
 #### What I'd do next
 - Cluster failing trajectories by their first divergent command, and diff the files each attempt finally produced against what the tests read.
 - Use the pytest assertion introspection (the `E` lines) to explain *how* an output missed (e.g. which section header was absent), not just that it did.
+
+## Stretch goal C: Task quality checks
+
+#### What I did
+- Added a validation pipeline (`runner/validation/`) that checks a task before any agent compute is spent on it. It runs in three stages, cheapest first:
+  1. **Static checks** (`static_checks.py`, milliseconds, no containers), reading `task.yaml`, the Dockerfile, `run-tests.sh`, the tests and the solution:
+     - `task_schema`: `task.yaml` parses and `resource_class` is known.
+     - `duplicated_instruction`: the instruction repeats a block of three or more lines.
+     - `pytest_invocation`: pytest runs with `-rA`, which terminal-bench's parser needs.
+     - `tests_present`: the tests contain at least one test function.
+     - `workdir`: the Dockerfile sets a `WORKDIR`.
+     - `test_paths_outside_image`: the tests read absolute paths under a directory the image never creates (by `WORKDIR`, `COPY` or `mkdir`).
+     - `copy_renames_directory`: a `COPY` renames a directory that other task files still refer to by its old name.
+     - `tested_files_not_in_instruction`: the tests open a file that the task doesn't ship and the instruction never names.
+     - `instruction_describes_other_project`: the instruction names several files that nothing else in the task contains.
+     - `test_timeout_budget`: `run-tests.sh` installs packages over the network but the test timeout is under 90s.
+     - `solution_present`: the task has a `solution.sh`.
+  2. **Image probe** (`image_probe.py`): builds the image exactly as the executor does and runs a shell probe in it with networking off. It flags directories the instruction points the agent at that are missing or empty, and tools the tests call that the image lacks and `run-tests.sh` doesn't install.
+  3. **Reference runs** (`reference_runs.py`): the oracle (2 attempts) and nop (1 attempt) agents run as ordinary submissions through the existing pipeline: Jobs, retries, cleanup, restart recovery.
+     - **Oracle:** must resolve every attempt, with identical per-test results (determinism), and with tests not taking over half of `max_test_timeout_sec`. A task-container OOM is reported as `resource_class_fits`.
+     - **Nop:** must not resolve the task. Tests that pass on the untouched environment are listed as `info`, since they don't measure the agent's work.
+- **API endpoints** (`api/validation.py`, `api/validation_routes.py`):
+  - `POST /validate` (`mode=static|full`, `force`) returns a report of findings, each with a stage, severity, check and message.
+  - `GET /validations/{id}` returns a report.
+  - `POST /submit` gains `validation=none|static|full`.
+    - `static` rejects with a 422 that carries the report.
+    - `full` puts the submission in a `validating` phase. `GatedTaskRunner` runs the validation before the agents and fails the submission (pointing at the report) if it finds errors, so no agent compute is spent on a broken task.
+- `scripts/validation_report.py` validates every task in a directory and writes per-task JSON reports and a `SUMMARY.md`.
+- Unit tests for each static check and for the Dockerfile parser: `tests/test_validation_static_checks.py`.
+
+#### Evidence
+- `docs/validation/original-tasks/`: the six tasks exactly as they were in the initial commit, validated with `force=true` so every stage ran. The pipeline flags every bug that was later fixed by hand:
+  - **broken-flask-api:** `test_paths_outside_image` (WORKDIR `/workspace`, tests read `/app/...`), and the oracle fails 3 tests.
+  - **fix-maven-artifact-dependencies:**
+    - `copy_renames_directory` (`libs/` copied to `/app/lib`);
+    - `instruction_describes_other_project` (8 Maven/Java files that exist nowhere);
+    - `test_timeout_budget` (60s);
+    - the oracle fails all 10 tests.
+  - **config-manifest-validator:** `tested_files_not_in_instruction` (`hello.txt`) and `instruction_files_unused` (`manifest.txt`).
+  - **log-rotation-analyzer:** `instruction_path_empty` for both `/var/log/samples/` and `/etc/logrotate.d/samples/`.
+  - **Duplicated instructions:** `duplicated_instruction` on all three affected tasks.
+- `docs/validation/fixed-tasks/`: the current tasks. All six pass every stage with no errors or warnings. The only findings are `info` notes on two tests that pass without any work (Flask's `test_requirements_file_exists`, csv's `test_utf8_stdout_encoding`).
+
+#### Design decisions
+- **Cheap stages gate expensive ones.** Static errors stop the pipeline before an image is built unless `force` is set, which is the point of validating at all. The image probe only builds the image, which the reference runs then reuse from Docker's layer cache.
+- **The reference runs reuse the submission pipeline instead of a parallel code path.** The oracle and nop runs are real submissions, so they exercise the exact infrastructure an agent run would. They also inherit its robustness, and a validation can resume after an API restart because it records its child submission IDs.
+- **Severities reflect consequence.**
+  - `error` means the task is unsolvable, unverifiable or self-contradictory.
+  - `warning` means it is likely to mislead the agent or be flaky.
+  - `info` means it is worth a reviewer's attention.
+
+  A validation passes when it has no errors.
+- **The static checks are heuristics tuned on these tasks.** They read text, so they can be fooled, for example by a path built from variables in the tests. The image probe and reference runs are the backstop for whatever text analysis misses.
+
+#### What I'd do next
+- Mutation checks: break the oracle's output (truncate files, flip values) and confirm the tests catch it. Some tests could only be confirmed to pass for the wrong reason, like the original link-order test, by reading the code.
+- Run the oracle under the task's own resource limits with N>2 attempts on a loaded node, to surface timing flakiness before customers see it.
+- An optional LLM reviewer that compares the instruction, tests and solution for unstated requirements, kept advisory and separate from these deterministic checks.

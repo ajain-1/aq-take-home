@@ -78,6 +78,6 @@ class Validation(BaseModel):
             "nop_submission_id": self.nop_submission_id,
             "note": self.note,
             "error": self.error,
-            "created_at": self.created_at,
-            "finished_at": self.finished_at,
+            "created_at": self.created_at.isoformat(),
+            "finished_at": self.finished_at.isoformat() if self.finished_at else None,
         }
