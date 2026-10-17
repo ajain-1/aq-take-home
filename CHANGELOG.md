@@ -214,6 +214,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
      - `copy_renames_directory`: a `COPY` renames a directory that other task files still refer to by its old name.
      - `tested_files_not_in_instruction`: the tests open a file that the task doesn't ship and the instruction never names.
      - `instruction_describes_other_project`: the instruction names several files that nothing else in the task contains.
+     - `instruction_files_unused` (warning): the instruction names a file that no test, solution or task file references.
      - `unstated_test_literals` (warning): text a test requires that the instruction never states and no file the task ships shows, e.g. an exact report heading. It reuses the literal extraction from stretch goal D (`runner/test_literals.py`, shared by both), which skips assertion messages, f-strings, dict keys, set literals (allow-lists), call arguments and `x not in y` checks. Paths and file names are left to the file checks.
      - `test_timeout_budget`: `run-tests.sh` installs packages over the network but the test timeout is under 90s.
      - `solution_present`: the task has a `solution.sh`.
