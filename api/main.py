@@ -63,6 +63,8 @@ def submit_task(
     file: UploadFile = File(...),
     n_attempts: int | None = Form(None),
     agent: str | None = Form(None),
+    strategy: str | None = Form(None),
+    confidence: float | None = Form(None),
 ):
     """
     Accept a task ZIP and execute it as a K8s Job.
@@ -76,10 +78,12 @@ def submit_task(
         - [task-specific files]
 
     Optional form fields: `n_attempts` (parallel agent runs) and `agent`
-    (terminus-1, or oracle/nop for infrastructure checks).
+    (terminus-1, or oracle/nop for infrastructure checks). `strategy=adaptive`
+    runs attempts in waves and stops once the 10-run learnability class is
+    decided; `confidence` < 1.0 allows earlier, probabilistic stopping.
     """
     try:
-        submission = service.submit(file.file.read(), n_attempts, agent)
+        submission = service.submit(file.file.read(), n_attempts, agent, strategy, confidence)
     except SubmissionRejected as e:
         raise HTTPException(status_code=422, detail=str(e))
     return {
@@ -87,6 +91,8 @@ def submit_task(
         "task_id": submission.task_id,
         "status": submission.status,
         "n_attempts": submission.n_attempts,
+        "strategy": submission.strategy,
+        "confidence": submission.confidence,
         "agent": submission.agent,
         "status_url": f"/status/{submission.id}",
         "results_url": f"/results/{submission.id}",
@@ -105,6 +111,8 @@ def get_status(submission_id: str):
         "agent": submission.agent,
         "model": submission.model,
         "n_attempts": submission.n_attempts,
+        "strategy": submission.strategy,
+        "confidence": submission.confidence,
         "error": submission.error,
         "created_at": submission.created_at,
         "started_at": submission.started_at,
@@ -115,6 +123,7 @@ def get_status(submission_id: str):
             "attempts_total": progress.attempts_total,
             **{state.value: progress.count(state) for state in AttemptState},
             "attempts": [attempt.model_dump() for attempt in progress.attempts],
+            "waves": [wave.model_dump() for wave in progress.waves],
         },
     }
 
