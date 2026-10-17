@@ -1,0 +1,92 @@
+{
+  "validation_id": "3aef3a614a50",
+  "task_id": "fix-maven-artifact-dependencies",
+  "mode": "full",
+  "status": "completed",
+  "passed": false,
+  "counts": {
+    "error": 3,
+    "warning": 2,
+    "info": 0
+  },
+  "stages_run": [
+    "static",
+    "image_probe",
+    "oracle",
+    "nop"
+  ],
+  "findings": [
+    {
+      "check": "duplicated_instruction",
+      "stage": "static",
+      "severity": "warning",
+      "message": "instruction repeats a 46-line block (starting 'Fix a Maven-based Java project that builds JAR artifacts but'); the agent sees the requirements twice and may treat them as conflicting",
+      "details": {
+        "repeated_lines": 46
+      }
+    },
+    {
+      "check": "copy_renames_directory",
+      "stage": "static",
+      "severity": "error",
+      "message": "Dockerfile copies libs/ to /app/lib, but task files refer to it as libs/",
+      "details": {
+        "source": "libs",
+        "destination": "/app/lib"
+      }
+    },
+    {
+      "check": "instruction_describes_other_project",
+      "stage": "static",
+      "severity": "error",
+      "message": "instruction names 8 files that appear nowhere in the environment, tests, or solution (Calc.java, Main.java, Math.java, calc-lib-1.0.0.jar, calculator.jar, dependencies.html, math-lib-1.0.0.jar, pom.xml); it likely describes a different project",
+      "details": {
+        "files": [
+          "Calc.java",
+          "Main.java",
+          "Math.java",
+          "calc-lib-1.0.0.jar",
+          "calculator.jar",
+          "dependencies.html",
+          "math-lib-1.0.0.jar",
+          "pom.xml"
+        ]
+      }
+    },
+    {
+      "check": "test_timeout_budget",
+      "stage": "static",
+      "severity": "warning",
+      "message": "run-tests.sh installs packages over the network but max_test_timeout_sec is 60s; setup alone can exceed that under load",
+      "details": {
+        "max_test_timeout_sec": 60.0
+      }
+    },
+    {
+      "check": "oracle_passes",
+      "stage": "oracle",
+      "severity": "error",
+      "message": "reference solution fails 10 test(s): test_calculator_runs_and_output_matches, test_compile_commands_generated, test_configure_and_build_succeeds, test_explicit_dependencies_present_to_avoid_races, test_idempotent_build_no_work, test_no_stray_artifacts_outside_build_dirs, test_public_includes_and_no_manual_includes_in_app, test_rpath_configured_properly, test_shared_lib_link_order_math_before_calc, test_shared_libs_have_soname",
+      "details": {
+        "failed_tests": [
+          "test_calculator_runs_and_output_matches",
+          "test_compile_commands_generated",
+          "test_configure_and_build_succeeds",
+          "test_explicit_dependencies_present_to_avoid_races",
+          "test_idempotent_build_no_work",
+          "test_no_stray_artifacts_outside_build_dirs",
+          "test_public_includes_and_no_manual_includes_in_app",
+          "test_rpath_configured_properly",
+          "test_shared_lib_link_order_math_before_calc",
+          "test_shared_libs_have_soname"
+        ]
+      }
+    }
+  ],
+  "oracle_submission_id": "27d619d6c800",
+  "nop_submission_id": "71d242ddbd4c",
+  "note": null,
+  "error": null,
+  "created_at": "2026-10-17T02:28:41.785810+00:00",
+  "finished_at": "2026-10-17T02:29:54.114995+00:00"
+}

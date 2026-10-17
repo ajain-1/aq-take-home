@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from runner import bundle
 from runner.config import AGENTS, Settings
 from runner.learnability import TARGET_RUNS
-from runner.models import Strategy, Submission
+from runner.models import Phase, Strategy, Submission
 from runner.run_task import TaskRunner
 from runner.store import SubmissionStore
 
@@ -36,6 +36,7 @@ class SubmissionService:
         agent: str | None,
         strategy: str | None = None,
         confidence: float | None = None,
+        validation_id: str | None = None,
     ) -> Submission:
         agent = agent or self._settings.agent
         try:
@@ -74,6 +75,9 @@ class SubmissionService:
             shutil.rmtree(paths.root, ignore_errors=True)
             raise SubmissionRejected(str(e)) from e
 
+        if validation_id:
+            submission.validation_id = validation_id
+            submission.progress.phase = Phase.VALIDATING
         self._store.save(submission)
         self._enqueue(submission.id)
         return submission

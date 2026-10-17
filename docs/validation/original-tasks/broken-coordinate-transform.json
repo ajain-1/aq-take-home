@@ -1,0 +1,35 @@
+{
+  "validation_id": "c6341c65cc3e",
+  "task_id": "broken-coordinate-transform",
+  "mode": "full",
+  "status": "completed",
+  "passed": true,
+  "counts": {
+    "error": 0,
+    "warning": 1,
+    "info": 0
+  },
+  "stages_run": [
+    "static",
+    "image_probe",
+    "oracle",
+    "nop"
+  ],
+  "findings": [
+    {
+      "check": "duplicated_instruction",
+      "stage": "static",
+      "severity": "warning",
+      "message": "instruction repeats a 7-line block (starting 'Our robotics team uses `/app/buggy.cpp` for coordinate trans'); the agent sees the requirements twice and may treat them as conflicting",
+      "details": {
+        "repeated_lines": 7
+      }
+    }
+  ],
+  "oracle_submission_id": "d7338e136526",
+  "nop_submission_id": "8a97e7ad9574",
+  "note": null,
+  "error": null,
+  "created_at": "2026-10-17T02:24:45.899203+00:00",
+  "finished_at": "2026-10-17T02:25:44.374940+00:00"
+}

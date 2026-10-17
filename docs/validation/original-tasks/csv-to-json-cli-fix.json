@@ -1,0 +1,37 @@
+{
+  "validation_id": "cb20fab893a9",
+  "task_id": "csv-to-json-cli-fix",
+  "mode": "full",
+  "status": "completed",
+  "passed": true,
+  "counts": {
+    "error": 0,
+    "warning": 0,
+    "info": 1
+  },
+  "stages_run": [
+    "static",
+    "image_probe",
+    "oracle",
+    "nop"
+  ],
+  "findings": [
+    {
+      "check": "tests_require_work",
+      "stage": "nop",
+      "severity": "info",
+      "message": "1/5 test(s) pass on the untouched environment and don't measure the agent's work: test_utf8_stdout_encoding",
+      "details": {
+        "passing_tests": [
+          "test_utf8_stdout_encoding"
+        ]
+      }
+    }
+  ],
+  "oracle_submission_id": "ee537db2430a",
+  "nop_submission_id": "6e1833181973",
+  "note": null,
+  "error": null,
+  "created_at": "2026-10-17T02:27:51.621183+00:00",
+  "finished_at": "2026-10-17T02:28:39.957330+00:00"
+}

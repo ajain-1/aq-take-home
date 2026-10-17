@@ -1,0 +1,25 @@
+{
+  "validation_id": "77aa8f7227eb",
+  "task_id": "config-manifest-validator",
+  "mode": "full",
+  "status": "completed",
+  "passed": true,
+  "counts": {
+    "error": 0,
+    "warning": 0,
+    "info": 0
+  },
+  "stages_run": [
+    "static",
+    "image_probe",
+    "oracle",
+    "nop"
+  ],
+  "findings": [],
+  "oracle_submission_id": "46aba13940d9",
+  "nop_submission_id": "46a54ba1f077",
+  "note": null,
+  "error": null,
+  "created_at": "2026-10-17T02:19:28.614188+00:00",
+  "finished_at": "2026-10-17T02:20:27.414756+00:00"
+}
