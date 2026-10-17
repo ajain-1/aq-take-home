@@ -1,0 +1,2 @@
+2026-10-16 19:23:03,390 INFO runner.run_task: submission 08b7479b6117 interrupted; it will resume on restart
+2026-10-16 19:23:06,305 INFO api.service: resuming submission 08b7479b6117 (phase running_attempts)

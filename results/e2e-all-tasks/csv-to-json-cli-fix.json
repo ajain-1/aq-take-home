@@ -1,0 +1,94 @@
+{
+  "submission_id": "e4f4cb9580c2",
+  "task_id": "csv-to-json-cli-fix",
+  "agent": "terminus-1",
+  "model": "openrouter/anthropic/claude-opus-4.5",
+  "passed": true,
+  "passed_tests": 5,
+  "total_tests": 5,
+  "summary": {
+    "n_attempts": 1,
+    "completed_attempts": 1,
+    "errored_attempts": 0,
+    "resolved_attempts": 1,
+    "pass_rate": 1.0
+  },
+  "tests": [
+    {
+      "name": "test_commas_records_as_objects",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_default_delimiter_is_comma",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_utf8_stdout_encoding",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_semicolons_with_env_delim",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_pretty_flag_changes_format_only",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    }
+  ],
+  "started_at": "2026-10-17T02:01:22.338772+00:00",
+  "finished_at": "2026-10-17T02:02:59.348397+00:00",
+  "execution_time_sec": 97.01,
+  "attempts": [
+    {
+      "attempt": 0,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_commas_records_as_objects",
+          "status": "passed"
+        },
+        {
+          "name": "test_default_delimiter_is_comma",
+          "status": "passed"
+        },
+        {
+          "name": "test_utf8_stdout_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_semicolons_with_env_delim",
+          "status": "passed"
+        },
+        {
+          "name": "test_pretty_flag_changes_format_only",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 5,
+      "total_tests": 5,
+      "started_at": "2026-10-17T02:01:27.585896+00:00",
+      "finished_at": "2026-10-17T02:02:55.136456+00:00",
+      "duration_sec": 87.55,
+      "agent_duration_sec": 60.08,
+      "test_duration_sec": 9.65,
+      "input_tokens": 65656,
+      "output_tokens": 2626,
+      "artifacts_dir": "submissions/e4f4cb9580c2/runs/attempt-0/e4f4cb9580c2-attempt-0/csv-to-json-cli-fix/csv-to-json-cli-fix.1-of-1.e4f4cb9580c2-attempt-0",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.7, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 5 items\n\n../tests/test_outputs.py .....                                                                                                                           [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_commas_records_as_objects\nPASSED ../tests/test_outputs.py::test_default_delimiter_is_comma\nPASSED ../tests/test_outputs.py::test_utf8_stdout_encoding\nPASSED ../tests/test_outputs.py::test_semicolons_with_env_delim\nPASSED ../tests/test_outputs.py::test_pretty_flag_changes_format_only\n====================================================================== 5 passed in 0.06s =======================================================================\nroot@34c4eaceabc7:/app#"
+    }
+  ],
+  "status": "completed"
+}

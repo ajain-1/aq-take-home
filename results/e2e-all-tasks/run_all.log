@@ -1,0 +1,36 @@
+Submitting 6 tasks to http://localhost:8001 ...
+
+--- Submitting: csv-to-json-cli-fix ---
+  -> e4f4cb9580c2
+
+--- Submitting: log-rotation-analyzer ---
+  -> bd18619ee6a6
+
+--- Submitting: broken-coordinate-transform ---
+  -> 6698b0d15d27
+
+--- Submitting: config-manifest-validator ---
+  -> a65ba1e667dd
+
+--- Submitting: broken-flask-api ---
+  -> e93cb46b87e1
+
+--- Submitting: fix-maven-artifact-dependencies ---
+  -> c8c83fb4c67d
+
+All tasks submitted. Polling for results...
+
+[csv-to-json-cli-fix] Waiting...
+[csv-to-json-cli-fix] PASS - 5/5 tests passed
+[log-rotation-analyzer] Waiting...
+[log-rotation-analyzer] FAIL - 3/7 tests passed
+[broken-coordinate-transform] Waiting...
+[broken-coordinate-transform] PASS - 8/8 tests passed
+[config-manifest-validator] Waiting...
+[config-manifest-validator] PASS - 7/7 tests passed
+[broken-flask-api] Waiting...
+[broken-flask-api] PASS - 9/9 tests passed
+[fix-maven-artifact-dependencies] Waiting...
+[fix-maven-artifact-dependencies] PASS - 10/10 tests passed
+
+Done.

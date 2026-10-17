@@ -1,0 +1,56 @@
+{
+  "submission_id": "08b7479b6117",
+  "task_id": "oom-probe",
+  "agent": "oracle",
+  "model": null,
+  "passed": true,
+  "passed_tests": 1,
+  "total_tests": 1,
+  "summary": {
+    "n_attempts": 1,
+    "completed_attempts": 1,
+    "tests_not_run_attempts": 0,
+    "errored_attempts": 0,
+    "resolved_attempts": 1,
+    "pass_rate": 1.0
+  },
+  "tests": [
+    {
+      "name": "test_out",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    }
+  ],
+  "started_at": "2026-10-17T02:23:01.036884+00:00",
+  "finished_at": "2026-10-17T02:23:34.599360+00:00",
+  "execution_time_sec": 33.56,
+  "attempts": [
+    {
+      "attempt": 0,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "none",
+      "retries": 0,
+      "infrastructure_issues": [],
+      "tests": [
+        {
+          "name": "test_out",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 1,
+      "total_tests": 1,
+      "started_at": "2026-10-17T02:23:07.160636+00:00",
+      "finished_at": "2026-10-17T02:23:29.725071+00:00",
+      "duration_sec": 22.56,
+      "agent_duration_sec": 1.85,
+      "test_duration_sec": 2.76,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "artifacts_dir": "submissions/08b7479b6117/runs/attempt-0/08b7479b6117-attempt-0/oom-probe/oom-probe.1-of-1.08b7479b6117-attempt-0",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.3.3, pluggy-1.7.0\nrootdir: /tests\ncollected 1 item\n\n../tests/test_outputs.py .                                                                                                                               [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_out\n====================================================================== 1 passed in 0.01s =======================================================================\nroot@801c9887991c:/app#"
+    }
+  ],
+  "status": "completed"
+}

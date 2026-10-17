@@ -1,0 +1,144 @@
+{
+  "submission_id": "c8c83fb4c67d",
+  "task_id": "fix-maven-artifact-dependencies",
+  "agent": "terminus-1",
+  "model": "openrouter/anthropic/claude-opus-4.5",
+  "passed": true,
+  "passed_tests": 10,
+  "total_tests": 10,
+  "summary": {
+    "n_attempts": 1,
+    "completed_attempts": 1,
+    "errored_attempts": 0,
+    "resolved_attempts": 1,
+    "pass_rate": 1.0
+  },
+  "tests": [
+    {
+      "name": "test_configure_and_build_succeeds",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_calculator_runs_and_output_matches",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_idempotent_build_no_work",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_compile_commands_generated",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_shared_libs_have_soname",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_rpath_configured_properly",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_shared_lib_link_order_math_before_calc",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_public_includes_and_no_manual_includes_in_app",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_explicit_dependencies_present_to_avoid_races",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_no_stray_artifacts_outside_build_dirs",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    }
+  ],
+  "started_at": "2026-10-17T02:01:23.978180+00:00",
+  "finished_at": "2026-10-17T02:04:26.526600+00:00",
+  "execution_time_sec": 182.55,
+  "attempts": [
+    {
+      "attempt": 0,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_configure_and_build_succeeds",
+          "status": "passed"
+        },
+        {
+          "name": "test_calculator_runs_and_output_matches",
+          "status": "passed"
+        },
+        {
+          "name": "test_idempotent_build_no_work",
+          "status": "passed"
+        },
+        {
+          "name": "test_compile_commands_generated",
+          "status": "passed"
+        },
+        {
+          "name": "test_shared_libs_have_soname",
+          "status": "passed"
+        },
+        {
+          "name": "test_rpath_configured_properly",
+          "status": "passed"
+        },
+        {
+          "name": "test_shared_lib_link_order_math_before_calc",
+          "status": "passed"
+        },
+        {
+          "name": "test_public_includes_and_no_manual_includes_in_app",
+          "status": "passed"
+        },
+        {
+          "name": "test_explicit_dependencies_present_to_avoid_races",
+          "status": "passed"
+        },
+        {
+          "name": "test_no_stray_artifacts_outside_build_dirs",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 10,
+      "total_tests": 10,
+      "started_at": "2026-10-17T02:01:59.519889+00:00",
+      "finished_at": "2026-10-17T02:04:18.110110+00:00",
+      "duration_sec": 138.59,
+      "agent_duration_sec": 100.91,
+      "test_duration_sec": 19.92,
+      "input_tokens": 154895,
+      "output_tokens": 3722,
+      "artifacts_dir": "submissions/c8c83fb4c67d/runs/attempt-0/c8c83fb4c67d-attempt-0/fix-maven-artifact-dependencies/fix-maven-artifact-dependencies.1-of-1.c8c83fb4c67d-attempt-0",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 10 items\n\n../tests/test_outputs.py ..........                                                                                                                      [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_configure_and_build_succeeds\nPASSED ../tests/test_outputs.py::test_calculator_runs_and_output_matches\nPASSED ../tests/test_outputs.py::test_idempotent_build_no_work\nPASSED ../tests/test_outputs.py::test_compile_commands_generated\nPASSED ../tests/test_outputs.py::test_shared_libs_have_soname\nPASSED ../tests/test_outputs.py::test_rpath_configured_properly\nPASSED ../tests/test_outputs.py::test_shared_lib_link_order_math_before_calc\nPASSED ../tests/test_outputs.py::test_public_includes_and_no_manual_includes_in_app\nPASSED ../tests/test_outputs.py::test_explicit_dependencies_present_to_avoid_races\nPASSED ../tests/test_outputs.py::test_no_stray_artifacts_outside_build_dirs\n====================================================================== 10 passed in 5.08s ======================================================================\nroot@6e55cc93c2bb:/app#"
+    }
+  ],
+  "status": "completed"
+}

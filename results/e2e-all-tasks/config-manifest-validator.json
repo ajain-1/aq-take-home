@@ -1,0 +1,114 @@
+{
+  "submission_id": "a65ba1e667dd",
+  "task_id": "config-manifest-validator",
+  "agent": "terminus-1",
+  "model": "openrouter/anthropic/claude-opus-4.5",
+  "passed": true,
+  "passed_tests": 7,
+  "total_tests": 7,
+  "summary": {
+    "n_attempts": 1,
+    "completed_attempts": 1,
+    "errored_attempts": 0,
+    "resolved_attempts": 1,
+    "pass_rate": 1.0
+  },
+  "tests": [
+    {
+      "name": "test_manifest_file_exists",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_content",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_is_file",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_size",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_permissions",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_encoding",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_manifest_file_exact_content",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    }
+  ],
+  "started_at": "2026-10-17T02:01:23.258328+00:00",
+  "finished_at": "2026-10-17T02:02:35.135021+00:00",
+  "execution_time_sec": 71.88,
+  "attempts": [
+    {
+      "attempt": 0,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_manifest_file_exists",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_content",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_is_file",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_size",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_permissions",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_encoding",
+          "status": "passed"
+        },
+        {
+          "name": "test_manifest_file_exact_content",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 7,
+      "total_tests": 7,
+      "started_at": "2026-10-17T02:01:44.495510+00:00",
+      "finished_at": "2026-10-17T02:02:31.136542+00:00",
+      "duration_sec": 46.64,
+      "agent_duration_sec": 15.69,
+      "test_duration_sec": 12.24,
+      "input_tokens": 4959,
+      "output_tokens": 529,
+      "artifacts_dir": "submissions/a65ba1e667dd/runs/attempt-0/a65ba1e667dd-attempt-0/config-manifest-validator/config-manifest-validator.1-of-1.a65ba1e667dd-attempt-0",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.15, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 7 items\n\n../tests/test_outputs.py .......                                                                                                                         [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_manifest_file_exists\nPASSED ../tests/test_outputs.py::test_manifest_file_content\nPASSED ../tests/test_outputs.py::test_manifest_file_is_file\nPASSED ../tests/test_outputs.py::test_manifest_file_size\nPASSED ../tests/test_outputs.py::test_manifest_file_permissions\nPASSED ../tests/test_outputs.py::test_manifest_file_encoding\nPASSED ../tests/test_outputs.py::test_manifest_file_exact_content\n====================================================================== 7 passed in 0.01s =======================================================================\nroot@294d634ffcdb:/app#"
+    }
+  ],
+  "status": "completed"
+}

@@ -7,7 +7,7 @@
 - Built the executor as a pipeline in `runner/`, with a thin FastAPI layer in `api/`:
   - `bundle.py`: safe ZIP extraction (no path traversal or symlinks, size and entry caps), `task.yaml` validation, and generation of the `docker-compose.yaml` that terminal-bench expects.
   - `docker_ops.py`: builds the task image once per submission, layers `tmux`/`asciinema` on top (task images don't include them), builds the content-addressed Job pod image, and cleans up containers, networks, and images by label.
-  - `k8s.py`: one Indexed Job per submission, one index per attempt. The manifest is derived from `task.yaml`; the module also reads per-attempt state from pods and syncs the LLM Secret.
+  - `k8s.py`: one Indexed Job per wave of attempts (a fixed-strategy submission is a single wave), one index per attempt. The manifest is derived from `task.yaml`; the module also reads per-attempt state from pods and syncs the LLM Secret.
   - `results.py`: turns terminal-bench trial output into per-attempt and aggregate results.
   - `run_task.py`: the orchestrator (prepare → build → launch → wait → collect → cleanup).
   - `store.py`: SQLite-backed submission state.
@@ -38,7 +38,7 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
 
 #### Design decisions
 - **The harness runs in the pod; the task container is a sibling on the host Docker daemon.** terminal-bench drives tasks through `docker compose` and `docker exec` + tmux, so each Job pod mounts the Docker socket. The alternative, Docker-in-Docker sidecars, would mean privileged pods plus a registry or `docker load` to get the image into every pod. Locally that is slower and has more moving parts. The tradeoff is that the socket mount effectively gives root on the node. In production I'd use DinD/sysbox or a registry-backed runtime.
-- **Build once, run N times.** The task image is built a single time per submission on the host daemon; the N attempt pods use it via `imagePullPolicy: Never` and the generated compose file (which has no `build:` section). `tb` runs with `--no-rebuild --no-cleanup` so one attempt can't delete the image another attempt is using; the executor removes it once, after every attempt has finished. The Job pod image is tagged by a content hash of its sources, so it is rebuilt only when `runner/` or `terminal_bench/` changes.
+- **Build once, run N times.** The task image is built a single time per submission on the host daemon; the N attempt pods use it via `imagePullPolicy: Never` and the generated compose file (which has no `build:` section). `tb` runs with `--no-rebuild --no-cleanup` so one attempt can't delete the image another attempt is using; the executor removes it once, after every attempt has finished. The Job pod image is tagged by a content hash of its sources, so it is rebuilt only when `runner/` or `terminal_bench/` changes. One exception: with `validation=full`, the image probe and the oracle and nop reference runs each build the task image again before the gated run. That keeps every validation stage independent at the cost of extra builds, which Docker's layer cache keeps cheap.
 - **`task.yaml` drives execution.**
   - `resource_class` maps to pod resource requests, so the scheduler queues work when the node is full, and to `cpus`/`mem_limit` on the task container.
   - The agent and test timeouts are enforced by `tb`.
@@ -89,9 +89,9 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - **Linting:** `ruff.toml` added, and the code is clean under it.
 
 #### End-to-end verification
-- All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards.
+- All 6 tasks ran concurrently via `scripts/run_all.sh` with `terminus-1`, one attempt each. Tests passed per task: csv-to-json 5/5, broken-coordinate-transform 8/8, config-manifest-validator 7/7, broken-flask-api 9/9, fix-maven-artifact-dependencies 10/10, log-rotation-analyzer 3/7 (an agent failure, not an infrastructure one). No Jobs or task containers were left afterwards. Evidence: each submission's `/results` JSON and the script output are in `results/e2e-all-tasks/`.
 - The committed real run is in `results/sample-run/` (csv-to-json-cli-fix: results, agent episodes, asciinema recording, tmux panes).
-- Restart recovery: an oracle submission with 2 attempts was interrupted by an API restart, resumed, and passed 5/5 on both attempts.
+- Restart recovery: a submission was interrupted by an API restart while its attempt was running, then resumed and completed. Evidence: `results/restart-recovery/` holds the API's interrupted and resuming log lines and the final results.
 
 #### What I'd do next
 - Replace the Docker socket with per-pod DinD/sysbox (or a remote BuildKit plus a registry) for real isolation, and use object storage instead of hostPath.

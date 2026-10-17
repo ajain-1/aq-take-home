@@ -1,0 +1,124 @@
+{
+  "submission_id": "6698b0d15d27",
+  "task_id": "broken-coordinate-transform",
+  "agent": "terminus-1",
+  "model": "openrouter/anthropic/claude-opus-4.5",
+  "passed": true,
+  "passed_tests": 8,
+  "total_tests": 8,
+  "summary": {
+    "n_attempts": 1,
+    "completed_attempts": 1,
+    "errored_attempts": 0,
+    "resolved_attempts": 1,
+    "pass_rate": 1.0
+  },
+  "tests": [
+    {
+      "name": "test_exists_and_compiles",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_normal_multiplication",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_invalid_dimensions",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_single_element",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_negative_numbers",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_matrices_with_zeros",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_larger_matrix",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "test_row_times_column",
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0
+    }
+  ],
+  "started_at": "2026-10-17T02:01:22.937013+00:00",
+  "finished_at": "2026-10-17T02:03:34.445691+00:00",
+  "execution_time_sec": 131.51,
+  "attempts": [
+    {
+      "attempt": 0,
+      "status": "completed",
+      "resolved": true,
+      "failure_mode": "unset",
+      "retries": 0,
+      "tests": [
+        {
+          "name": "test_exists_and_compiles",
+          "status": "passed"
+        },
+        {
+          "name": "test_normal_multiplication",
+          "status": "passed"
+        },
+        {
+          "name": "test_invalid_dimensions",
+          "status": "passed"
+        },
+        {
+          "name": "test_single_element",
+          "status": "passed"
+        },
+        {
+          "name": "test_negative_numbers",
+          "status": "passed"
+        },
+        {
+          "name": "test_matrices_with_zeros",
+          "status": "passed"
+        },
+        {
+          "name": "test_larger_matrix",
+          "status": "passed"
+        },
+        {
+          "name": "test_row_times_column",
+          "status": "passed"
+        }
+      ],
+      "passed_tests": 8,
+      "total_tests": 8,
+      "started_at": "2026-10-17T02:01:48.531256+00:00",
+      "finished_at": "2026-10-17T02:03:26.194341+00:00",
+      "duration_sec": 97.66,
+      "agent_duration_sec": 60.71,
+      "test_duration_sec": 18.68,
+      "input_tokens": 61826,
+      "output_tokens": 2489,
+      "artifacts_dir": "submissions/6698b0d15d27/runs/attempt-0/6698b0d15d27-attempt-0/broken-coordinate-transform/broken-coordinate-transform.1-of-1.6698b0d15d27-attempt-0",
+      "pytest_output": "===================================================================== test session starts ======================================================================\nplatform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.7.0\nrootdir: /tests\ncollected 8 items\n\n../tests/test_outputs.py ........                                                                                                                        [100%]\n\n============================================================================ PASSES ============================================================================\n=================================================================== short test summary info ====================================================================\nPASSED ../tests/test_outputs.py::test_exists_and_compiles\nPASSED ../tests/test_outputs.py::test_normal_multiplication\nPASSED ../tests/test_outputs.py::test_invalid_dimensions\nPASSED ../tests/test_outputs.py::test_single_element\nPASSED ../tests/test_outputs.py::test_negative_numbers\nPASSED ../tests/test_outputs.py::test_matrices_with_zeros\nPASSED ../tests/test_outputs.py::test_larger_matrix\nPASSED ../tests/test_outputs.py::test_row_times_column\n====================================================================== 8 passed in 1.43s =======================================================================\nroot@e8bde28289c3:/app#"
+    }
+  ],
+  "status": "completed"
+}
