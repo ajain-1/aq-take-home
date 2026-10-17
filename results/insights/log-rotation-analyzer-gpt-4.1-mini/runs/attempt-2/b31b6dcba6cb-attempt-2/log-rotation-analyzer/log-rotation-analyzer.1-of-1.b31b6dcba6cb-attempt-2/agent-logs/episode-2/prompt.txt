@@ -1,0 +1,40 @@
+    "peak_traffic_hours": ["09:00-11:00", "14:00-16:00", "20:00-22:00"]
+  },
+  "current_issues": [
+    "High disk usage on log partition",
+    "Inconsistent rotation schedules",
+    "Missing compression on some logs",
+    "Some critical logs lack rotation configuration"
+  ]
+}
+root@ddedf61219a6:/app# stat --format='%n %s %Y' /var/log/samples/*; tmux wait -S done
+/var/log/samples/access.log 161214 1792202109
+/var/log/samples/access.log.old 40500 1792202109
+/var/log/samples/app.log 259893 1792202107
+/var/log/samples/debug.log 54292 1792202113
+/var/log/samples/error.log 239071 1792202112
+/var/log/samples/system.log 219 1792202107
+/var/log/samples/system.log.1.gz 551 1792202107
+root@ddedf61219a6:/app# cat /etc/logrotate.d/samples/*; tmux wait -S done
+/var/log/samples/access.log {
+    monthly
+    rotate 2
+    compress
+    missingok
+}
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@ddedf61219a6:/app#

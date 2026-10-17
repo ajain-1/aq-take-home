@@ -1,0 +1,40 @@
+root@8d8d83b52291:/app# head -10 /app/rotation_summary.csv; tmux wait -S done
+head: cannot open '/app/rotation_summary.csv' for reading: No such file or directory
+root@8d8d83b52291:/app# /bin/cat << 'EOF' > /app/generate_csv.py
+> import json
+> import time
+> import csv
+>
+> data = json.load(open('log_metadata.json'))
+> now = int(time.time())
+> logs = ['/var/log/samples/app.log','/var/log/samples/system.log','/var/log/samples/access.log','/var/log/samples/error.log']
+> sizes = {'/var/log/samples/app.log':259893,'/var/log/samples/system.log':219,'/var/log/samples/access.log':161214,'/var/log/samples/error.log':239071}
+> result = []
+> for log in logs:
+>     logdata = next((item for item in data['logs'] if item['path'] == log), None)
+>     if not logdata:
+>         continue
+>     size_mb = sizes[log] / (1024 * 1024)
+>     days_since_rotation = (now - logdata['last_rotation_epoch']) // 86400
+>     est_savings = max(0, size_mb - (logdata['retention_requirement_days'] * logdata['growth_rate_mb_per_day']))
+>     if logdata['growth_rate_mb_per_day'] > 20:
+>         rec_sched = 'daily'
+>     elif logdata['growth_rate_mb_per_day'] > 5:
+>         rec_sched = 'weekly'
+>     else:
+>         rec_sched = 'monthly'
+>     result.append([log, size_mb, int(days_since_rotation), rec_sched, round(est_savings, 2)])
+> with open('/app/rotation_summary.csv', 'w', newline='') as f:
+>     writer = csv.writer(f)
+>     writer.writerow(['log_path', 'current_size_mb', 'days_since_rotation', 'recommended_schedule', 'estimated_savings_mb'])
+>     writer.writerows(result)
+> EOF
+root@8d8d83b52291:/app# python3 /app/generate_csv.py; tmux wait -S done
+Traceback (most recent call last):
+  File "/app/generate_csv.py", line 15, in <module>
+    days_since_rotation = (now - logdata['last_rotation_epoch']) // 86400
+                                 ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'last_rotation_epoch'
+root@8d8d83b52291:/app# head -10 /app/rotation_summary.csv; tmux wait -S done
+head: cannot open '/app/rotation_summary.csv' for reading: No such file or directory
+root@8d8d83b52291:/app#

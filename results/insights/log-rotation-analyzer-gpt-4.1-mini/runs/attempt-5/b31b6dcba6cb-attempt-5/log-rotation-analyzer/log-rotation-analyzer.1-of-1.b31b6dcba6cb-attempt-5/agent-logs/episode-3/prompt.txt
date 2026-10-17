@@ -1,0 +1,40 @@
+root@d02817e6f343:/app# ls -l /var/log/samples/; tmux wait -S done
+total 756
+-rw-r--r-- 1 root root 161214 Oct 17 01:55 access.log
+-rw-r--r-- 1 root root  40500 Oct 17 01:55 access.log.old
+-rw-r--r-- 1 root root 259893 Oct 17 01:55 app.log
+-rw-r--r-- 1 root root  54292 Oct 17 01:55 debug.log
+-rw-r--r-- 1 root root 239071 Oct 17 01:55 error.log
+-rw-r--r-- 1 root root    219 Oct 17 01:55 system.log
+-rw-r--r-- 1 root root    551 Oct 17 01:55 system.log.1.gz
+root@d02817e6f343:/app# stat -c '%n %s %Y' /var/log/samples/*; tmux wait -S done
+/var/log/samples/access.log 161214 1792202109
+/var/log/samples/access.log.old 40500 1792202109
+/var/log/samples/app.log 259893 1792202107
+/var/log/samples/debug.log 54292 1792202113
+/var/log/samples/error.log 239071 1792202112
+/var/log/samples/system.log 219 1792202107
+/var/log/samples/system.log.1.gz 551 1792202107
+root@d02817e6f343:/app# cat /etc/logrotate.d/samples/*; tmux wait -S done
+/var/log/samples/access.log {
+    monthly
+    rotate 2
+    compress
+    missingok
+}
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@d02817e6f343:/app#

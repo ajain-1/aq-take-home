@@ -1,0 +1,44 @@
+Current terminal state:
+\n')\n perc = (total_est_savings / total_size_mb * 100) if total_size_mb else 0\n frep.write(f'Potential space reduction: {perc:.1f}%\n\nRECOMMENDATIONS:\n')\n
+frep.write('1. Rotate critical and high growth logs daily with compression enabled.\n')\n frep.write('2. Rotate medium importance logs weekly with compression.\
+n')\n frep.write('3. Rotate low importance logs monthly.\n')\n frep.write('4. Enable delaycompress for large logs to prevent issues with active logs.\n')\n frep
+.write('5. Monitor /var/log disk usage and alert at 80% capacity.\n')\n frep.write('6. Align rotation schedules with backup frequency and compliance requirement
+s.\n')\n # Write optimized logrotate config\n with open('/app/optimized_logrotate.conf','w') as fconf:\n  fconf.write('/var/log/samples/app.log {\n rotate 4\n w
+eekly\n compress\n delaycompress\n missingok\n notifempty\n create 0640 www-data adm\n}\n')\n  fconf.write('/var/log/samples/system.log {\n rotate 4\n weekly\n
+compress\n delaycompress\n missingok\n notifempty\n create 0640 root adm\n}\n')\n  fconf.write('/var/log/samples/access.log {\n rotate 12\n monthly\n compress\n
+ missingok\n notifempty\n create 0640 www-data adm\n}\n')\n  fconf.write('/var/log/samples/error.log {\n rotate 60\n daily\n compress\n delaycompress\n missingo
+k\n notifempty\n create 0640 www-data adm\n}\n')" ; tmux wait -S done
+  File "<string>", line 1
+    import json, time;\nlogs=[{'path':'/var/log/samples/app.log','size_bytes':259893,'mtime':1792202107,'growth_rate':45.7,'retention_days':14,'importance':'med
+ium','type':'nginx'},{'path':'/var/log/samples/system.log','size_bytes':219,'mtime':1792202107,'growth_rate':0,'retention_days':30,'importance':'medium','type':
+'system'},{'path':'/var/log/samples/access.log','size_bytes':161214,'mtime':1792202109,'growth_rate':0,'retention_days':30,'importance':'medium','type':'access'
+},{'path':'/var/log/samples/error.log','size_bytes':239071,'mtime':1792202112,'growth_rate':8.9,'retention_days':60,'importance':'critical','type':'error'}];\nn
+ow=1792207761;\nfrom datetime import datetime;\nreport = []\ntotal_size_mb = 0; total_est_savings = 0\nwith open('/app/rotation_summary.csv','w') as fcsv, open(
+'/app/analysis_report.txt','w') as frep:\n fcsv.write('log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb\n')\n frep.write('
+LOG ROTATION ANALYSIS REPORT\n\nSYSTEM OVERVIEW\n')\n frep.write(f'Available disk space: 50 GB\nLog partition usage: 78%\nBackup frequency: daily\nCompliance re
+quirements: PCI-DSS, SOX\n\nLOG FILE ANALYSIS\n')\n for log in logs:\n  size_mb = log['size_bytes']/1024/1024\n  days_since = (now - log['mtime'])//86400\n  tot
+al_size_mb += size_mb\n  rec_schedule = 'daily' if log['growth_rate'] > 20 else 'weekly' if log['growth_rate'] > 5 else 'monthly'\n  est_savings = 0\n  issues =
+ []\n  if size_mb > 10:\n   issues.append(f'ISSUE (HIGH): Large file {log[path]} exceeds 10MB threshold with size {size_mb:.1f} MB')\n  if days_since > log['ret
+ention_days']:\n   issues.append(f'ISSUE (MEDIUM): Retention period exceeded for {log[path]} ({days_since} days since rotation)')\n  if log['importance'] == 'cr
+itical' and rec_schedule != 'daily':\n   issues.append(f'ISSUE (HIGH): Critical log {log[path]} should be rotated daily')\n  if log['growth_rate'] > 10 and rec_
+schedule != 'daily':\n   issues.append(f'ISSUE (MEDIUM): High growth rate for {log[path]} suggests daily rotation')\n  if rec_schedule == 'daily' and log['growt
+h_rate'] <= 5:\n   rec_schedule = 'weekly'\n  if rec_schedule == 'weekly' and log['growth_rate'] <= 1:\n   rec_schedule = 'monthly'\n  # Estimate savings as 30%
+ of size if compression missing or rotation infrequent\n  if log['path'] == '/var/log/samples/access.log':\n   est_savings = size_mb * 0.3\n  elif log['path'] =
+= '/var/log/samples/error.log':\n   est_savings = size_mb * 0.4\n  else:\n   est_savings = size_mb * 0.2\n  total_est_savings += est_savings\n  for issue in iss
+ues:\n   frep.write(issue + '\n')\n  fcsv.write(f'{log[path]},{size_mb:.2f},{days_since},{rec_schedule},{est_savings:.2f}\n')\n frep.write('\nSUMMARY\n')\n frep
+.write(f'Total log size: {total_size_mb:.1f} MB\n')\n frep.write(f'Estimated total savings: {total_est_savings:.1f} MB\n')\n perc = (total_est_savings / total_s
+ize_mb * 100) if total_size_mb else 0\n frep.write(f'Potential space reduction: {perc:.1f}%\n\nRECOMMENDATIONS:\n')\n frep.write('1. Rotate critical and high gr
+owth logs daily with compression enabled.\n')\n frep.write('2. Rotate medium importance logs weekly with compression.\n')\n frep.write('3. Rotate low importance
+ logs monthly.\n')\n frep.write('4. Enable delaycompress for large logs to prevent issues with active logs.\n')\n frep.write('5. Monitor /var/log disk usage and
+ alert at 80% capacity.\n')\n frep.write('6. Align rotation schedules with backup frequency and compliance requirements.\n')\n # Write optimized logrotate confi
+g\n with open('/app/optimized_logrotate.conf','w') as fconf:\n  fconf.write('/var/log/samples/app.log {\n rotate 4\n weekly\n compress\n delaycompress\n missing
+ok\n notifempty\n create 0640 www-data adm\n}\n')\n  fconf.write('/var/log/samples/system.log {\n rotate 4\n weekly\n compress\n delaycompress\n missingok\n not
+ifempty\n create 0640 root adm\n}\n')\n  fconf.write('/var/log/samples/access.log {\n rotate 12\n monthly\n compress\n missingok\n notifempty\n create 0640 www-
+data adm\n}\n')\n  fconf.write('/var/log/samples/error.log {\n rotate 60\n daily\n compress\n delaycompress\n missingok\n notifempty\n create 0640 www-data adm\
+n}\n')
+                       ^
+SyntaxError: unexpected character after line continuation character
+root@e047045471c0:/app#
+
+
+TESTS FAILED! Are you sure you want to mark complete? You have ONE chance to fix this. If you set is_task_complete: true again, the task will end.

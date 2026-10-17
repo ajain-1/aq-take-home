@@ -1,0 +1,40 @@
+      "importance": "medium",
+      "growth_rate_mb_per_day": 45.7,
+      "retention_requirement_days": 14,
+      "application": "nginx",
+      "owner": "www-data"
+    },
+    {
+      "path": "/var/log/samples/error.log",
+      "type": "error",
+      "importance": "critical",
+      "growth_rate_mb_per_day": 8.9,
+      "retention_requirement_days": 60,
+      "application": "web-server",
+      "owner": "www-data"
+    },
+    {
+      "path": "/var/log/samples/debug.log",
+      "type": "debug",
+      "importance": "low",
+      "growth_rate_mb_per_day": 5.3,
+      "retention_requirement_days": 7,
+      "application": "web-server",
+      "owner": "www-data"
+    }
+  ],
+  "system_info": {
+    "available_disk_gb": 50,
+    "log_partition_usage_percent": 78,
+    "backup_frequency": "daily",
+    "compliance_requirements": ["PCI-DSS", "SOX"],
+    "peak_traffic_hours": ["09:00-11:00", "14:00-16:00", "20:00-22:00"]
+  },
+  "current_issues": [
+    "High disk usage on log partition",
+    "Inconsistent rotation schedules",
+    "Missing compression on some logs",
+    "Some critical logs lack rotation configuration"
+  ]
+}
+root@c6f6dd1f4e06:/app#

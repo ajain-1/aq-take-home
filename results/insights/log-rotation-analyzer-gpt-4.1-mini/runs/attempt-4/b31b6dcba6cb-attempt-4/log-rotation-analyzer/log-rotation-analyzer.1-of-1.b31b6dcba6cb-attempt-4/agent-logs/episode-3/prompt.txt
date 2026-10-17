@@ -1,0 +1,40 @@
+  },
+  "current_issues": [
+    "High disk usage on log partition",
+    "Inconsistent rotation schedules",
+    "Missing compression on some logs",
+    "Some critical logs lack rotation configuration"
+  ]
+}
+root@bc5ee84a8e22:/app# ls -lh --time-style=+%Y-%m-%d /var/log/samples/; tmux wait -S done
+total 756K
+-rw-r--r-- 1 root root 158K 2026-10-17 access.log
+-rw-r--r-- 1 root root  40K 2026-10-17 access.log.old
+-rw-r--r-- 1 root root 254K 2026-10-17 app.log
+-rw-r--r-- 1 root root  54K 2026-10-17 debug.log
+-rw-r--r-- 1 root root 234K 2026-10-17 error.log
+-rw-r--r-- 1 root root  219 2026-10-17 system.log
+-rw-r--r-- 1 root root  551 2026-10-17 system.log.1.gz
+root@bc5ee84a8e22:/app# cat /etc/logrotate.d/samples/*; tmux wait -S done
+/var/log/samples/access.log {
+    monthly
+    rotate 2
+    compress
+    missingok
+}
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@bc5ee84a8e22:/app#

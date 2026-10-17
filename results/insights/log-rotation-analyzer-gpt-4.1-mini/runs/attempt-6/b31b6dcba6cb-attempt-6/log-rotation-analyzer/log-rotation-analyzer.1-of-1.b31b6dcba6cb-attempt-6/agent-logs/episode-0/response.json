@@ -1,0 +1,37 @@
+{
+    "state_analysis": "The terminal is at the shell prompt with no prior output shown from commands. No files or logs have been examined yet.",
+    "explanation": "This batch will gather necessary data about log files in /var/log/samples/, the current logrotate configuration files in /etc/logrotate.d/samples/, and system information needed for analysis. It will list log files with sizes and timestamps, retrieve logrotate configurations, read system memory and disk stats, and obtain the metadata database.",
+    "commands": [
+        {
+            "keystrokes": "ls -l /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "stat -c '%n %s %y' /var/log/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat /etc/logrotate.d/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat /proc/meminfo\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        },
+        {
+            "keystrokes": "cat /proc/diskstats\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        },
+        {
+            "keystrokes": "cat log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

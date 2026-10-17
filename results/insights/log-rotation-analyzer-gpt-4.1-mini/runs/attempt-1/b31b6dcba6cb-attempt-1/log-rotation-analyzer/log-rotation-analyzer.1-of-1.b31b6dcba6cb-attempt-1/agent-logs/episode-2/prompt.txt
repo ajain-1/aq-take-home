@@ -1,0 +1,40 @@
+>     for issue in issues:
+>         f.write(issue + "\n")
+>     f.write("\nSUMMARY\n")
+>     f.write(f"Total log size: {round(total_size,2)} MB\n")
+>     f.write(f"Estimated total savings: {estimated_savings} MB\n")
+>     f.write(f"Potential space reduction: {potential_reduction}%\n")
+>     f.write("\nRECOMMENDATIONS:\n")
+>     for rec in recommendations:
+>         f.write(rec + "\n")
+>
+> # Write optimized_logrotate.conf
+> with open('/app/optimized_logrotate.conf', 'w') as f:
+>     f.write("/var/log/samples/app.log {\n")
+>     f.write("    rotate 14\n    daily\n    compress\n    missingok\n    notifempty\n    delaycompress\n    create 0640 www-data adm\n}\n")
+>     f.write("/var/log/samples/error.log {\n")
+>     f.write("    rotate 60\n    weekly\n    compress\n    missingok\n    notifempty\n    delaycompress\n    create 0640 www-data adm\n}\n")
+>
+> # Write rotation_summary.csv
+> with open('/app/rotation_summary.csv', 'w') as f:
+>     f.write("log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb\n")
+>     for ld in log_details:
+>         schedule = 'weekly'
+>         est_savings = 0
+>         if ld['growth_rate_mb_per_day'] > 40:
+>             schedule = 'daily'
+>         elif ld['growth_rate_mb_per_day'] < 10:
+>             schedule = 'monthly'
+>         if ld['current_size_mb'] > 10:
+>             est_savings += ld['current_size_mb'] * 0.2
+>         # Assume 50% saving if no compression
+>         compressed = any(os.path.exists(ld['path']+ext) for ext in ['.gz', '.bz2'])
+>         if not compressed:
+>             est_savings += ld['current_size_mb'] * 0.5
+>         f.write(f"{ld['path']},{ld['current_size_mb']},{ld['days_since_rotation']},{schedule},{round(est_savings,2)}\n")
+>
+> print('Analysis complete and files generated.')
+> EOF
+root@8b31eb84dd5c:/app# python3 /app/log_analysis.py; tmux wait -S done
+Analysis complete and files generated.
+root@8b31eb84dd5c:/app#

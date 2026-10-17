@@ -1,0 +1,42 @@
+{
+    "state_analysis": "The terminal is at a root prompt in the /app directory with no prior commands executed in this session.",
+    "explanation": "The next commands will gather detailed information about the sample log files, current logrotate configurations, system memory and disk usage, and metadata about the logs. This data will be necessary to analyze rotation patterns, identify issues, and produce the required reports and configuration file.",
+    "commands": [
+        {
+            "keystrokes": "ls -l /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "du -h /var/log/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "stat /var/log/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "cat /etc/logrotate.d/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "head -40 /proc/meminfo\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        },
+        {
+            "keystrokes": "head -40 /proc/diskstats\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

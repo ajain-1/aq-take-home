@@ -1,0 +1,22 @@
+{
+    "state_analysis": "The terminal is at the root prompt in the /app directory with no previous command output provided.",
+    "explanation": "List the log files in /var/log/samples/ with detailed attributes like size and modification times, view current logrotate configurations in /etc/logrotate.d/samples/, and read the log_metadata.json to gather metadata for analysis. This data collection is essential before analyzing patterns and generating the required reports and configurations.",
+    "commands": [
+        {
+            "keystrokes": "ls -l --time-style=+%Y-%m-%d /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat /etc/logrotate.d/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

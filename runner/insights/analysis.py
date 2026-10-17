@@ -1,6 +1,9 @@
+
 """Deterministic analysis of N attempts. Every insight cites evidence; insights whose
 evidence does not verify against the artifacts are withheld and listed as rejected."""
 
+import re
+from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from statistics import mean
@@ -32,17 +35,41 @@ class Insight:
     attempts: list[int] = field(default_factory=list)
 
 
+# Messages pytest prints when a test cannot find a file the task should have produced.
+MISSING_OUTPUT = re.compile(r"not found|No such file or directory", re.IGNORECASE)
+
+# What a customer can change when one way of failing dominates the attempts.
+FAILURE_GUIDANCE = {
+    "declared_done_with_missing_outputs": (
+        "the agent declared the task complete while files the tests read did not exist. If the "
+        "instruction names those outputs, this is a gap in the agent checking its own work, not a "
+        "task bug"
+    ),
+    "declared_done_with_failing_tests": (
+        "the agent believed it was done while tests still failed; check that the instruction states "
+        "everything the tests verify"
+    ),
+    "declared_done_despite_failure_warning": (
+        "the agent ignored terminus's warning that tests were failing and stopped anyway"
+    ),
+    "stopped_without_completing": "the agent ran out of episodes or time before finishing",
+    "agent_timeout": "the agent hit the task's agent timeout; consider whether the timeout is realistic",
+}
+
+
 class Analyzer:
     def __init__(self, submission: Submission):
         self.s = submission
         self.ledger = EvidenceLedger(submission.root)
         self.insights: list[Insight] = []
+        self.attempt_evidence: dict[int, tuple[str, list[str]]] = {}
         completed = [a for a in submission.attempts if a.status == "completed"]
         self.completed = completed
         self.test_names = sorted({name for a in completed for name in a.tests})
 
     def run(self) -> dict[str, Any]:
         attempts = [self._classify(attempt) for attempt in self.s.attempts]
+        self._dominant_failure()
         self._consistent_failures()
         self._hidden_requirements()
         self._divergences()
@@ -71,6 +98,7 @@ class Analyzer:
 
     def _classify(self, attempt: Attempt) -> dict[str, Any]:
         category, evidence = self._attempt_category(attempt)
+        self.attempt_evidence[attempt.index] = (category, evidence)
         failed = sorted(name for name, status in attempt.tests.items() if status != "passed")
         if category != "solved":
             detail = f"Attempt {attempt.index} ended as {category.replace('_', ' ')}"
@@ -139,6 +167,12 @@ class Analyzer:
         evidence = [
             self.ledger.quote(final.source, final.state_analysis, attempt=attempt.index, episode=final.index)
         ]
+        missing = [f for f in attempt.failures.values() if MISSING_OUTPUT.search(f.message)]
+        if missing:
+            return "declared_done_with_missing_outputs", evidence + [
+                self.ledger.quote(attempt.pane_source, f.text, line=f.line, attempt=attempt.index)
+                for f in missing
+            ]
         warned = next((e for e in attempt.episodes if CONFIRMATION_WARNING in e.prompt), None)
         if warned:
             evidence.append(
@@ -148,6 +182,30 @@ class Analyzer:
             )
             return "declared_done_despite_failure_warning", evidence + failure_evidence
         return "declared_done_with_failing_tests", evidence + failure_evidence
+
+    def _dominant_failure(self) -> None:
+        """Report a way of failing shared by at least half of the failing attempts."""
+        failing = {
+            index: entry for index, entry in self.attempt_evidence.items() if entry[0] != "solved"
+        }
+        if len(failing) < 2:
+            return
+        counts = Counter(category for category, _ in failing.values())
+        category, count = counts.most_common(1)[0]
+        if count < 2 or count * 2 < len(failing):
+            return
+        indices = sorted(index for index, (c, _) in failing.items() if c == category)
+        guidance = FAILURE_GUIDANCE.get(category, "see the per-attempt findings")
+        self.insights.append(
+            Insight(
+                "failure_pattern",
+                "high",
+                f"{count} of {len(failing)} failing attempts: {category}",
+                f"Attempts {', '.join(map(str, indices))} failed the same way: {guidance}.",
+                [e for index in indices for e in failing[index][1]],
+                indices,
+            )
+        )
 
     def _infrastructure_evidence(self, attempt: Attempt) -> list[str]:
         """Cite the recorded container event itself, not the executor's summary of it."""

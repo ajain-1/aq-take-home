@@ -1,0 +1,22 @@
+{
+    "state_analysis": "At the prompt in the /app directory, no files or data have been gathered yet.",
+    "explanation": "To analyze the log rotation patterns, first I will gather detailed information about the sample log files in /var/log/samples/, their sizes, modification times, and any rotated versions. Then, I will gather the current logrotate configuration files from /etc/logrotate.d/samples/. Finally, I will read the log metadata database file log_metadata.json if it exists to get additional metadata. This data gathering will allow us to analyze rotation patterns and issues.",
+    "commands": [
+        {
+            "keystrokes": "ls -l /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "ls -l /etc/logrotate.d/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

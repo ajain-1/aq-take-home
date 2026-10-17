@@ -1,0 +1,40 @@
+  ]
+}
+root@3859f87d0376:/app# stat -c '%n %s %Y' /var/log/samples/app.log /var/log/samples/system.log /var/log/samples/access.log /var/log/samples/error.log; tmux wai
+t -S done
+/var/log/samples/app.log 259893 1792202107
+/var/log/samples/system.log 219 1792202107
+/var/log/samples/access.log 161214 1792202109
+/var/log/samples/error.log 239071 1792202112
+root@3859f87d0376:/app# grep -l 'app.log' /etc/logrotate.d/samples/*; tmux wait -S done
+/etc/logrotate.d/samples/app
+root@3859f87d0376:/app# grep -l 'system.log' /etc/logrotate.d/samples/*; tmux wait -S done
+/etc/logrotate.d/samples/system
+root@3859f87d0376:/app# grep -l 'access.log' /etc/logrotate.d/samples/*; tmux wait -S done
+/etc/logrotate.d/samples/access
+root@3859f87d0376:/app# grep -l 'error.log' /etc/logrotate.d/samples/*; tmux wait -S done
+root@3859f87d0376:/app# cat /etc/logrotate.d/samples/app; tmux wait -S done
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+root@3859f87d0376:/app# cat /etc/logrotate.d/samples/system; tmux wait -S done
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@3859f87d0376:/app# cat /etc/logrotate.d/samples/access; tmux wait -S done
+/var/log/samples/access.log {
+    monthly
+    rotate 2
+    compress
+    missingok
+}
+root@3859f87d0376:/app#

@@ -1,0 +1,42 @@
+{
+    "state_analysis": "The terminal is at a root prompt inside the /app directory with no prior commands executed or outputs shown.",
+    "explanation": "This command batch will gather detailed information about the log files in /var/log/samples/, the current logrotate configuration for samples, system memory and disk stats, and the metadata database. The collected data will be saved to files for subsequent parsing and analysis to create the required reports and optimized configuration.",
+    "commands": [
+        {
+            "keystrokes": "ls -l /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "du -m /var/log/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "stat --format='%n %s %y' /var/log/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat /etc/logrotate.d/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat /proc/meminfo\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        },
+        {
+            "keystrokes": "cat /proc/diskstats\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        },
+        {
+            "keystrokes": "cat log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

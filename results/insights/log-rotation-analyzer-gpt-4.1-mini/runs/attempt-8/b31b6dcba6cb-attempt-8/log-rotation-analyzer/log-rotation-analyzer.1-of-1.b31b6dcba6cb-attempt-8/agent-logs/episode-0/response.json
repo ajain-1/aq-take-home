@@ -1,0 +1,27 @@
+{
+    "state_analysis": "The terminal is ready at the /app directory with no commands executed yet. No current output to analyze.",
+    "explanation": "The next step is to gather detailed information about the log files in /var/log/samples/, the existing logrotate configurations in /etc/logrotate.d/samples/, and the log metadata from log_metadata.json. This data will allow us to analyze current rotation patterns, file sizes, rotation dates, and compression status to identify problematic patterns.",
+    "commands": [
+        {
+            "keystrokes": "ls -l /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "ls -l /etc/logrotate.d/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "head -40 /etc/logrotate.d/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "cat /app/log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

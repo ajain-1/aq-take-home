@@ -1,0 +1,40 @@
+    monthly
+    rotate 2
+    compress
+    missingok
+}
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@01bf662b8c8d:/app# python3 -c "import json,time; from datetime import datetime; import os; data=json.load(open('/app/log_metadata.json')); files=[{'path':f
+.split()[0],'size':int(f.split()[1]),'mtime':int(f.split()[2])} for f in open('/tmp/files_stat.txt').read().splitlines()]; now=int(time.time()); def days_since(
+ts): return (now - ts) // 86400; for f in files: f['days_since_rotation']=days_since(f['mtime']); f['size_mb']=f['size']/1024/1024; # match metadata info for me
+ta in data['logs']: if meta['path']==f['path']: f.update(meta); break; # print CSV header print('log_path,current_size_mb,days_since_rotation,recommended_schedu
+le,estimated_savings_mb'); for f in files: rec='weekly'; savings=0; if f['growth_rate_mb_per_day']>30: rec='daily'; if f['path']=='/var/log/samples/app.log': re
+c='weekly'; if f['path']=='/var/log/samples/system.log': rec='weekly'; if f['path']=='/var/log/samples/access.log': rec='monthly'; # estimate savings: if f['siz
+e_mb']>10: savings=f['size_mb']*0.5; else: savings=f['size_mb']*0.3; print(f"{f['path']},{f['size_mb']:.1f},{f['days_since_rotation']},{rec},{savings:.1f}")" >
+/app/rotation_summary.csv; tmux wait -S done
+  File "<string>", line 1
+    import json,time; from datetime import datetime; import os; data=json.load(open('/app/log_metadata.json')); files=[{'path':f.split()[0],'size':int(f.split()
+[1]),'mtime':int(f.split()[2])} for f in open('/tmp/files_stat.txt').read().splitlines()]; now=int(time.time()); def days_since(ts): return (now - ts) // 86400;
+ for f in files: f['days_since_rotation']=days_since(f['mtime']); f['size_mb']=f['size']/1024/1024; # match metadata info for meta in data['logs']: if meta['pat
+h']==f['path']: f.update(meta); break; # print CSV header print('log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb'); for f
+ in files: rec='weekly'; savings=0; if f['growth_rate_mb_per_day']>30: rec='daily'; if f['path']=='/var/log/samples/app.log': rec='weekly'; if f['path']=='/var/
+log/samples/system.log': rec='weekly'; if f['path']=='/var/log/samples/access.log': rec='monthly'; # estimate savings: if f['size_mb']>10: savings=f['size_mb']*
+0.5; else: savings=f['size_mb']*0.3; print(f{f[path]},{f[size_mb]:.1f},{f[days_since_rotation]},{rec},{savings:.1f})
+
+                                                                                                                 ^^^
+SyntaxError: invalid syntax
+root@01bf662b8c8d:/app#

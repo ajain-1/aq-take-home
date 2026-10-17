@@ -1,0 +1,40 @@
+g/samples/system.log':219,'/var/log/samples/access.log':161214,'/var/log/samples/error.log':239071}; for log in logs: logdata=next((item for item in data['logs'
+] if item['path']==log),None); if not logdata: continue; size_mb=sizes[log]/(1024*1024); days_since_rotation=(now-int(time.mktime(time.localtime(sizes[logdata['
+path']]))))//86400 if sizes[logdata['path']] else 0; # correction below last_mod_time=next((item for item in [259893,219,161214,239071] if item==sizes[log]),0);
+ last_mod=logdata.get('last_rotation_epoch',now); days_since_rotation=(now-last_mod)//86400; estimated_savings=max(0,size_mb-(logdata['retention_requirement_day
+s']*logdata['growth_rate_mb_per_day'])); recommended_schedule='daily' if logdata['growth_rate_mb_per_day']>20 else 'weekly' if logdata['growth_rate_mb_per_day']
+>5 else 'monthly'; result.append([log,size_mb,int(days_since_rotation),recommended_schedule,round(estimated_savings,2)]); import csv; with open('/app/rotation_s
+ummary.csv','w') as f: writer=csv.writer(f); writer.writerow(['log_path','current_size_mb','days_since_rotation','recommended_schedule','estimated_savings_mb'])
+; writer.writerows(result)" ; tmux wait -S done
+  File "<string>", line 1
+    import json,time; import datetime; data=json.load(open('log_metadata.json')); now=int(time.time()); logs=['/var/log/samples/app.log','/var/log/samples/syste
+m.log','/var/log/samples/access.log','/var/log/samples/error.log']; result=[]; sizes={'/var/log/samples/app.log':259893,'/var/log/samples/system.log':219,'/var/
+log/samples/access.log':161214,'/var/log/samples/error.log':239071}; for log in logs: logdata=next((item for item in data['logs'] if item['path']==log),None); i
+f not logdata: continue; size_mb=sizes[log]/(1024*1024); days_since_rotation=(now-int(time.mktime(time.localtime(sizes[logdata['path']]))))//86400 if sizes[logd
+ata['path']] else 0; # correction below last_mod_time=next((item for item in [259893,219,161214,239071] if item==sizes[log]),0); last_mod=logdata.get('last_rota
+tion_epoch',now); days_since_rotation=(now-last_mod)//86400; estimated_savings=max(0,size_mb-(logdata['retention_requirement_days']*logdata['growth_rate_mb_per_
+day'])); recommended_schedule='daily' if logdata['growth_rate_mb_per_day']>20 else 'weekly' if logdata['growth_rate_mb_per_day']>5 else 'monthly'; result.append
+([log,size_mb,int(days_since_rotation),recommended_schedule,round(estimated_savings,2)]); import csv; with open('/app/rotation_summary.csv','w') as f: writer=cs
+v.writer(f); writer.writerow(['log_path','current_size_mb','days_since_rotation','recommended_schedule','estimated_savings_mb']); writer.writerows(result)
+
+
+                                                                     ^^^
+SyntaxError: invalid syntax
+root@8d8d83b52291:/app# echo "import json\nimport time\nimport csv\n\ndata = json.load(open('log_metadata.json'))\nnow = int(time.time())\nlogs = ['/var/log/sam
+ples/app.log','/var/log/samples/system.log','/var/log/samples/access.log','/var/log/samples/error.log']\nsizes = {'/var/log/samples/app.log':259893,'/var/log/sa
+mples/system.log':219,'/var/log/samples/access.log':161214,'/var/log/samples/error.log':239071}\nresult = []\nfor log in logs:\n    logdata = next((item for ite
+m in data['logs'] if item['path'] == log), None)\n    if not logdata:\n        continue\n    size_mb = sizes[log] / (1024 * 1024)\n    days_since_rotation = (no
+w - logdata['last_rotation_epoch']) // 86400\n    est_savings = max(0, size_mb - (logdata['retention_requirement_days'] * logdata['growth_rate_mb_per_day']))\n
+   if logdata['growth_rate_mb_per_day'] > 20:\n        rec_sched = 'daily'\n    elif logdata['growth_rate_mb_per_day'] > 5:\n        rec_sched = 'weekly'\n    e
+lse:\n        rec_sched = 'monthly'\n    result.append([log, size_mb, int(days_since_rotation), rec_sched, round(est_savings, 2)])\nwith open('/app/rotation_sum
+mary.csv', 'w', newline='') as f:\n    writer = csv.writer(f)\n    writer.writerow(['log_path', 'current_size_mb', 'days_since_rotation', 'recommended_schedule'
+, 'estimated_savings_mb'])\n    writer.writerows(result)" > /app/generate_csv.py; tmux wait -S done
+root@8d8d83b52291:/app# python3 /app/generate_csv.py; tmux wait -S done
+  File "/app/generate_csv.py", line 1
+    int(days_since_rotation), rec_sched, round(est_savings, 2)])\nwith open('/app/rotation_summary.csv', 'w', newline='') as f:\n    writer = csv.writer(f)\n
+ writer.writerow(['log_path', 'current_size_mb', 'days_since_rotation', 'recommended_schedule', 'estimated_savings_mb'])\n    writer.writerows(result)
+               ^
+SyntaxError: unexpected character after line continuation character
+root@8d8d83b52291:/app# head -10 /app/rotation_summary.csv; tmux wait -S done
+head: cannot open '/app/rotation_summary.csv' for reading: No such file or directory
+root@8d8d83b52291:/app#

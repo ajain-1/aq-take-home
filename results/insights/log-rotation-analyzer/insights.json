@@ -89,7 +89,7 @@
   "attempts": [
     {
       "attempt": 0,
-      "category": "declared_done_with_failing_tests",
+      "category": "declared_done_with_missing_outputs",
       "resolved": false,
       "failed_tests": [
         "test_analysis_report_content",
@@ -105,7 +105,7 @@
     },
     {
       "attempt": 1,
-      "category": "declared_done_with_failing_tests",
+      "category": "declared_done_with_missing_outputs",
       "resolved": false,
       "failed_tests": [
         "test_analysis_report_content",
@@ -121,7 +121,7 @@
     },
     {
       "attempt": 2,
-      "category": "declared_done_with_failing_tests",
+      "category": "declared_done_with_missing_outputs",
       "resolved": false,
       "failed_tests": [
         "test_analysis_report_content",
@@ -137,7 +137,7 @@
     },
     {
       "attempt": 3,
-      "category": "declared_done_with_failing_tests",
+      "category": "declared_done_with_missing_outputs",
       "resolved": false,
       "failed_tests": [
         "test_analysis_report_content",
@@ -153,7 +153,7 @@
     },
     {
       "attempt": 4,
-      "category": "declared_done_with_failing_tests",
+      "category": "declared_done_with_missing_outputs",
       "resolved": false,
       "failed_tests": [
         "test_analysis_report_content",
@@ -184,14 +184,11 @@
     {
       "category": "attempt_failure",
       "severity": "info",
-      "title": "Attempt 0: declared_done_with_failing_tests",
-      "detail": "Attempt 0 ended as declared done with failing tests; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
+      "title": "Attempt 0: declared_done_with_missing_outputs",
+      "detail": "Attempt 0 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
       "evidence": [
         "E5",
-        "E1",
-        "E2",
-        "E3",
-        "E4"
+        "E6"
       ],
       "attempts": [
         0
@@ -200,14 +197,11 @@
     {
       "category": "attempt_failure",
       "severity": "info",
-      "title": "Attempt 1: declared_done_with_failing_tests",
-      "detail": "Attempt 1 ended as declared done with failing tests; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
+      "title": "Attempt 1: declared_done_with_missing_outputs",
+      "detail": "Attempt 1 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
       "evidence": [
-        "E10",
-        "E6",
-        "E7",
-        "E8",
-        "E9"
+        "E11",
+        "E12"
       ],
       "attempts": [
         1
@@ -216,14 +210,11 @@
     {
       "category": "attempt_failure",
       "severity": "info",
-      "title": "Attempt 2: declared_done_with_failing_tests",
-      "detail": "Attempt 2 ended as declared done with failing tests; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
+      "title": "Attempt 2: declared_done_with_missing_outputs",
+      "detail": "Attempt 2 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
       "evidence": [
-        "E15",
-        "E11",
-        "E12",
-        "E13",
-        "E14"
+        "E17",
+        "E18"
       ],
       "attempts": [
         2
@@ -232,14 +223,11 @@
     {
       "category": "attempt_failure",
       "severity": "info",
-      "title": "Attempt 3: declared_done_with_failing_tests",
-      "detail": "Attempt 3 ended as declared done with failing tests; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
+      "title": "Attempt 3: declared_done_with_missing_outputs",
+      "detail": "Attempt 3 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
       "evidence": [
-        "E20",
-        "E16",
-        "E17",
-        "E18",
-        "E19"
+        "E23",
+        "E24"
       ],
       "attempts": [
         3
@@ -248,28 +236,30 @@
     {
       "category": "attempt_failure",
       "severity": "info",
-      "title": "Attempt 4: declared_done_with_failing_tests",
-      "detail": "Attempt 4 ended as declared done with failing tests; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
+      "title": "Attempt 4: declared_done_with_missing_outputs",
+      "detail": "Attempt 4 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_issue_identification, test_recommendations_quality, test_savings_calculation",
       "evidence": [
-        "E25",
-        "E21",
-        "E22",
-        "E23",
-        "E24"
+        "E29",
+        "E30"
       ],
       "attempts": [
         4
       ]
     },
     {
-      "category": "consistent_test_failure",
+      "category": "failure_pattern",
       "severity": "high",
-      "title": "test_analysis_report_content never passes",
-      "detail": "test_analysis_report_content failed in all 5 completed attempts with the identical assertion message, which points at a systematic cause (a task/spec issue or a capability gap) rather than run-to-run noise.",
+      "title": "5 of 5 failing attempts: declared_done_with_missing_outputs",
+      "detail": "Attempts 0, 1, 2, 3, 4 failed the same way: the agent declared the task complete while files the tests read did not exist. If the instruction names those outputs, this is a gap in the agent checking its own work, not a task bug.",
       "evidence": [
-        "E26",
-        "E27",
-        "E28",
+        "E5",
+        "E6",
+        "E11",
+        "E12",
+        "E17",
+        "E18",
+        "E23",
+        "E24",
         "E29",
         "E30"
       ],
@@ -284,8 +274,8 @@
     {
       "category": "consistent_test_failure",
       "severity": "high",
-      "title": "test_issue_identification never passes",
-      "detail": "test_issue_identification failed in all 5 completed attempts with the identical assertion message, which points at a systematic cause (a task/spec issue or a capability gap) rather than run-to-run noise.",
+      "title": "test_analysis_report_content never passes",
+      "detail": "test_analysis_report_content failed in all 5 completed attempts with the identical assertion message, which points at a systematic cause (a task/spec issue or a capability gap) rather than run-to-run noise.",
       "evidence": [
         "E31",
         "E32",
@@ -304,8 +294,8 @@
     {
       "category": "consistent_test_failure",
       "severity": "high",
-      "title": "test_recommendations_quality never passes",
-      "detail": "test_recommendations_quality failed in all 5 completed attempts.",
+      "title": "test_issue_identification never passes",
+      "detail": "test_issue_identification failed in all 5 completed attempts with the identical assertion message, which points at a systematic cause (a task/spec issue or a capability gap) rather than run-to-run noise.",
       "evidence": [
         "E36",
         "E37",
@@ -324,8 +314,8 @@
     {
       "category": "consistent_test_failure",
       "severity": "high",
-      "title": "test_savings_calculation never passes",
-      "detail": "test_savings_calculation failed in all 5 completed attempts with the identical assertion message, which points at a systematic cause (a task/spec issue or a capability gap) rather than run-to-run noise.",
+      "title": "test_recommendations_quality never passes",
+      "detail": "test_recommendations_quality failed in all 5 completed attempts.",
       "evidence": [
         "E41",
         "E42",
@@ -342,21 +332,41 @@
       ]
     },
     {
-      "category": "hidden_requirement",
+      "category": "consistent_test_failure",
       "severity": "high",
-      "title": "test_analysis_report_content checks for text the instruction never specifies",
-      "detail": "test_analysis_report_content looks for 'LOG ROTATION ANALYSIS REPORT', 'SYSTEM OVERVIEW', 'LOG FILE ANALYSIS', 'Total log size:', 'Estimated total savings:', but none of these appear in the instruction or in any terminal output the agents saw. It failed in 5/5 completed attempts. Either state the expected format in the instruction or relax the test.",
+      "title": "test_savings_calculation never passes",
+      "detail": "test_savings_calculation failed in all 5 completed attempts with the identical assertion message, which points at a systematic cause (a task/spec issue or a capability gap) rather than run-to-run noise.",
       "evidence": [
         "E46",
         "E47",
         "E48",
         "E49",
-        "E50",
+        "E50"
+      ],
+      "attempts": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "category": "hidden_requirement",
+      "severity": "high",
+      "title": "test_analysis_report_content checks for text the instruction never specifies",
+      "detail": "test_analysis_report_content looks for 'LOG ROTATION ANALYSIS REPORT', 'SYSTEM OVERVIEW', 'LOG FILE ANALYSIS', 'Total log size:', 'Estimated total savings:', but none of these appear in the instruction or in any terminal output the agents saw. It failed in 5/5 completed attempts. Either state the expected format in the instruction or relax the test.",
+      "evidence": [
         "E51",
         "E52",
         "E53",
         "E54",
-        "E55"
+        "E55",
+        "E56",
+        "E57",
+        "E58",
+        "E59",
+        "E60"
       ],
       "attempts": [
         0,
@@ -372,8 +382,8 @@
       "title": "test_savings_calculation checks for text the instruction never specifies",
       "detail": "test_savings_calculation looks for 'Potential space reduction:', but none of these appear in the instruction or in any terminal output the agents saw. It failed in 5/5 completed attempts. Either state the expected format in the instruction or relax the test.",
       "evidence": [
-        "E56",
-        "E57"
+        "E61",
+        "E62"
       ],
       "attempts": [
         0,
@@ -389,12 +399,12 @@
       "title": "test_issue_identification checks for text the instruction never specifies",
       "detail": "test_issue_identification looks for 'HIGH', 'MEDIUM', 'Large file', but none of these appear in the instruction or in any terminal output the agents saw. It failed in 5/5 completed attempts. Either state the expected format in the instruction or relax the test.",
       "evidence": [
-        "E58",
-        "E59",
-        "E60",
-        "E61",
-        "E62",
-        "E63"
+        "E63",
+        "E64",
+        "E65",
+        "E66",
+        "E67",
+        "E68"
       ],
       "attempts": [
         0,
@@ -410,10 +420,10 @@
       "title": "test_recommendations_quality checks for text the instruction never specifies",
       "detail": "test_recommendations_quality looks for 'monitor', 'RECOMMENDATIONS:', but none of these appear in the instruction or in any terminal output the agents saw. It failed in 5/5 completed attempts. Either state the expected format in the instruction or relax the test.",
       "evidence": [
-        "E64",
-        "E65",
-        "E66",
-        "E67"
+        "E69",
+        "E70",
+        "E71",
+        "E72"
       ],
       "attempts": [
         0,
@@ -426,42 +436,6 @@
   ],
   "rejected_insights": [],
   "evidence": {
-    "E1": {
-      "id": "E1",
-      "kind": "quote",
-      "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 239,
-      "attempt": 0,
-      "verified": true
-    },
-    "E2": {
-      "id": "E2",
-      "kind": "quote",
-      "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 240,
-      "attempt": 0,
-      "verified": true
-    },
-    "E3": {
-      "id": "E3",
-      "kind": "quote",
-      "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 241,
-      "attempt": 0,
-      "verified": true
-    },
-    "E4": {
-      "id": "E4",
-      "kind": "quote",
-      "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
-      "line": 242,
-      "attempt": 0,
-      "verified": true
-    },
     "E5": {
       "id": "E5",
       "kind": "quote",
@@ -474,41 +448,14 @@
     "E6": {
       "id": "E6",
       "kind": "quote",
-      "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 239,
-      "attempt": 1,
-      "verified": true
-    },
-    "E7": {
-      "id": "E7",
-      "kind": "quote",
-      "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
+      "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
       "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
       "line": 240,
-      "attempt": 1,
+      "attempt": 0,
       "verified": true
     },
-    "E8": {
-      "id": "E8",
-      "kind": "quote",
-      "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 241,
-      "attempt": 1,
-      "verified": true
-    },
-    "E9": {
-      "id": "E9",
-      "kind": "quote",
-      "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
-      "line": 242,
-      "attempt": 1,
-      "verified": true
-    },
-    "E10": {
-      "id": "E10",
+    "E11": {
+      "id": "E11",
       "kind": "quote",
       "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/agent-logs/episode-15/response.json",
       "quote": "All three required files have been successfully created in /app:\n\n1. analysis_report.txt (8259 bytes, 210 lines) - Contains comprehensive analysis including:\n   - Executive summary with current disk usage (78%)\n   - Current log rotation sta",
@@ -516,44 +463,17 @@
       "episode": 15,
       "verified": true
     },
-    "E11": {
-      "id": "E11",
-      "kind": "quote",
-      "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 250,
-      "attempt": 2,
-      "verified": true
-    },
     "E12": {
       "id": "E12",
       "kind": "quote",
-      "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
+      "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
       "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 251,
-      "attempt": 2,
+      "line": 240,
+      "attempt": 1,
       "verified": true
     },
-    "E13": {
-      "id": "E13",
-      "kind": "quote",
-      "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 252,
-      "attempt": 2,
-      "verified": true
-    },
-    "E14": {
-      "id": "E14",
-      "kind": "quote",
-      "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: Recommendations lack specificity, found 1 actionable terms",
-      "line": 253,
-      "attempt": 2,
-      "verified": true
-    },
-    "E15": {
-      "id": "E15",
+    "E17": {
+      "id": "E17",
       "kind": "quote",
       "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/agent-logs/episode-21/response.json",
       "quote": "All three required files have been successfully created:\n\n1. **analysis_report.txt** - Contains:\n   - Executive Summary\n   - Current Log Status\n   - Identified Issues (6 issues found)\n   - Disk Space Impact Analysis\n   - Recommendations\n   ",
@@ -561,44 +481,17 @@
       "episode": 21,
       "verified": true
     },
-    "E16": {
-      "id": "E16",
-      "kind": "quote",
-      "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 239,
-      "attempt": 3,
-      "verified": true
-    },
-    "E17": {
-      "id": "E17",
-      "kind": "quote",
-      "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 240,
-      "attempt": 3,
-      "verified": true
-    },
     "E18": {
       "id": "E18",
       "kind": "quote",
-      "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 241,
-      "attempt": 3,
+      "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
+      "line": 251,
+      "attempt": 2,
       "verified": true
     },
-    "E19": {
-      "id": "E19",
-      "kind": "quote",
-      "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
-      "line": 242,
-      "attempt": 3,
-      "verified": true
-    },
-    "E20": {
-      "id": "E20",
+    "E23": {
+      "id": "E23",
       "kind": "quote",
       "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/agent-logs/episode-17/response.json",
       "quote": "All three required files have been successfully created in /app:\n\n1. analysis_report.txt (6779 bytes) - Comprehensive human-readable report with:\n   - Summary of current log rotation status\n   - Identified issues and their severity (Critica",
@@ -606,44 +499,17 @@
       "episode": 17,
       "verified": true
     },
-    "E21": {
-      "id": "E21",
-      "kind": "quote",
-      "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 250,
-      "attempt": 4,
-      "verified": true
-    },
-    "E22": {
-      "id": "E22",
-      "kind": "quote",
-      "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 251,
-      "attempt": 4,
-      "verified": true
-    },
-    "E23": {
-      "id": "E23",
-      "kind": "quote",
-      "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 252,
-      "attempt": 4,
-      "verified": true
-    },
     "E24": {
       "id": "E24",
       "kind": "quote",
-      "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: Recommendations lack specificity, found 2 actionable terms",
-      "line": 253,
-      "attempt": 4,
+      "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
+      "line": 240,
+      "attempt": 3,
       "verified": true
     },
-    "E25": {
-      "id": "E25",
+    "E29": {
+      "id": "E29",
       "kind": "quote",
       "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/agent-logs/episode-25/response.json",
       "quote": "All three required files have been successfully created:\n\n1. /app/analysis_report.txt (4412 bytes) - Human-readable report containing:\n   - Summary of current log rotation status\n   - Identified issues and their severity (4 HIGH, 1 MEDIUM)\n",
@@ -651,48 +517,12 @@
       "episode": 25,
       "verified": true
     },
-    "E26": {
-      "id": "E26",
-      "kind": "quote",
-      "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 239,
-      "attempt": 0,
-      "verified": true
-    },
-    "E27": {
-      "id": "E27",
-      "kind": "quote",
-      "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 239,
-      "attempt": 1,
-      "verified": true
-    },
-    "E28": {
-      "id": "E28",
-      "kind": "quote",
-      "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 250,
-      "attempt": 2,
-      "verified": true
-    },
-    "E29": {
-      "id": "E29",
-      "kind": "quote",
-      "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 239,
-      "attempt": 3,
-      "verified": true
-    },
     "E30": {
       "id": "E30",
       "kind": "quote",
       "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
-      "line": 250,
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
+      "line": 251,
       "attempt": 4,
       "verified": true
     },
@@ -700,8 +530,8 @@
       "id": "E31",
       "kind": "quote",
       "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 241,
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
+      "line": 239,
       "attempt": 0,
       "verified": true
     },
@@ -709,8 +539,8 @@
       "id": "E32",
       "kind": "quote",
       "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 241,
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
+      "line": 239,
       "attempt": 1,
       "verified": true
     },
@@ -718,8 +548,8 @@
       "id": "E33",
       "kind": "quote",
       "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 252,
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
+      "line": 250,
       "attempt": 2,
       "verified": true
     },
@@ -727,8 +557,8 @@
       "id": "E34",
       "kind": "quote",
       "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 241,
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
+      "line": 239,
       "attempt": 3,
       "verified": true
     },
@@ -736,8 +566,8 @@
       "id": "E35",
       "kind": "quote",
       "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
-      "line": 252,
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - AssertionError: Missing required section: SYSTEM OVERVIEW",
+      "line": 250,
       "attempt": 4,
       "verified": true
     },
@@ -745,8 +575,8 @@
       "id": "E36",
       "kind": "quote",
       "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
-      "line": 242,
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
+      "line": 241,
       "attempt": 0,
       "verified": true
     },
@@ -754,8 +584,8 @@
       "id": "E37",
       "kind": "quote",
       "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
-      "line": 242,
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
+      "line": 241,
       "attempt": 1,
       "verified": true
     },
@@ -763,8 +593,8 @@
       "id": "E38",
       "kind": "quote",
       "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: Recommendations lack specificity, found 1 actionable terms",
-      "line": 253,
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
+      "line": 252,
       "attempt": 2,
       "verified": true
     },
@@ -772,8 +602,8 @@
       "id": "E39",
       "kind": "quote",
       "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
-      "line": 242,
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
+      "line": 241,
       "attempt": 3,
       "verified": true
     },
@@ -781,8 +611,8 @@
       "id": "E40",
       "kind": "quote",
       "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: Recommendations lack specificity, found 2 actionable terms",
-      "line": 253,
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - AssertionError: No issues identified in log analysis",
+      "line": 252,
       "attempt": 4,
       "verified": true
     },
@@ -790,8 +620,8 @@
       "id": "E41",
       "kind": "quote",
       "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 240,
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
+      "line": 242,
       "attempt": 0,
       "verified": true
     },
@@ -799,8 +629,8 @@
       "id": "E42",
       "kind": "quote",
       "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 240,
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
+      "line": 242,
       "attempt": 1,
       "verified": true
     },
@@ -808,8 +638,8 @@
       "id": "E43",
       "kind": "quote",
       "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 251,
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: Recommendations lack specificity, found 1 actionable terms",
+      "line": 253,
       "attempt": 2,
       "verified": true
     },
@@ -817,8 +647,8 @@
       "id": "E44",
       "kind": "quote",
       "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 240,
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: No recommendations section found",
+      "line": 242,
       "attempt": 3,
       "verified": true
     },
@@ -826,171 +656,216 @@
       "id": "E45",
       "kind": "quote",
       "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
-      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
-      "line": 251,
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - AssertionError: Recommendations lack specificity, found 2 actionable terms",
+      "line": 253,
       "attempt": 4,
       "verified": true
     },
     "E46": {
       "id": "E46",
       "kind": "quote",
+      "source": "runs/attempt-0/d420e95d2ee0-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-0/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
+      "line": 240,
+      "attempt": 0,
+      "verified": true
+    },
+    "E47": {
+      "id": "E47",
+      "kind": "quote",
+      "source": "runs/attempt-1/d420e95d2ee0-attempt-1/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-1/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
+      "line": 240,
+      "attempt": 1,
+      "verified": true
+    },
+    "E48": {
+      "id": "E48",
+      "kind": "quote",
+      "source": "runs/attempt-2/d420e95d2ee0-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
+      "line": 251,
+      "attempt": 2,
+      "verified": true
+    },
+    "E49": {
+      "id": "E49",
+      "kind": "quote",
+      "source": "runs/attempt-3/d420e95d2ee0-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
+      "line": 240,
+      "attempt": 3,
+      "verified": true
+    },
+    "E50": {
+      "id": "E50",
+      "kind": "quote",
+      "source": "runs/attempt-4/d420e95d2ee0-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.d420e95d2ee0-attempt-4/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - AssertionError: Savings percentage not found in report",
+      "line": 251,
+      "attempt": 4,
+      "verified": true
+    },
+    "E51": {
+      "id": "E51",
+      "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "LOG ROTATION ANALYSIS REPORT",
       "line": 20,
       "verified": true
     },
-    "E47": {
-      "id": "E47",
+    "E52": {
+      "id": "E52",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "LOG ROTATION ANALYSIS REPORT",
       "verified": true
     },
-    "E48": {
-      "id": "E48",
+    "E53": {
+      "id": "E53",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "SYSTEM OVERVIEW",
       "line": 21,
       "verified": true
     },
-    "E49": {
-      "id": "E49",
+    "E54": {
+      "id": "E54",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "SYSTEM OVERVIEW",
       "verified": true
     },
-    "E50": {
-      "id": "E50",
+    "E55": {
+      "id": "E55",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "LOG FILE ANALYSIS",
       "line": 22,
       "verified": true
     },
-    "E51": {
-      "id": "E51",
+    "E56": {
+      "id": "E56",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "LOG FILE ANALYSIS",
       "verified": true
     },
-    "E52": {
-      "id": "E52",
+    "E57": {
+      "id": "E57",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "Total log size:",
       "line": 30,
       "verified": true
     },
-    "E53": {
-      "id": "E53",
+    "E58": {
+      "id": "E58",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "Total log size:",
       "verified": true
     },
-    "E54": {
-      "id": "E54",
+    "E59": {
+      "id": "E59",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "Estimated total savings:",
       "line": 31,
       "verified": true
     },
-    "E55": {
-      "id": "E55",
+    "E60": {
+      "id": "E60",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "Estimated total savings:",
       "verified": true
     },
-    "E56": {
-      "id": "E56",
+    "E61": {
+      "id": "E61",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "Potential space reduction:",
       "line": 91,
       "verified": true
     },
-    "E57": {
-      "id": "E57",
+    "E62": {
+      "id": "E62",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "Potential space reduction:",
       "verified": true
     },
-    "E58": {
-      "id": "E58",
+    "E63": {
+      "id": "E63",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "HIGH",
       "line": 103,
       "verified": true
     },
-    "E59": {
-      "id": "E59",
+    "E64": {
+      "id": "E64",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "HIGH",
       "verified": true
     },
-    "E60": {
-      "id": "E60",
+    "E65": {
+      "id": "E65",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "MEDIUM",
       "line": 103,
       "verified": true
     },
-    "E61": {
-      "id": "E61",
+    "E66": {
+      "id": "E66",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "MEDIUM",
       "verified": true
     },
-    "E62": {
-      "id": "E62",
+    "E67": {
+      "id": "E67",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "Large file",
       "line": 114,
       "verified": true
     },
-    "E63": {
-      "id": "E63",
+    "E68": {
+      "id": "E68",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "Large file",
       "verified": true
     },
-    "E64": {
-      "id": "E64",
+    "E69": {
+      "id": "E69",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "monitor",
       "line": 135,
       "verified": true
     },
-    "E65": {
-      "id": "E65",
+    "E70": {
+      "id": "E70",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "monitor",
       "verified": true
     },
-    "E66": {
-      "id": "E66",
+    "E71": {
+      "id": "E71",
       "kind": "quote",
       "source": "tasks/log-rotation-analyzer/tests/test_outputs.py",
       "quote": "RECOMMENDATIONS:",
       "line": 128,
       "verified": true
     },
-    "E67": {
-      "id": "E67",
+    "E72": {
+      "id": "E72",
       "kind": "absence",
       "source": "tasks/log-rotation-analyzer/task.yaml#instruction",
       "quote": "RECOMMENDATIONS:",

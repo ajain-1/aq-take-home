@@ -1,0 +1,40 @@
+
+LOG FILE ANALYSIS
+ISSUE (MEDIUM): /var/log/samples/app.log missing compression on old logs
+ISSUE (MEDIUM): /var/log/samples/error.log missing compression on old logs
+ISSUE (MEDIUM): /var/log/samples/debug.log missing compression on old logs
+
+SUMMARY
+Total log size: 0.53 MB
+Estimated total savings: 0.27 MB
+Potential space reduction: 50.9%
+
+RECOMMENDATIONS:
+/var/log/samples/app.log: rotate daily, compress, retain for 14 days
+/var/log/samples/error.log: rotate monthly, compress, retain for 60 days
+/var/log/samples/debug.log: rotate monthly, compress, retain for 7 days
+root@8b31eb84dd5c:/app# head -20 /app/optimized_logrotate.conf; tmux wait -S done
+/var/log/samples/app.log {
+    rotate 14
+    daily
+    compress
+    missingok
+    notifempty
+    delaycompress
+    create 0640 www-data adm
+}
+/var/log/samples/error.log {
+    rotate 60
+    weekly
+    compress
+    missingok
+    notifempty
+    delaycompress
+    create 0640 www-data adm
+}
+root@8b31eb84dd5c:/app# head -10 /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.25,0,daily,0.12
+/var/log/samples/error.log,0.23,0,monthly,0.12
+/var/log/samples/debug.log,0.05,0,monthly,0.03
+root@8b31eb84dd5c:/app#

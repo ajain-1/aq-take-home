@@ -1,0 +1,47 @@
+{
+    "state_analysis": "Currently at the root prompt in /app with no output from previous commands; no data about logs or configurations has been collected yet.",
+    "explanation": "This batch of commands will gather detailed information about the log files in /var/log/samples/, the existing logrotate configurations for samples, system memory and disk stats, and the log metadata database. This data is necessary to analyze current rotation patterns, identify issues, and prepare to generate the requested report and configuration files.",
+    "commands": [
+        {
+            "keystrokes": "ls -l /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "du -b /var/log/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "stat -c '%n %s %y' /var/log/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "ls -l /etc/logrotate.d/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat /etc/logrotate.d/samples/*\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat /proc/meminfo\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat /proc/diskstats\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        },
+        {
+            "keystrokes": "cat log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": false
+}

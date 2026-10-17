@@ -1,0 +1,44 @@
+Current terminal state:
+der); total_size=sum(float(log['current_size_mb']) for log in logs); total_savings=sum(float(log['estimated_savings_mb']) for log in logs); potential_reduction=
+(total_savings/total_size*100 if total_size>0 else 0); lines=['LOG ROTATION ANALYSIS REPORT','', 'SYSTEM OVERVIEW', f'Available disk space: {data[system_info][a
+vailable_disk_gb]} GB', f'Log partition usage: {data[system_info][log_partition_usage_percent]}%', f'Backup frequency: {data[system_info][backup_frequency]}', f
+'Compliance requirements: {,
+                                                                ^^^^
+SyntaxError: invalid syntax
+root@8d8d83b52291:/app# echo "/var/log/samples/app.log {
+>     weekly
+>     rotate 4
+>     compress
+>     missingok
+>     notifempty
+> }
+>
+> /var/log/samples/system.log {
+>     weekly
+>     rotate 4
+>     compress
+>     delaycompress
+>     missingok
+>     create 644 root adm
+> }
+>
+> /var/log/samples/access.log {
+>     daily
+>     rotate 7
+>     compress
+>     missingok
+>     notifempty
+> }
+>
+> /var/log/samples/error.log {
+>     daily
+>     rotate 30
+>     compress
+>     missingok
+>     notifempty
+> }
+> " > /app/optimized_logrotate.conf; tmux wait -S done
+root@8d8d83b52291:/app#
+
+
+TESTS FAILED! Are you sure you want to mark complete? You have ONE chance to fix this. If you set is_task_complete: true again, the task will end.

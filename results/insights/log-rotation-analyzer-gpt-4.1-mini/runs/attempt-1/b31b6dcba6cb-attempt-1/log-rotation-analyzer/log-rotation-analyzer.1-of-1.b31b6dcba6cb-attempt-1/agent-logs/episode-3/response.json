@@ -1,0 +1,17 @@
+{
+    "state_analysis": "The analysis_report.txt correctly lists issues, summary, and recommendations with proper formatting. The optimized_logrotate.conf specifies rotation and compression for app.log and error.log, but the error.log block uses weekly rotation instead of the recommended monthly from the report. The rotation_summary.csv file contains the expected header and data rows with recommended schedules matching the report except for error.log where the config is weekly but CSV and report say monthly.",
+    "explanation": "We will update the optimized_logrotate.conf to align with the recommendations by setting error.log rotation to monthly instead of weekly. Then we will verify the updated config file to ensure consistency.",
+    "commands": [
+        {
+            "keystrokes": "sed -i '/\\/var\\/log\\/samples\\/error.log {/,/}/s/weekly/monthly/' /app/optimized_logrotate.conf\n",
+            "is_blocking": true,
+            "timeout_sec": 3
+        },
+        {
+            "keystrokes": "head -20 /app/optimized_logrotate.conf\n",
+            "is_blocking": true,
+            "timeout_sec": 5
+        }
+    ],
+    "is_task_complete": true
+}

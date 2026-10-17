@@ -1,0 +1,1064 @@
+{
+  "task_id": "log-rotation-analyzer",
+  "outcome": {
+    "resolved_attempts": 2,
+    "n_attempts": 10,
+    "learnability": {
+      "verdict": "learnable",
+      "basis": "2 passing / 8 failing runs decide the 10-run rule (2-7 of 10 pass)",
+      "pass_rate": 0.2,
+      "interval_95": [
+        0.057,
+        0.51
+      ],
+      "n": 10
+    }
+  },
+  "tests": [
+    {
+      "name": "test_analysis_report_content",
+      "passed": 2,
+      "failed": 8,
+      "pass_rate": 0.2,
+      "interval_95": [
+        0.057,
+        0.51
+      ]
+    },
+    {
+      "name": "test_analysis_report_exists",
+      "passed": 2,
+      "failed": 8,
+      "pass_rate": 0.2,
+      "interval_95": [
+        0.057,
+        0.51
+      ]
+    },
+    {
+      "name": "test_issue_identification",
+      "passed": 2,
+      "failed": 8,
+      "pass_rate": 0.2,
+      "interval_95": [
+        0.057,
+        0.51
+      ]
+    },
+    {
+      "name": "test_optimized_logrotate_config",
+      "passed": 3,
+      "failed": 7,
+      "pass_rate": 0.3,
+      "interval_95": [
+        0.108,
+        0.603
+      ]
+    },
+    {
+      "name": "test_recommendations_quality",
+      "passed": 2,
+      "failed": 8,
+      "pass_rate": 0.2,
+      "interval_95": [
+        0.057,
+        0.51
+      ]
+    },
+    {
+      "name": "test_rotation_summary_csv",
+      "passed": 4,
+      "failed": 6,
+      "pass_rate": 0.4,
+      "interval_95": [
+        0.168,
+        0.687
+      ]
+    },
+    {
+      "name": "test_savings_calculation",
+      "passed": 2,
+      "failed": 8,
+      "pass_rate": 0.2,
+      "interval_95": [
+        0.057,
+        0.51
+      ]
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 0,
+      "category": "declared_done_with_missing_outputs",
+      "resolved": false,
+      "failed_tests": [
+        "test_analysis_report_content",
+        "test_analysis_report_exists",
+        "test_issue_identification",
+        "test_optimized_logrotate_config",
+        "test_recommendations_quality",
+        "test_rotation_summary_csv",
+        "test_savings_calculation"
+      ],
+      "episodes": 2,
+      "declared_complete": true,
+      "duration_sec": 51.64,
+      "input_tokens": 3539,
+      "output_tokens": 1673
+    },
+    {
+      "attempt": 1,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 4,
+      "declared_complete": true,
+      "duration_sec": 81.64,
+      "input_tokens": 13340,
+      "output_tokens": 2692
+    },
+    {
+      "attempt": 2,
+      "category": "declared_done_with_missing_outputs",
+      "resolved": false,
+      "failed_tests": [
+        "test_analysis_report_content",
+        "test_analysis_report_exists",
+        "test_issue_identification",
+        "test_optimized_logrotate_config",
+        "test_recommendations_quality",
+        "test_rotation_summary_csv",
+        "test_savings_calculation"
+      ],
+      "episodes": 3,
+      "declared_complete": true,
+      "duration_sec": 65.51,
+      "input_tokens": 6183,
+      "output_tokens": 3038
+    },
+    {
+      "attempt": 3,
+      "category": "declared_done_with_missing_outputs",
+      "resolved": false,
+      "failed_tests": [
+        "test_analysis_report_content",
+        "test_analysis_report_exists",
+        "test_issue_identification",
+        "test_optimized_logrotate_config",
+        "test_recommendations_quality",
+        "test_rotation_summary_csv",
+        "test_savings_calculation"
+      ],
+      "episodes": 3,
+      "declared_complete": true,
+      "duration_sec": 77.21,
+      "input_tokens": 10989,
+      "output_tokens": 4341
+    },
+    {
+      "attempt": 4,
+      "category": "declared_done_with_missing_outputs",
+      "resolved": false,
+      "failed_tests": [
+        "test_analysis_report_content",
+        "test_analysis_report_exists",
+        "test_issue_identification",
+        "test_optimized_logrotate_config",
+        "test_recommendations_quality",
+        "test_rotation_summary_csv",
+        "test_savings_calculation"
+      ],
+      "episodes": 5,
+      "declared_complete": true,
+      "duration_sec": 70.61,
+      "input_tokens": 24432,
+      "output_tokens": 3489
+    },
+    {
+      "attempt": 5,
+      "category": "declared_done_with_missing_outputs",
+      "resolved": false,
+      "failed_tests": [
+        "test_analysis_report_content",
+        "test_analysis_report_exists",
+        "test_issue_identification",
+        "test_optimized_logrotate_config",
+        "test_recommendations_quality",
+        "test_rotation_summary_csv",
+        "test_savings_calculation"
+      ],
+      "episodes": 4,
+      "declared_complete": true,
+      "duration_sec": 80.85,
+      "input_tokens": 13796,
+      "output_tokens": 2675
+    },
+    {
+      "attempt": 6,
+      "category": "declared_done_with_missing_outputs",
+      "resolved": false,
+      "failed_tests": [
+        "test_analysis_report_content",
+        "test_analysis_report_exists",
+        "test_issue_identification",
+        "test_optimized_logrotate_config",
+        "test_recommendations_quality",
+        "test_savings_calculation"
+      ],
+      "episodes": 4,
+      "declared_complete": true,
+      "duration_sec": 86.82,
+      "input_tokens": 23719,
+      "output_tokens": 5997
+    },
+    {
+      "attempt": 7,
+      "category": "declared_done_with_missing_outputs",
+      "resolved": false,
+      "failed_tests": [
+        "test_analysis_report_content",
+        "test_analysis_report_exists",
+        "test_issue_identification",
+        "test_recommendations_quality",
+        "test_savings_calculation"
+      ],
+      "episodes": 8,
+      "declared_complete": true,
+      "duration_sec": 83.96,
+      "input_tokens": 58707,
+      "output_tokens": 5893
+    },
+    {
+      "attempt": 8,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 5,
+      "declared_complete": true,
+      "duration_sec": 67.34,
+      "input_tokens": 25228,
+      "output_tokens": 5023
+    },
+    {
+      "attempt": 9,
+      "category": "declared_done_with_missing_outputs",
+      "resolved": false,
+      "failed_tests": [
+        "test_analysis_report_content",
+        "test_analysis_report_exists",
+        "test_issue_identification",
+        "test_optimized_logrotate_config",
+        "test_recommendations_quality",
+        "test_rotation_summary_csv",
+        "test_savings_calculation"
+      ],
+      "episodes": 5,
+      "declared_complete": true,
+      "duration_sec": 66.86,
+      "input_tokens": 20701,
+      "output_tokens": 3931
+    }
+  ],
+  "attempt_stats": {
+    "resolved": {
+      "n": 2,
+      "mean_episodes": 4.5,
+      "mean_duration_sec": 74.5,
+      "mean_input_tokens": 19284
+    },
+    "unresolved": {
+      "n": 8,
+      "mean_episodes": 4.2,
+      "mean_duration_sec": 72.9,
+      "mean_input_tokens": 20258
+    },
+    "note": "Descriptive only; differences at this sample size are not statistically meaningful."
+  },
+  "insights": [
+    {
+      "category": "attempt_failure",
+      "severity": "info",
+      "title": "Attempt 0: declared_done_with_missing_outputs",
+      "detail": "Attempt 0 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_analysis_report_exists, test_issue_identification, test_optimized_logrotate_config, test_recommendations_quality, test_rotation_summary_csv, test_savings_calculation",
+      "evidence": [
+        "E8",
+        "E9",
+        "E10",
+        "E11",
+        "E12",
+        "E13",
+        "E14",
+        "E15"
+      ],
+      "attempts": [
+        0
+      ]
+    },
+    {
+      "category": "attempt_failure",
+      "severity": "info",
+      "title": "Attempt 2: declared_done_with_missing_outputs",
+      "detail": "Attempt 2 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_analysis_report_exists, test_issue_identification, test_optimized_logrotate_config, test_recommendations_quality, test_rotation_summary_csv, test_savings_calculation",
+      "evidence": [
+        "E23",
+        "E24",
+        "E25",
+        "E26",
+        "E27",
+        "E28",
+        "E29",
+        "E30"
+      ],
+      "attempts": [
+        2
+      ]
+    },
+    {
+      "category": "attempt_failure",
+      "severity": "info",
+      "title": "Attempt 3: declared_done_with_missing_outputs",
+      "detail": "Attempt 3 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_analysis_report_exists, test_issue_identification, test_optimized_logrotate_config, test_recommendations_quality, test_rotation_summary_csv, test_savings_calculation",
+      "evidence": [
+        "E38",
+        "E39",
+        "E40",
+        "E41",
+        "E42",
+        "E43",
+        "E44",
+        "E45"
+      ],
+      "attempts": [
+        3
+      ]
+    },
+    {
+      "category": "attempt_failure",
+      "severity": "info",
+      "title": "Attempt 4: declared_done_with_missing_outputs",
+      "detail": "Attempt 4 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_analysis_report_exists, test_issue_identification, test_optimized_logrotate_config, test_recommendations_quality, test_rotation_summary_csv, test_savings_calculation",
+      "evidence": [
+        "E53",
+        "E54",
+        "E55",
+        "E56",
+        "E57",
+        "E58",
+        "E59",
+        "E60"
+      ],
+      "attempts": [
+        4
+      ]
+    },
+    {
+      "category": "attempt_failure",
+      "severity": "info",
+      "title": "Attempt 5: declared_done_with_missing_outputs",
+      "detail": "Attempt 5 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_analysis_report_exists, test_issue_identification, test_optimized_logrotate_config, test_recommendations_quality, test_rotation_summary_csv, test_savings_calculation",
+      "evidence": [
+        "E68",
+        "E69",
+        "E70",
+        "E71",
+        "E72",
+        "E73",
+        "E74",
+        "E75"
+      ],
+      "attempts": [
+        5
+      ]
+    },
+    {
+      "category": "attempt_failure",
+      "severity": "info",
+      "title": "Attempt 6: declared_done_with_missing_outputs",
+      "detail": "Attempt 6 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_analysis_report_exists, test_issue_identification, test_optimized_logrotate_config, test_recommendations_quality, test_savings_calculation",
+      "evidence": [
+        "E82",
+        "E83",
+        "E84",
+        "E85",
+        "E86",
+        "E87",
+        "E88"
+      ],
+      "attempts": [
+        6
+      ]
+    },
+    {
+      "category": "attempt_failure",
+      "severity": "info",
+      "title": "Attempt 7: declared_done_with_missing_outputs",
+      "detail": "Attempt 7 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_analysis_report_exists, test_issue_identification, test_recommendations_quality, test_savings_calculation",
+      "evidence": [
+        "E94",
+        "E95",
+        "E96",
+        "E97",
+        "E98",
+        "E99"
+      ],
+      "attempts": [
+        7
+      ]
+    },
+    {
+      "category": "attempt_failure",
+      "severity": "info",
+      "title": "Attempt 9: declared_done_with_missing_outputs",
+      "detail": "Attempt 9 ended as declared done with missing outputs; failing tests: test_analysis_report_content, test_analysis_report_exists, test_issue_identification, test_optimized_logrotate_config, test_recommendations_quality, test_rotation_summary_csv, test_savings_calculation",
+      "evidence": [
+        "E107",
+        "E108",
+        "E109",
+        "E110",
+        "E111",
+        "E112",
+        "E113",
+        "E114"
+      ],
+      "attempts": [
+        9
+      ]
+    },
+    {
+      "category": "failure_pattern",
+      "severity": "high",
+      "title": "8 of 8 failing attempts: declared_done_with_missing_outputs",
+      "detail": "Attempts 0, 2, 3, 4, 5, 6, 7, 9 failed the same way: the agent declared the task complete while files the tests read did not exist. If the instruction names those outputs, this is a gap in the agent checking its own work, not a task bug.",
+      "evidence": [
+        "E8",
+        "E9",
+        "E10",
+        "E11",
+        "E12",
+        "E13",
+        "E14",
+        "E15",
+        "E23",
+        "E24",
+        "E25",
+        "E26",
+        "E27",
+        "E28",
+        "E29",
+        "E30",
+        "E38",
+        "E39",
+        "E40",
+        "E41",
+        "E42",
+        "E43",
+        "E44",
+        "E45",
+        "E53",
+        "E54",
+        "E55",
+        "E56",
+        "E57",
+        "E58",
+        "E59",
+        "E60",
+        "E68",
+        "E69",
+        "E70",
+        "E71",
+        "E72",
+        "E73",
+        "E74",
+        "E75",
+        "E82",
+        "E83",
+        "E84",
+        "E85",
+        "E86",
+        "E87",
+        "E88",
+        "E94",
+        "E95",
+        "E96",
+        "E97",
+        "E98",
+        "E99",
+        "E107",
+        "E108",
+        "E109",
+        "E110",
+        "E111",
+        "E112",
+        "E113",
+        "E114"
+      ],
+      "attempts": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ]
+    }
+  ],
+  "rejected_insights": [],
+  "evidence": {
+    "E8": {
+      "id": "E8",
+      "kind": "quote",
+      "source": "runs/attempt-0/b31b6dcba6cb-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-0/agent-logs/episode-1/response.json",
+      "quote": "Received JSON data including detailed log file metadata, system info, and current issues related to log rotation and disk usage. This data provides growth rates, retention requirements, application ownership, system disk usage, and complian",
+      "attempt": 0,
+      "episode": 1,
+      "verified": true
+    },
+    "E9": {
+      "id": "E9",
+      "kind": "quote",
+      "source": "runs/attempt-0/b31b6dcba6cb-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-0/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_exists - AssertionError: analysis_report.txt not found",
+      "line": 239,
+      "attempt": 0,
+      "verified": true
+    },
+    "E10": {
+      "id": "E10",
+      "kind": "quote",
+      "source": "runs/attempt-0/b31b6dcba6cb-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-0/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 240,
+      "attempt": 0,
+      "verified": true
+    },
+    "E11": {
+      "id": "E11",
+      "kind": "quote",
+      "source": "runs/attempt-0/b31b6dcba6cb-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-0/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_rotation_summary_csv - AssertionError: rotation_summary.csv not found",
+      "line": 241,
+      "attempt": 0,
+      "verified": true
+    },
+    "E12": {
+      "id": "E12",
+      "kind": "quote",
+      "source": "runs/attempt-0/b31b6dcba6cb-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-0/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_optimized_logrotate_config - AssertionError: optimized_logrotate.conf not found",
+      "line": 242,
+      "attempt": 0,
+      "verified": true
+    },
+    "E13": {
+      "id": "E13",
+      "kind": "quote",
+      "source": "runs/attempt-0/b31b6dcba6cb-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-0/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 243,
+      "attempt": 0,
+      "verified": true
+    },
+    "E14": {
+      "id": "E14",
+      "kind": "quote",
+      "source": "runs/attempt-0/b31b6dcba6cb-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-0/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 244,
+      "attempt": 0,
+      "verified": true
+    },
+    "E15": {
+      "id": "E15",
+      "kind": "quote",
+      "source": "runs/attempt-0/b31b6dcba6cb-attempt-0/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-0/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 245,
+      "attempt": 0,
+      "verified": true
+    },
+    "E23": {
+      "id": "E23",
+      "kind": "quote",
+      "source": "runs/attempt-2/b31b6dcba6cb-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-2/agent-logs/episode-2/response.json",
+      "quote": "We have detailed file metadata: sizes in bytes and last modification timestamps for log files in /var/log/samples/. For example, access.log is about 161 KB, app.log about 260 KB, error.log about 239 KB. Some older rotated or compressed file",
+      "attempt": 2,
+      "episode": 2,
+      "verified": true
+    },
+    "E24": {
+      "id": "E24",
+      "kind": "quote",
+      "source": "runs/attempt-2/b31b6dcba6cb-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_exists - AssertionError: analysis_report.txt not found",
+      "line": 239,
+      "attempt": 2,
+      "verified": true
+    },
+    "E25": {
+      "id": "E25",
+      "kind": "quote",
+      "source": "runs/attempt-2/b31b6dcba6cb-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 240,
+      "attempt": 2,
+      "verified": true
+    },
+    "E26": {
+      "id": "E26",
+      "kind": "quote",
+      "source": "runs/attempt-2/b31b6dcba6cb-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_rotation_summary_csv - AssertionError: rotation_summary.csv not found",
+      "line": 241,
+      "attempt": 2,
+      "verified": true
+    },
+    "E27": {
+      "id": "E27",
+      "kind": "quote",
+      "source": "runs/attempt-2/b31b6dcba6cb-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_optimized_logrotate_config - AssertionError: optimized_logrotate.conf not found",
+      "line": 242,
+      "attempt": 2,
+      "verified": true
+    },
+    "E28": {
+      "id": "E28",
+      "kind": "quote",
+      "source": "runs/attempt-2/b31b6dcba6cb-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 243,
+      "attempt": 2,
+      "verified": true
+    },
+    "E29": {
+      "id": "E29",
+      "kind": "quote",
+      "source": "runs/attempt-2/b31b6dcba6cb-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 244,
+      "attempt": 2,
+      "verified": true
+    },
+    "E30": {
+      "id": "E30",
+      "kind": "quote",
+      "source": "runs/attempt-2/b31b6dcba6cb-attempt-2/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-2/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 245,
+      "attempt": 2,
+      "verified": true
+    },
+    "E38": {
+      "id": "E38",
+      "kind": "quote",
+      "source": "runs/attempt-3/b31b6dcba6cb-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-3/agent-logs/episode-2/response.json",
+      "quote": "We have the latest outputs showing log file sizes and modification times, and the current logrotate configurations for access.log, app.log, and system.log. debug.log and error.log lack logrotate configs.",
+      "attempt": 3,
+      "episode": 2,
+      "verified": true
+    },
+    "E39": {
+      "id": "E39",
+      "kind": "quote",
+      "source": "runs/attempt-3/b31b6dcba6cb-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_exists - AssertionError: analysis_report.txt not found",
+      "line": 239,
+      "attempt": 3,
+      "verified": true
+    },
+    "E40": {
+      "id": "E40",
+      "kind": "quote",
+      "source": "runs/attempt-3/b31b6dcba6cb-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 240,
+      "attempt": 3,
+      "verified": true
+    },
+    "E41": {
+      "id": "E41",
+      "kind": "quote",
+      "source": "runs/attempt-3/b31b6dcba6cb-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_rotation_summary_csv - AssertionError: rotation_summary.csv not found",
+      "line": 241,
+      "attempt": 3,
+      "verified": true
+    },
+    "E42": {
+      "id": "E42",
+      "kind": "quote",
+      "source": "runs/attempt-3/b31b6dcba6cb-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_optimized_logrotate_config - AssertionError: optimized_logrotate.conf not found",
+      "line": 242,
+      "attempt": 3,
+      "verified": true
+    },
+    "E43": {
+      "id": "E43",
+      "kind": "quote",
+      "source": "runs/attempt-3/b31b6dcba6cb-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 243,
+      "attempt": 3,
+      "verified": true
+    },
+    "E44": {
+      "id": "E44",
+      "kind": "quote",
+      "source": "runs/attempt-3/b31b6dcba6cb-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 244,
+      "attempt": 3,
+      "verified": true
+    },
+    "E45": {
+      "id": "E45",
+      "kind": "quote",
+      "source": "runs/attempt-3/b31b6dcba6cb-attempt-3/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-3/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 245,
+      "attempt": 3,
+      "verified": true
+    },
+    "E53": {
+      "id": "E53",
+      "kind": "quote",
+      "source": "runs/attempt-4/b31b6dcba6cb-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-4/agent-logs/episode-4/response.json",
+      "quote": "All sample log files are approximately 1 MB each, with modification dates set to 2026-10-17, which matches the current system date, indicating no rotation has occurred recently. The disk usage for the root filesystem containing /var/log/sam",
+      "attempt": 4,
+      "episode": 4,
+      "verified": true
+    },
+    "E54": {
+      "id": "E54",
+      "kind": "quote",
+      "source": "runs/attempt-4/b31b6dcba6cb-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-4/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_exists - AssertionError: analysis_report.txt not found",
+      "line": 239,
+      "attempt": 4,
+      "verified": true
+    },
+    "E55": {
+      "id": "E55",
+      "kind": "quote",
+      "source": "runs/attempt-4/b31b6dcba6cb-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-4/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 240,
+      "attempt": 4,
+      "verified": true
+    },
+    "E56": {
+      "id": "E56",
+      "kind": "quote",
+      "source": "runs/attempt-4/b31b6dcba6cb-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-4/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_rotation_summary_csv - AssertionError: rotation_summary.csv not found",
+      "line": 241,
+      "attempt": 4,
+      "verified": true
+    },
+    "E57": {
+      "id": "E57",
+      "kind": "quote",
+      "source": "runs/attempt-4/b31b6dcba6cb-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-4/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_optimized_logrotate_config - AssertionError: optimized_logrotate.conf not found",
+      "line": 242,
+      "attempt": 4,
+      "verified": true
+    },
+    "E58": {
+      "id": "E58",
+      "kind": "quote",
+      "source": "runs/attempt-4/b31b6dcba6cb-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-4/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 243,
+      "attempt": 4,
+      "verified": true
+    },
+    "E59": {
+      "id": "E59",
+      "kind": "quote",
+      "source": "runs/attempt-4/b31b6dcba6cb-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-4/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 244,
+      "attempt": 4,
+      "verified": true
+    },
+    "E60": {
+      "id": "E60",
+      "kind": "quote",
+      "source": "runs/attempt-4/b31b6dcba6cb-attempt-4/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-4/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 245,
+      "attempt": 4,
+      "verified": true
+    },
+    "E68": {
+      "id": "E68",
+      "kind": "quote",
+      "source": "runs/attempt-5/b31b6dcba6cb-attempt-5/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-5/agent-logs/episode-3/response.json",
+      "quote": "We have detailed listings and stats for log files in /var/log/samples/, showing sizes ranging from very small (system.log) to large (app.log and error.log). The timestamps are consistent around Oct 17 01:55. The logrotate configurations cov",
+      "attempt": 5,
+      "episode": 3,
+      "verified": true
+    },
+    "E69": {
+      "id": "E69",
+      "kind": "quote",
+      "source": "runs/attempt-5/b31b6dcba6cb-attempt-5/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-5/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_exists - AssertionError: analysis_report.txt not found",
+      "line": 239,
+      "attempt": 5,
+      "verified": true
+    },
+    "E70": {
+      "id": "E70",
+      "kind": "quote",
+      "source": "runs/attempt-5/b31b6dcba6cb-attempt-5/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-5/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 240,
+      "attempt": 5,
+      "verified": true
+    },
+    "E71": {
+      "id": "E71",
+      "kind": "quote",
+      "source": "runs/attempt-5/b31b6dcba6cb-attempt-5/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-5/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_rotation_summary_csv - AssertionError: rotation_summary.csv not found",
+      "line": 241,
+      "attempt": 5,
+      "verified": true
+    },
+    "E72": {
+      "id": "E72",
+      "kind": "quote",
+      "source": "runs/attempt-5/b31b6dcba6cb-attempt-5/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-5/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_optimized_logrotate_config - AssertionError: optimized_logrotate.conf not found",
+      "line": 242,
+      "attempt": 5,
+      "verified": true
+    },
+    "E73": {
+      "id": "E73",
+      "kind": "quote",
+      "source": "runs/attempt-5/b31b6dcba6cb-attempt-5/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-5/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 243,
+      "attempt": 5,
+      "verified": true
+    },
+    "E74": {
+      "id": "E74",
+      "kind": "quote",
+      "source": "runs/attempt-5/b31b6dcba6cb-attempt-5/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-5/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 244,
+      "attempt": 5,
+      "verified": true
+    },
+    "E75": {
+      "id": "E75",
+      "kind": "quote",
+      "source": "runs/attempt-5/b31b6dcba6cb-attempt-5/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-5/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 245,
+      "attempt": 5,
+      "verified": true
+    },
+    "E82": {
+      "id": "E82",
+      "kind": "quote",
+      "source": "runs/attempt-6/b31b6dcba6cb-attempt-6/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-6/agent-logs/episode-3/response.json",
+      "quote": "We have sizes and last modification times of key logs, and the current logrotate configs for app.log, system.log, and access.log showing weekly or monthly rotation with compression. error.log is missing any logrotate config.",
+      "attempt": 6,
+      "episode": 3,
+      "verified": true
+    },
+    "E83": {
+      "id": "E83",
+      "kind": "quote",
+      "source": "runs/attempt-6/b31b6dcba6cb-attempt-6/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-6/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_exists - AssertionError: analysis_report.txt not found",
+      "line": 229,
+      "attempt": 6,
+      "verified": true
+    },
+    "E84": {
+      "id": "E84",
+      "kind": "quote",
+      "source": "runs/attempt-6/b31b6dcba6cb-attempt-6/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-6/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 230,
+      "attempt": 6,
+      "verified": true
+    },
+    "E85": {
+      "id": "E85",
+      "kind": "quote",
+      "source": "runs/attempt-6/b31b6dcba6cb-attempt-6/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-6/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_optimized_logrotate_config - AssertionError: optimized_logrotate.conf not found",
+      "line": 231,
+      "attempt": 6,
+      "verified": true
+    },
+    "E86": {
+      "id": "E86",
+      "kind": "quote",
+      "source": "runs/attempt-6/b31b6dcba6cb-attempt-6/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-6/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 232,
+      "attempt": 6,
+      "verified": true
+    },
+    "E87": {
+      "id": "E87",
+      "kind": "quote",
+      "source": "runs/attempt-6/b31b6dcba6cb-attempt-6/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-6/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 233,
+      "attempt": 6,
+      "verified": true
+    },
+    "E88": {
+      "id": "E88",
+      "kind": "quote",
+      "source": "runs/attempt-6/b31b6dcba6cb-attempt-6/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-6/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 234,
+      "attempt": 6,
+      "verified": true
+    },
+    "E94": {
+      "id": "E94",
+      "kind": "quote",
+      "source": "runs/attempt-7/b31b6dcba6cb-attempt-7/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-7/agent-logs/episode-7/response.json",
+      "quote": "The previous Python command to generate analysis_report.txt failed due to a SyntaxError caused by incorrect use of f-string placeholders without quotes around dictionary keys. The optimized_logrotate.conf file was successfully created.",
+      "attempt": 7,
+      "episode": 7,
+      "verified": true
+    },
+    "E95": {
+      "id": "E95",
+      "kind": "quote",
+      "source": "runs/attempt-7/b31b6dcba6cb-attempt-7/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-7/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_exists - AssertionError: analysis_report.txt not found",
+      "line": 218,
+      "attempt": 7,
+      "verified": true
+    },
+    "E96": {
+      "id": "E96",
+      "kind": "quote",
+      "source": "runs/attempt-7/b31b6dcba6cb-attempt-7/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-7/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 219,
+      "attempt": 7,
+      "verified": true
+    },
+    "E97": {
+      "id": "E97",
+      "kind": "quote",
+      "source": "runs/attempt-7/b31b6dcba6cb-attempt-7/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-7/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 220,
+      "attempt": 7,
+      "verified": true
+    },
+    "E98": {
+      "id": "E98",
+      "kind": "quote",
+      "source": "runs/attempt-7/b31b6dcba6cb-attempt-7/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-7/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 221,
+      "attempt": 7,
+      "verified": true
+    },
+    "E99": {
+      "id": "E99",
+      "kind": "quote",
+      "source": "runs/attempt-7/b31b6dcba6cb-attempt-7/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-7/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 222,
+      "attempt": 7,
+      "verified": true
+    },
+    "E107": {
+      "id": "E107",
+      "kind": "quote",
+      "source": "runs/attempt-9/b31b6dcba6cb-attempt-9/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-9/agent-logs/episode-4/response.json",
+      "quote": "The previous Python inline command failed due to syntax errors from improper escaping of newlines and quotes in the command string.",
+      "attempt": 9,
+      "episode": 4,
+      "verified": true
+    },
+    "E108": {
+      "id": "E108",
+      "kind": "quote",
+      "source": "runs/attempt-9/b31b6dcba6cb-attempt-9/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-9/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_exists - AssertionError: analysis_report.txt not found",
+      "line": 239,
+      "attempt": 9,
+      "verified": true
+    },
+    "E109": {
+      "id": "E109",
+      "kind": "quote",
+      "source": "runs/attempt-9/b31b6dcba6cb-attempt-9/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-9/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_analysis_report_content - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 240,
+      "attempt": 9,
+      "verified": true
+    },
+    "E110": {
+      "id": "E110",
+      "kind": "quote",
+      "source": "runs/attempt-9/b31b6dcba6cb-attempt-9/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-9/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_rotation_summary_csv - AssertionError: rotation_summary.csv not found",
+      "line": 241,
+      "attempt": 9,
+      "verified": true
+    },
+    "E111": {
+      "id": "E111",
+      "kind": "quote",
+      "source": "runs/attempt-9/b31b6dcba6cb-attempt-9/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-9/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_optimized_logrotate_config - AssertionError: optimized_logrotate.conf not found",
+      "line": 242,
+      "attempt": 9,
+      "verified": true
+    },
+    "E112": {
+      "id": "E112",
+      "kind": "quote",
+      "source": "runs/attempt-9/b31b6dcba6cb-attempt-9/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-9/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_savings_calculation - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 243,
+      "attempt": 9,
+      "verified": true
+    },
+    "E113": {
+      "id": "E113",
+      "kind": "quote",
+      "source": "runs/attempt-9/b31b6dcba6cb-attempt-9/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-9/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_issue_identification - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 244,
+      "attempt": 9,
+      "verified": true
+    },
+    "E114": {
+      "id": "E114",
+      "kind": "quote",
+      "source": "runs/attempt-9/b31b6dcba6cb-attempt-9/log-rotation-analyzer/log-rotation-analyzer.1-of-1.b31b6dcba6cb-attempt-9/panes/post-test.txt",
+      "quote": "FAILED ../tests/test_outputs.py::test_recommendations_quality - FileNotFoundError: [Errno 2] No such file or directory: 'analysis_report.txt'",
+      "line": 245,
+      "attempt": 9,
+      "verified": true
+    }
+  },
+  "limitations": [
+    "Pass-rate intervals are 95% Wilson intervals; with few attempts they are wide and verdicts say so.",
+    "Attempt classification is rule-based on recorded artifacts; it does not infer the agent's intent.",
+    "Hidden-requirement detection is lexical: a test literal counts as stated only if it appears (case-insensitively) in the instruction, and as discoverable only if the environment showed it to an agent before that agent typed it; tests that accept any of several alternatives may be over-reported."
+  ]
+}
