@@ -11,7 +11,9 @@ from pathlib import Path
 
 import yaml
 
-TASK_CONTAINER_EVENTS_FILE = "task-container-events.jsonl"
+from runner import trajectory
+from runner.paths import SubmissionPaths
+
 SUMMARY_LINE = re.compile(r"^(?:FAILED|ERROR) \S*::(?P<name>[^\s\[]+)\S*(?: - (?P<message>.*))?$")
 
 
@@ -76,30 +78,19 @@ def _relative(root: Path, path: Path) -> str:
 
 
 def _load_episodes(root: Path, trial_dir: Path) -> list[Episode]:
-    episode_dirs = sorted(
-        (trial_dir / "agent-logs").glob("episode-*"), key=lambda p: int(p.name.split("-")[1])
-    )
-    episodes = []
-    for episode_dir in episode_dirs:
-        response_path, prompt_path = episode_dir / "response.json", episode_dir / "prompt.txt"
-        if not response_path.exists():
-            continue
-        try:
-            response = json.loads(response_path.read_text())
-        except json.JSONDecodeError:
-            response = {}
-        episodes.append(
-            Episode(
-                index=int(episode_dir.name.split("-")[1]),
-                source=_relative(root, response_path),
-                prompt_source=_relative(root, prompt_path),
-                state_analysis=response.get("state_analysis", ""),
-                keystrokes=[c.get("keystrokes", "") for c in response.get("commands", [])],
-                is_task_complete=bool(response.get("is_task_complete")),
-                prompt=prompt_path.read_text(errors="replace") if prompt_path.exists() else "",
-            )
+    return [
+        Episode(
+            index=episode.index,
+            source=_relative(root, episode.response_path),
+            prompt_source=_relative(root, episode.prompt_path),
+            state_analysis=episode.response.get("state_analysis", ""),
+            keystrokes=[command.get("keystrokes", "") for command in episode.commands],
+            is_task_complete=episode.is_task_complete,
+            prompt=episode.prompt,
         )
-    return episodes
+        for episode in trajectory.load_episodes(trial_dir)
+        if episode.response_path.exists()
+    ]
 
 
 def _load_failures(pane: Path) -> dict[str, TestFailure]:
@@ -111,15 +102,11 @@ def _load_failures(pane: Path) -> dict[str, TestFailure]:
     return failures
 
 
-def _find_trial_dir(root: Path, index: int, task_id: str) -> Path | None:
-    matches = sorted((root / "runs" / f"attempt-{index}").glob(f"*/{task_id}/*/results.json"))
-    return matches[-1].parent if matches else None
-
-
 def load_submission(root: Path) -> Submission:
-    results = json.loads((root / "results.json").read_text())
+    paths = SubmissionPaths(root)
+    results = json.loads(paths.results.read_text())
     task_id = results["task_id"]
-    task_dir = root / "tasks" / task_id
+    task_dir = paths.task(task_id)
     task_yaml = yaml.safe_load((task_dir / "task.yaml").read_text())
     tests_path = task_dir / "tests" / "test_outputs.py"
 
@@ -137,10 +124,10 @@ def load_submission(root: Path) -> Submission:
             output_tokens=summary.get("output_tokens"),
             infrastructure_issues=summary.get("infrastructure_issues") or [],
         )
-        events = root / "runs" / f"attempt-{attempt.index}" / TASK_CONTAINER_EVENTS_FILE
+        events = paths.task_container_events(attempt.index)
         if events.exists():
             attempt.events_source = _relative(root, events)
-        if trial_dir := _find_trial_dir(root, attempt.index, task_id):
+        if trial_dir := paths.trial(attempt.index, task_id):
             attempt.trial_source = _relative(root, trial_dir)
             attempt.episodes = _load_episodes(root, trial_dir)
             pane = trial_dir / "panes" / "post-test.txt"

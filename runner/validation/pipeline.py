@@ -14,6 +14,7 @@ from pathlib import Path
 from runner import bundle
 from runner.config import Settings
 from runner.models import Status, utcnow
+from runner.paths import SubmissionPaths
 from runner.run_task import TaskRunner
 from runner.validation import image_probe, reference_runs, static_checks
 from runner.validation.models import Stage, Validation, ValidationMode
@@ -45,14 +46,14 @@ class Validator:
     def create(self, archive: bytes, mode: ValidationMode, force: bool = False) -> Validation:
         """Run the static stage synchronously; raises InvalidTaskBundle for unreadable ZIPs."""
         validation = Validation(id=uuid.uuid4().hex[:12], mode=mode, force=force)
-        root = self.root(validation.id)
-        root.mkdir(parents=True)
-        (root / "upload.zip").write_bytes(archive)
+        paths = SubmissionPaths(self.root(validation.id))
+        paths.root.mkdir(parents=True)
+        paths.upload.write_bytes(archive)
         try:
-            bundle.extract_zip(root / "upload.zip", root / "tasks", self._settings.max_extracted_bytes)
-            task_dir = bundle.locate_task_dir(root / "tasks")
+            bundle.extract_zip(paths.upload, paths.tasks, self._settings.max_extracted_bytes)
+            task_dir = bundle.locate_task_dir(paths.tasks)
         except bundle.InvalidTaskBundle:
-            shutil.rmtree(root, ignore_errors=True)
+            shutil.rmtree(paths.root, ignore_errors=True)
             raise
 
         _, findings = static_checks.run_static_checks(task_dir)
@@ -128,7 +129,7 @@ class Validator:
 
     def _reference_submissions(self, validation_id: str, has_solution: bool) -> tuple[str | None, str]:
         validation = self._store.get(validation_id)
-        archive = (self.root(validation_id) / "upload.zip").read_bytes()
+        archive = SubmissionPaths(self.root(validation_id)).upload.read_bytes()
         oracle_id = validation.oracle_submission_id
         if has_solution and oracle_id is None:
             oracle_id = self._runner.create(archive, ORACLE_ATTEMPTS, "oracle").id

@@ -15,7 +15,6 @@ import shutil
 import threading
 import time
 import uuid
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +22,7 @@ from runner import bundle, docker_ops, learnability, results
 from runner.config import RESOURCE_CLASSES, Settings
 from runner.k8s import JobSnapshot, KubeClient, build_job_manifest, job_deadline_sec, job_name
 from runner.models import AttemptProgress, Phase, Status, Strategy, Submission, TaskSpec, Wave, utcnow
+from runner.paths import SubmissionPaths
 from runner.store import SubmissionNotFound, SubmissionStore
 
 logger = logging.getLogger(__name__)
@@ -36,34 +36,6 @@ class ExecutionError(RuntimeError):
 
 class Interrupted(Exception):
     """Raised when the runner is shutting down; the submission is left resumable."""
-
-
-@dataclass(frozen=True)
-class SubmissionPaths:
-    root: Path
-
-    @property
-    def upload(self) -> Path:
-        return self.root / "upload.zip"
-
-    @property
-    def tasks(self) -> Path:
-        return self.root / "tasks"
-
-    @property
-    def runs(self) -> Path:
-        return self.root / "runs"
-
-    @property
-    def build_log(self) -> Path:
-        return self.root / "build.log"
-
-    @property
-    def results(self) -> Path:
-        return self.root / "results.json"
-
-    def attempt(self, index: int) -> Path:
-        return self.runs / f"attempt-{index}"
 
 
 def task_image_tag(submission_id: str) -> str:

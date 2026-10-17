@@ -8,9 +8,10 @@ from typing import Any
 from runner.config import Settings
 from runner.learnability import TARGET_RUNS, decide
 from runner.models import AttemptProgress
+from runner.paths import find_trial_dir
+from runner.trial_entrypoint import TASK_CONTAINER_EVENTS_FILE
 
 PYTEST_SESSION_MARKER = "test session starts"
-TASK_CONTAINER_EVENTS_FILE = "task-container-events.jsonl"
 # terminal-bench leaves failure_mode "unset" when nothing went wrong.
 NO_FAILURE_MODES = {"unset", "none"}
 
@@ -38,11 +39,6 @@ def infrastructure_issues(attempt_dir: Path) -> list[str]:
     if any(event.get("status") == "oom" or event.get("Action") == "oom" for event in events):
         return ["task container was OOM-killed (exceeded its resource_class memory limit)"]
     return []
-
-
-def find_trial_dir(attempt_dir: Path, task_id: str) -> Path | None:
-    matches = sorted(attempt_dir.glob(f"*/{task_id}/*/results.json"))
-    return matches[-1].parent if matches else None
 
 
 def attempt_resolved(attempt_dir: Path, task_id: str) -> bool | None:

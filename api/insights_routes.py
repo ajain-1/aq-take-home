@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from api.context import AppContext, get_context
 from runner import insights
+from runner.paths import SubmissionPaths
 from runner.store import SubmissionNotFound
 
 router = APIRouter()
@@ -31,12 +32,11 @@ def get_insights(
             },
         )
 
-    root = context.settings.submissions_dir / submission.id
-    cached = root / "insights.json"
+    paths = SubmissionPaths(context.settings.submissions_dir / submission.id)
     report = (
-        json.loads(cached.read_text())
-        if cached.exists() and not refresh
-        else insights.generate(root, narrative)
+        json.loads(paths.insights_json.read_text())
+        if paths.insights_json.exists() and not refresh
+        else insights.generate(paths.root, narrative)
     )
     if format == "markdown":
         return PlainTextResponse(insights.render_markdown(report), media_type="text/markdown")
