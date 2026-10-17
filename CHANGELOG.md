@@ -76,3 +76,28 @@ The first submission builds the Job pod image (a few minutes); later submissions
 - Replace the Docker socket with per-pod DinD/sysbox (or a remote BuildKit plus a registry) for real isolation, and use object storage instead of hostPath.
 - Move the worker pool out of the API process into a queue-driven controller, so API restarts and deploys don't pause monitoring.
 - Add per-submission cancellation (`DELETE /submissions/{id}`) and a cluster-wide attempt budget.
+
+## Stretch goal B: Inference cost optimization
+
+#### What I did
+- `strategy=adaptive` on `POST /submit` runs attempts in waves (one Indexed Job per wave, with a global attempt offset) and stops as soon as the 10-run learnability class is decided. `/results` gains a `learnability` block: `classification` (`learnable | too_easy | too_hard | undetermined`), passing/failing runs, `attempts_used` vs. `target_runs`, measured tokens, estimated cost, and estimated tokens/cost saved versus running all 10. `/status` shows the waves.
+- `runner/learnability.py` holds the decision rules. Out of 10 runs the class is already fixed once passes ≥ 8 (too easy), failures ≥ 9 (too hard), or passes ≥ 2 and failures ≥ 3 (learnable), because no outcome of the remaining runs can change it. Stopping exactly then (`confidence=1.0`, the default) always returns the same answer as running all 10.
+- Optional `confidence < 1.0` also stops once the posterior predictive probability of one class (uniform Beta prior on the per-run pass rate, Beta-Binomial over the remaining runs) reaches the threshold. This trades a bounded misclassification rate for fewer runs.
+- `scripts/simulate_cost.py` produces `results/cost-optimization/simulation.md`. It replays all 1024 outcome sequences of 10 runs, so the expectations are exact rather than sampled, and checks every classification against the 10-run rule.
+
+#### Results
+- **Exact policy:** 0 misclassifications across all 1024 sequences × wave caps {1, 3, 5, 10}. It uses 7.85 attempts on average instead of 10 (22% fewer, p uniform). That is 8 for a task every run solves, 9 for one every run fails, and about 6.6 near p = 0.4. At the measured $0.61 per terminus-1 attempt, that is $4.75 instead of $6.05 per task.
+- **Confidence stopping:** 0.95 → 7.34 attempts (27% fewer) with a 0.5% misclassification rate; 0.9 → 6.43 attempts (36% fewer) with a 3.1% rate.
+- **Waves cost nothing extra.** Each wave launches `runs_until_decidable` attempts: the fewest more runs after which a decision is even possible. A one-at-a-time policy would run every one of those, so parallel waves have exactly the sequential policy's cost (checked for every sequence in the tests), and latency drops from about 7.9 waves to about 2.9 (averaged over p). The first wave is always 5. A naive "batches of 5" alternative costs 9.21 attempts.
+- **No in-flight cancellation is needed.** A wave never exceeds the minimum runs to a decision, so a decision can't arrive mid-wave.
+
+#### Verification
+- `tests/test_learnability.py` (31 tests): boundary cases; exactness against the 10-run rule for every sequence and wave cap; the stopping point is the first decidable prefix; parallel cost equals sequential cost; class probabilities sum to 1; replacement of errored attempts is bounded.
+- **End-to-end oracle run** (always passes) on `config-manifest-validator` with at most 4 attempts in flight: waves of 4, 3 and 1 → `too_easy` after 8 attempts, with all Jobs, containers and images cleaned up.
+- **End-to-end terminus-1 run** on `csv-to-json-cli-fix` with `confidence=0.9`: see `results/cost-optimization/terminus-adaptive-results.json`.
+
+#### Design decisions
+- **Exact by default.** "Learnable" is defined on 10 actual runs, so the default never changes a label; the probabilistic mode is opt-in and its error rate is published alongside its savings.
+- **Errored attempts are replaced.** Attempts with no test results (infrastructure errors) don't count as passes or failures. They are replaced, up to 3 extra launches (`AQ_ADAPTIVE_EXTRA_LAUNCHES`), after which the class can come back `undetermined`.
+- **Configurable caps and prices.** `AQ_ADAPTIVE_MAX_WAVE` caps attempts in flight. Prices default to Opus 4.5 list prices (`AQ_PRICE_*_PER_MTOK`). Token counts are terminal-bench's tokenizer estimates and ignore prompt caching, so dollar figures are approximate.
+- **Not done:** screening with a cheaper model first. It is not exact against a SOTA-defined label, and the measured savings above come from attempts avoided, not cheaper ones.
