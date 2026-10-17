@@ -1,0 +1,125 @@
++ docker build -q -t aq-verify-fix-maven-artifact-dependencies /Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/tasks/fix-maven-artifact-dependencies
+sha256:a69ec3741d23c8308cf96d9b6283445360abac04a1aa3e35427ffd75334a69b6
++ docker rm -f aq-verify-fix-maven-artifact-dependencies-oracle
++ docker run -d --name aq-verify-fix-maven-artifact-dependencies-oracle -e TEST_DIR=/tests aq-verify-fix-maven-artifact-dependencies sh -c 'sleep infinity'
+8677bf9e87d44b2428a3feceee29ccbb54b570dab99d7c7d5c85a50d6fab6bb1
++ '[' oracle = oracle ']'
++ docker exec aq-verify-fix-maven-artifact-dependencies-oracle mkdir -p /oracle
++ docker cp /Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/tasks/fix-maven-artifact-dependencies/solution.sh aq-verify-fix-maven-artifact-dependencies-oracle:/oracle/solution.sh
++ '[' fix-maven-artifact-dependencies = broken-flask-api ']'
++ docker exec aq-verify-fix-maven-artifact-dependencies-oracle bash /oracle/solution.sh
++ docker exec aq-verify-fix-maven-artifact-dependencies-oracle mkdir -p /tests
++ docker cp /Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/tasks/fix-maven-artifact-dependencies/run-tests.sh aq-verify-fix-maven-artifact-dependencies-oracle:/tests/run-tests.sh
++ docker cp /Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/tasks/fix-maven-artifact-dependencies/tests/. aq-verify-fix-maven-artifact-dependencies-oracle:/tests/
+++ date +%s
++ START=1792202119
++ docker exec aq-verify-fix-maven-artifact-dependencies-oracle bash /tests/run-tests.sh
+Get:1 http://ports.ubuntu.com/ubuntu-ports noble InRelease [256 kB]
+Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates InRelease [126 kB]
+Get:3 http://ports.ubuntu.com/ubuntu-ports noble-backports InRelease [126 kB]
+Get:4 http://ports.ubuntu.com/ubuntu-ports noble-security InRelease [126 kB]
+Get:5 http://ports.ubuntu.com/ubuntu-ports noble/universe arm64 Packages [19.0 MB]
+Get:6 http://ports.ubuntu.com/ubuntu-ports noble/multiverse arm64 Packages [274 kB]
+Get:7 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 Packages [1776 kB]
+Get:8 http://ports.ubuntu.com/ubuntu-ports noble/restricted arm64 Packages [113 kB]
+Get:9 http://ports.ubuntu.com/ubuntu-ports noble-updates/universe arm64 Packages [2214 kB]
+Get:10 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 Packages [1786 kB]
+Get:11 http://ports.ubuntu.com/ubuntu-ports noble-updates/restricted arm64 Packages [3251 kB]
+Get:12 http://ports.ubuntu.com/ubuntu-ports noble-updates/multiverse arm64 Packages [104 kB]
+Get:13 http://ports.ubuntu.com/ubuntu-ports noble-backports/multiverse arm64 Packages [669 B]
+Get:14 http://ports.ubuntu.com/ubuntu-ports noble-backports/universe arm64 Packages [36.3 kB]
+Get:15 http://ports.ubuntu.com/ubuntu-ports noble-backports/main arm64 Packages [49.0 kB]
+Get:16 http://ports.ubuntu.com/ubuntu-ports noble-security/multiverse arm64 Packages [99.1 kB]
+Get:17 http://ports.ubuntu.com/ubuntu-ports noble-security/main arm64 Packages [1475 kB]
+Get:18 http://ports.ubuntu.com/ubuntu-ports noble-security/restricted arm64 Packages [3129 kB]
+Get:19 http://ports.ubuntu.com/ubuntu-ports noble-security/universe arm64 Packages [1638 kB]
+Fetched 35.6 MB in 7s (4987 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+build-essential is already the newest version (12.10ubuntu1).
+cmake is already the newest version (3.28.3-1build7).
+pkg-config is already the newest version (1.8.1-2build1).
+The following additional packages will be installed:
+  openssl
+The following NEW packages will be installed:
+  ca-certificates curl openssl
+0 upgraded, 3 newly installed, 0 to remove and 2 not upgraded.
+Need to get 1347 kB of archives.
+After this operation, 2853 kB of additional disk space will be used.
+Get:1 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 openssl arm64 3.0.13-0ubuntu3.16 [985 kB]
+Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 ca-certificates all 20260601~24.04.1 [139 kB]
+Get:3 http://ports.ubuntu.com/ubuntu-ports noble-security/main arm64 curl arm64 8.5.0-2ubuntu10.16 [222 kB]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 1347 kB in 1s (1331 kB/s)
+Selecting previously unselected package openssl.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 13896 files and directories currently installed.)
+Preparing to unpack .../openssl_3.0.13-0ubuntu3.16_arm64.deb ...
+Unpacking openssl (3.0.13-0ubuntu3.16) ...
+Selecting previously unselected package ca-certificates.
+Preparing to unpack .../ca-certificates_20260601~24.04.1_all.deb ...
+Unpacking ca-certificates (20260601~24.04.1) ...
+Selecting previously unselected package curl.
+Preparing to unpack .../curl_8.5.0-2ubuntu10.16_arm64.deb ...
+Unpacking curl (8.5.0-2ubuntu10.16) ...
+Setting up curl (8.5.0-2ubuntu10.16) ...
+Setting up openssl (3.0.13-0ubuntu3.16) ...
+Setting up ca-certificates (20260601~24.04.1) ...
+Updating certificates in /etc/ssl/certs...
+121 added, 0 removed; done.
+Processing triggers for ca-certificates (20260601~24.04.1) ...
+Updating certificates in /etc/ssl/certs...
+0 added, 0 removed; done.
+Running hooks in /etc/ca-certificates/update.d...
+done.
+downloading uv 0.7.13 aarch64-unknown-linux-gnu
+no checksums to verify
+installing to /root/.local/bin
+  uv
+  uvx
+everything's installed!
+
+To add $HOME/.local/bin to your PATH, either restart your shell or run:
+
+    source $HOME/.local/bin/env (sh, bash, zsh)
+    source $HOME/.local/bin/env.fish (fish)
+Downloading cpython-3.13.5-linux-aarch64-gnu (download) (25.2MiB)
+ Downloading cpython-3.13.5-linux-aarch64-gnu (download)
+Initialized project `app`
+Using CPython 3.13.5
+Creating virtual environment at: .venv
+Resolved 7 packages in 330ms
+Downloading pygments (1.2MiB)
+ Downloading pygments
+Prepared 5 packages in 344ms
+Installed 5 packages in 12ms
+ + iniconfig==2.3.1
+ + packaging==26.3
+ + pluggy==1.7.0
+ + pygments==2.21.0
+ + pytest==8.4.1
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.7.0
+rootdir: /tests
+collected 10 items
+
+../tests/test_outputs.py ..........                                      [100%]
+
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_configure_and_build_succeeds
+PASSED ../tests/test_outputs.py::test_calculator_runs_and_output_matches
+PASSED ../tests/test_outputs.py::test_idempotent_build_no_work
+PASSED ../tests/test_outputs.py::test_compile_commands_generated
+PASSED ../tests/test_outputs.py::test_shared_libs_have_soname
+PASSED ../tests/test_outputs.py::test_rpath_configured_properly
+PASSED ../tests/test_outputs.py::test_shared_lib_link_order_math_before_calc
+PASSED ../tests/test_outputs.py::test_public_includes_and_no_manual_includes_in_app
+PASSED ../tests/test_outputs.py::test_explicit_dependencies_present_to_avoid_races
+PASSED ../tests/test_outputs.py::test_no_stray_artifacts_outside_build_dirs
+============================== 10 passed in 5.20s ==============================
+++ date +%s
++ echo TEST_DURATION_SEC=31
+TEST_DURATION_SEC=31
++ docker rm -f aq-verify-fix-maven-artifact-dependencies-oracle
