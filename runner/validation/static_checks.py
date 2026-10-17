@@ -15,6 +15,7 @@ import yaml
 
 from runner import bundle
 from runner.models import TaskSpec
+from runner.test_literals import required_literals
 from runner.validation.models import Finding, Severity, Stage
 
 SYSTEM_ROOTS = {
@@ -326,6 +327,48 @@ def check_instruction_files_exist(ctx: TaskContext) -> Iterator[Finding]:
         )
 
 
+FILE_LIKE = re.compile(r"[\w.-]+\.\w+")
+
+
+def _is_content_literal(literal: str) -> bool:
+    """Paths and file names are covered by the file checks; this one is about produced content."""
+    return "/" not in literal and not FILE_LIKE.fullmatch(literal)
+
+
+def check_unstated_test_literals(ctx: TaskContext) -> Iterator[Finding]:
+    """Text a test requires must be stated in the instruction or visible in the files the task
+    ships; otherwise an agent can only guess it and the task measures the spec, not the agent."""
+    instruction = ctx.instruction.lower()
+    environment = "\n".join([*ctx.other_files.values(), ctx.dockerfile.run_text])
+    unstated: dict[str, list[str]] = {}
+    for path in sorted((ctx.task_dir / "tests").rglob("*.py")):
+        try:
+            literals = required_literals(path.read_text(errors="replace"))
+        except SyntaxError:
+            continue
+        for test, found in literals.items():
+            hidden = sorted(
+                {
+                    lit.literal
+                    for lit in found
+                    if _is_content_literal(lit.literal)
+                    and lit.literal.lower() not in instruction
+                    and lit.literal not in environment
+                }
+            )
+            if hidden:
+                unstated[test] = hidden
+    if unstated:
+        summary = "; ".join(f"{test}: {', '.join(map(repr, lits))}" for test, lits in unstated.items())
+        yield _finding(
+            "unstated_test_literals",
+            Severity.WARNING,
+            f"tests require text the instruction never states and the task never shows ({summary}); "
+            "state the expected format in the instruction or relax the tests",
+            literals=unstated,
+        )
+
+
 def check_test_timeout_budget(ctx: TaskContext) -> Iterator[Finding]:
     if (
         ctx.spec
@@ -355,6 +398,7 @@ CHECKS: list[Callable[[TaskContext], Iterator[Finding]]] = [
     check_copy_renames_referenced_dir,
     check_tested_files_in_instruction,
     check_instruction_files_exist,
+    check_unstated_test_literals,
     check_test_timeout_budget,
     check_solution_present,
 ]
