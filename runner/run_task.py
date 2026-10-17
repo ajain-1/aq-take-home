@@ -13,8 +13,8 @@ import logging
 import os
 import shutil
 import threading
-import time
 import uuid
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -72,6 +72,8 @@ class TaskRunner:
         self._settings = settings
         self._build_slots = threading.Semaphore(settings.max_concurrent_builds)
         self._stopping = threading.Event()
+        self._in_flight: set[str] = set()
+        self._in_flight_lock = threading.Lock()
 
     def stop(self) -> None:
         self._stopping.set()
@@ -110,7 +112,22 @@ class TaskRunner:
         return SubmissionPaths(self._settings.submissions_dir / submission_id)
 
     def run(self, submission_id: str) -> dict[str, Any] | None:
-        """Execute (or resume) a submission and return its structured results."""
+        """Execute (or resume) a submission and return its structured results.
+
+        Returns None if the runner is shutting down, or if the submission is already
+        executing in another thread (it is never run twice concurrently)."""
+        with self._in_flight_lock:
+            if submission_id in self._in_flight:
+                logger.warning("submission %s is already running; not starting it twice", submission_id)
+                return None
+            self._in_flight.add(submission_id)
+        try:
+            return self._run(submission_id)
+        finally:
+            with self._in_flight_lock:
+                self._in_flight.discard(submission_id)
+
+    def _run(self, submission_id: str) -> dict[str, Any] | None:
         if (existing := self._store.get(submission_id)).status.is_terminal:
             return existing.results
         submission = self._store.update(submission_id, _mark_started)
@@ -177,36 +194,36 @@ class TaskRunner:
         return runner_image
 
     def _next_wave(self, submission_id: str, spec: TaskSpec, paths: SubmissionPaths) -> Wave | None:
-        """The wave to run next: an unfinished one being resumed, or a newly planned one."""
-        submission = self._store.get(submission_id)
-        waves = submission.progress.waves
-        if waves and not waves[-1].done:
-            return waves[-1]
+        """The wave to run next: an unfinished one being resumed, or a newly planned one.
+        Planning and recording happen in one store update, so a wave is planned once."""
+        chosen: list[Wave] = []
 
+        def plan(s: Submission) -> None:
+            waves = s.progress.waves
+            if waves and not waves[-1].done:
+                chosen.append(waves[-1])
+            elif size := self._wave_size(s, spec, paths):
+                wave = Wave(index=len(waves), offset=s.progress.attempts_launched, size=size)
+                waves.append(wave)
+                s.progress.attempts_total = wave.offset + size
+                chosen.append(wave)
+
+        self._store.update(submission_id, plan)
+        return chosen[0] if chosen else None
+
+    def _wave_size(self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths) -> int:
         launched = submission.progress.attempts_launched
         if submission.strategy == Strategy.FIXED:
-            size = 0 if waves else submission.n_attempts
-        else:
-            outcomes = [results.attempt_resolved(paths.attempt(i), spec.task_id) for i in range(launched)]
-            size = learnability.next_wave_size(
-                passes=outcomes.count(True),
-                failures=outcomes.count(False),
-                launched=launched,
-                max_launches=learnability.TARGET_RUNS + self._settings.adaptive_extra_launches,
-                max_wave=self._settings.adaptive_max_wave,
-                confidence=submission.confidence,
-            )
-        if size == 0:
-            return None
-
-        wave = Wave(index=len(waves), offset=launched, size=size)
-
-        def mutate(s: Submission) -> None:
-            s.progress.waves.append(wave)
-            s.progress.attempts_total = launched + size
-
-        self._store.update(submission_id, mutate)
-        return wave
+            return 0 if submission.progress.waves else submission.n_attempts
+        outcomes = [results.attempt_resolved(paths.attempt(i), spec.task_id) for i in range(launched)]
+        return learnability.next_wave_size(
+            passes=outcomes.count(True),
+            failures=outcomes.count(False),
+            launched=launched,
+            max_launches=learnability.TARGET_RUNS + self._settings.adaptive_extra_launches,
+            max_wave=self._settings.adaptive_max_wave,
+            confidence=submission.confidence,
+        )
 
     def _launch(
         self, submission: Submission, spec: TaskSpec, paths: SubmissionPaths, runner_image: str, wave: Wave
@@ -237,15 +254,18 @@ class TaskRunner:
         # Persisted so a resumed run re-attaches instead of re-running paid attempts,
         # even if the Job has since been garbage-collected.
         def mark_launched(s: Submission) -> None:
-            s.launched_at = s.launched_at or utcnow()
-            s.progress.waves[wave.index].launched_at = utcnow()
+            now = utcnow()
+            s.launched_at = s.launched_at or now
+            s.progress.waves[wave.index].launched_at = now
+            s.progress.waves[wave.index].deadline_at = now + self._wait_budget(spec)
 
         self._store.update(submission.id, mark_launched)
 
     def _wait(self, submission: Submission, spec: TaskSpec, wave: Wave) -> None:
         self._set_phase(submission.id, Phase.RUNNING_ATTEMPTS)
         name = job_name(submission.id, wave.index)
-        deadline = time.monotonic() + job_deadline_sec(spec, self._settings) + WAIT_GRACE_SEC
+        stored = self._store.get(submission.id).progress.waves[wave.index]
+        deadline = stored.deadline_at or (stored.launched_at or utcnow()) + self._wait_budget(spec)
 
         while True:
             try:
@@ -258,12 +278,15 @@ class TaskRunner:
                     return
                 if reason := snapshot.fatal_reason:
                     raise ExecutionError(f"attempt pods cannot start: {reason}")
-            if time.monotonic() > deadline:
+            if utcnow() > deadline:
                 logger.warning("submission %s exceeded its deadline; stopping job", submission.id)
                 self._kube.delete_job(name)
                 return
             if self._stopping.wait(self._settings.poll_interval_sec):
                 raise Interrupted
+
+    def _wait_budget(self, spec: TaskSpec) -> timedelta:
+        return timedelta(seconds=job_deadline_sec(spec, self._settings) + WAIT_GRACE_SEC)
 
     def _record_attempts(self, submission_id: str, snapshot: JobSnapshot, wave: Wave) -> None:
         """Pods vanish when a Job fails (e.g. DeadlineExceeded) and the Job itself can vanish,
