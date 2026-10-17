@@ -18,8 +18,9 @@ if [ ! -d "$TASK_DIR" ]; then
 fi
 
 # Create a temporary ZIP
-TMPZIP=$(mktemp /tmp/task-XXXXXX.zip)
-trap "rm -f $TMPZIP" EXIT
+TMPDIR_ZIP=$(mktemp -d)
+TMPZIP="$TMPDIR_ZIP/${TASK_NAME}.zip"
+trap "rm -rf $TMPDIR_ZIP" EXIT
 
 echo "Zipping task: $TASK_NAME"
 (cd tasks && zip -r "$TMPZIP" "$TASK_NAME" -x '*.DS_Store' '__pycache__/*')

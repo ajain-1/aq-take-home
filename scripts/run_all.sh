@@ -26,7 +26,7 @@ for i in "${!TASKS[@]}"; do
     task=${TASKS[$i]}
     SUBMISSION_IDS[$i]=""
     echo "--- Submitting: $task ---"
-    RESULT=$(bash scripts/submit_task.sh "$task" 2>&1)
+    RESULT=$(bash scripts/submit_task.sh "$task" 2>&1 || true)
     SID=$(echo "$RESULT" | grep "Submission ID:" | awk '{print $NF}')
     if [ -n "$SID" ]; then
         SUBMISSION_IDS[$i]=$SID
