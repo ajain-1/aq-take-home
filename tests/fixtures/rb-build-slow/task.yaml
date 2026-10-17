@@ -1,0 +1,5 @@
+instruction: Robustness fixture rb-build-slow; write ok to /app/out.txt.
+difficulty: easy
+max_agent_timeout_sec: 60
+max_test_timeout_sec: 60
+resource_class: small
