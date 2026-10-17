@@ -92,9 +92,15 @@ class Settings:
             retries_per_attempt=int(_env("AQ_RETRIES_PER_ATTEMPT", str(defaults.retries_per_attempt))),
             poll_interval_sec=float(_env("AQ_POLL_INTERVAL_SEC", str(defaults.poll_interval_sec))),
             adaptive_max_wave=int(_env("AQ_ADAPTIVE_MAX_WAVE", str(defaults.adaptive_max_wave))),
-            adaptive_extra_launches=int(_env("AQ_ADAPTIVE_EXTRA_LAUNCHES", str(defaults.adaptive_extra_launches))),
-            price_input_per_mtok=float(_env("AQ_PRICE_INPUT_PER_MTOK", str(defaults.price_input_per_mtok))),
-            price_output_per_mtok=float(_env("AQ_PRICE_OUTPUT_PER_MTOK", str(defaults.price_output_per_mtok))),
+            adaptive_extra_launches=int(
+                _env("AQ_ADAPTIVE_EXTRA_LAUNCHES", str(defaults.adaptive_extra_launches))
+            ),
+            price_input_per_mtok=float(
+                _env("AQ_PRICE_INPUT_PER_MTOK", str(defaults.price_input_per_mtok))
+            ),
+            price_output_per_mtok=float(
+                _env("AQ_PRICE_OUTPUT_PER_MTOK", str(defaults.price_output_per_mtok))
+            ),
             host_path_prefix=_env("AQ_HOST_PATH_PREFIX", defaults.host_path_prefix),
             harness_memory_limit=_env("AQ_HARNESS_MEMORY_LIMIT", defaults.harness_memory_limit),
             runner_image=os.environ.get("AQ_RUNNER_IMAGE") or None,

@@ -41,7 +41,7 @@ class SubmissionService:
         try:
             strategy = Strategy(strategy or Strategy.FIXED)
         except ValueError:
-            raise SubmissionRejected(f"strategy must be one of {', '.join(Strategy)}")
+            raise SubmissionRejected(f"strategy must be one of {', '.join(Strategy)}") from None
         if strategy == Strategy.ADAPTIVE:
             if n_attempts is not None:
                 raise SubmissionRejected("n_attempts is chosen by the adaptive strategy; omit it")

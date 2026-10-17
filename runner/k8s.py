@@ -66,7 +66,11 @@ def build_job_manifest(
     resources: ResourceClass,
     settings: Settings,
 ) -> dict:
-    labels = {"app.kubernetes.io/managed-by": MANAGED_BY, "aq/submission": submission_id, "aq/wave": str(wave.index)}
+    labels = {
+        "app.kubernetes.io/managed-by": MANAGED_BY,
+        "aq/submission": submission_id,
+        "aq/wave": str(wave.index),
+    }
     env = {
         "AQ_SUBMISSION_ID": submission_id,
         "AQ_ATTEMPT_OFFSET": str(wave.offset),
@@ -238,9 +242,8 @@ def _attempts_from_pods(pods: list, wave: Wave) -> list[AttemptProgress]:
             attempts.append(AttemptProgress(index=index))
             continue
         state, reason = _pod_state(tries[-1])
-        attempts.append(
-            AttemptProgress(index=index, state=state, pods=[pod.metadata.name for pod in tries], reason=reason)
-        )
+        pod_names = [pod.metadata.name for pod in tries]
+        attempts.append(AttemptProgress(index=index, state=state, pods=pod_names, reason=reason))
     return attempts
 
 

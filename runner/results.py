@@ -10,6 +10,7 @@ from runner.learnability import TARGET_RUNS, decide
 from runner.models import AttemptProgress
 
 PYTEST_SESSION_MARKER = "test session starts"
+TASK_CONTAINER_EVENTS_FILE = "task-container-events.jsonl"
 # terminal-bench leaves failure_mode "unset" when nothing went wrong.
 NO_FAILURE_MODES = {"unset", "none"}
 
@@ -28,6 +29,17 @@ def _pytest_output(pane_path: Path) -> str | None:
     return "\n".join(lines[start:]).strip()
 
 
+def infrastructure_issues(attempt_dir: Path) -> list[str]:
+    """Problems outside the agent's control, recorded by the pod while the attempt ran."""
+    events_path = attempt_dir / TASK_CONTAINER_EVENTS_FILE
+    if not events_path.exists():
+        return []
+    events = [json.loads(line) for line in events_path.read_text().splitlines() if line.strip()]
+    if any(event.get("status") == "oom" or event.get("Action") == "oom" for event in events):
+        return ["task container was OOM-killed (exceeded its resource_class memory limit)"]
+    return []
+
+
 def find_trial_dir(attempt_dir: Path, task_id: str) -> Path | None:
     matches = sorted(attempt_dir.glob(f"*/{task_id}/*/results.json"))
     return matches[-1].parent if matches else None
@@ -41,7 +53,9 @@ def attempt_resolved(attempt_dir: Path, task_id: str) -> bool | None:
     return bool(json.loads((trial_dir / "results.json").read_text()).get("is_resolved"))
 
 
-def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, data_dir: Path) -> dict[str, Any]:
+def collect_attempt(
+    attempt_dir: Path, task_id: str, progress: AttemptProgress, data_dir: Path
+) -> dict[str, Any]:
     trial_dir = find_trial_dir(attempt_dir, task_id)
     if trial_dir is None:
         return {
@@ -50,6 +64,7 @@ def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, 
             "resolved": False,
             "error": progress.reason or f"attempt produced no results (pod state: {progress.state})",
             "retries": progress.retries,
+            "infrastructure_issues": infrastructure_issues(attempt_dir),
             "tests": [],
             "passed_tests": 0,
             "total_tests": 0,
@@ -67,6 +82,7 @@ def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, 
         "resolved": bool(trial.get("is_resolved")),
         "failure_mode": "none" if failure_mode in NO_FAILURE_MODES else failure_mode,
         "retries": progress.retries,
+        "infrastructure_issues": infrastructure_issues(attempt_dir),
         "tests": tests,
         "passed_tests": sum(1 for test in tests if test["status"] == "passed"),
         "total_tests": len(tests),
@@ -82,6 +98,10 @@ def collect_attempt(attempt_dir: Path, task_id: str, progress: AttemptProgress, 
     }
 
 
+def _rate(numerator: int, denominator: int) -> float:
+    return round(numerator / denominator, 3) if denominator else 0.0
+
+
 def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     """Summarize N attempts. The task counts as passed only if every attempt resolved it;
     per-test pass counts show how consistently each test was satisfied."""
@@ -94,7 +114,7 @@ def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
 
     resolved = sum(1 for a in attempts if a["resolved"])
     tests = [
-        {"name": name, **counts, "pass_rate": round(counts["passed"] / (counts["passed"] + counts["failed"]), 3)}
+        {"name": name, **counts, "pass_rate": _rate(counts["passed"], counts["passed"] + counts["failed"])}
         for name, counts in per_test.items()
     ]
     return {
@@ -113,7 +133,9 @@ def aggregate(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def learnability(attempts: list[dict[str, Any]], strategy: str, confidence: float, settings: Settings) -> dict[str, Any]:
+def learnability(
+    attempts: list[dict[str, Any]], strategy: str, confidence: float, settings: Settings
+) -> dict[str, Any]:
     """Classify the task under the 10-run rule and account for inference spent and saved."""
     # A run counts toward the 10-run rule if the trial finished; infrastructure errors
     # (no trial results at all) are excluded and replaced by the adaptive strategy.
@@ -123,7 +145,9 @@ def learnability(attempts: list[dict[str, Any]], strategy: str, confidence: floa
     measured = [a for a in attempts if a.get("input_tokens") is not None]
     input_tokens = sum(a["input_tokens"] for a in measured)
     output_tokens = sum(a.get("output_tokens") or 0 for a in measured)
-    cost_usd = (input_tokens * settings.price_input_per_mtok + output_tokens * settings.price_output_per_mtok) / 1e6
+    cost_usd = (
+        input_tokens * settings.price_input_per_mtok + output_tokens * settings.price_output_per_mtok
+    ) / 1e6
     saved = max(0, TARGET_RUNS - len(attempts))
 
     def per_attempt(total: float) -> float:

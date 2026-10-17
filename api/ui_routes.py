@@ -3,7 +3,6 @@
 import json
 import re
 from pathlib import Path
-
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -49,7 +48,8 @@ def _episodes(agent_logs: Path) -> list[dict]:
 
     episodes = []
     for position, (index, path) in enumerate(indexed):
-        next_prompt = _read_text(indexed[position + 1][1] / "prompt.txt") if position + 1 < len(indexed) else None
+        has_next = position + 1 < len(indexed)
+        next_prompt = _read_text(indexed[position + 1][1] / "prompt.txt") if has_next else None
         episodes.append(
             {
                 "index": index,

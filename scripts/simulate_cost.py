@@ -56,7 +56,7 @@ OUTCOMES = {name: [policy(seq) for seq in SEQUENCES] for name, policy in POLICIE
 
 def expectation(name: str, p: float, field: str) -> float:
     total = 0.0
-    for seq, outcome in zip(SEQUENCES, OUTCOMES[name]):
+    for seq, outcome in zip(SEQUENCES, OUTCOMES[name], strict=True):
         weight = p ** sum(seq) * (1 - p) ** (TARGET_RUNS - sum(seq))
         total += weight * (getattr(outcome, field) if field != "error" else (not outcome.correct))
     return total
@@ -105,7 +105,8 @@ def main() -> None:
             [f"{p:.2f}", f"{expectation('exact w10', p, 'runs'):.2f}",
              f"{1 - expectation('exact w10', p, 'runs') / TARGET_RUNS:.0%}",
              *[f"{expectation(f'exact w{cap}', p, 'waves'):.2f}" for cap in WAVE_CAPS],
-             f"{expectation('batches of 5', p, 'runs'):.2f}", f"{expectation('batches of 5', p, 'waves'):.2f}"]
+             f"{expectation('batches of 5', p, 'runs'):.2f}",
+             f"{expectation('batches of 5', p, 'waves'):.2f}"]
             for p in P_GRID
         ],
     )

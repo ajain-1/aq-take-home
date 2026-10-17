@@ -141,7 +141,9 @@ class TaskRunner:
         timeout = self._settings.build_timeout_sec
         with self._build_slots:
             self._raise_if_stopping()
-            runner_image = self._settings.runner_image or docker_ops.ensure_runner_image(paths.build_log, timeout)
+            runner_image = self._settings.runner_image
+            if runner_image is None:
+                runner_image = docker_ops.ensure_runner_image(paths.build_log, timeout)
             if not docker_ops.image_exists(tag):
                 docker_ops.build_task_image(paths.tasks / spec.task_id, tag, paths.build_log, timeout)
         return runner_image
@@ -258,25 +260,30 @@ class TaskRunner:
 
         attempts = [
             results.collect_attempt(
-                paths.attempt(index), spec.task_id, progress.get(index, AttemptProgress(index=index)), self._settings.data_dir
+                paths.attempt(index), spec.task_id, progress.get(index, AttemptProgress(index=index)),
+                self._settings.data_dir,
             )
             for index in range(submission.progress.attempts_launched)
         ]
 
         finished_at = utcnow()
+        started_at = submission.started_at
+        elapsed = round((finished_at - started_at).total_seconds(), 2) if started_at else None
         outcome = {
             "submission_id": submission.id,
             "task_id": spec.task_id,
             "agent": submission.agent,
             "model": submission.model,
             **results.aggregate(attempts),
-            "learnability": results.learnability(attempts, submission.strategy, submission.confidence, self._settings),
-            "started_at": submission.started_at.isoformat() if submission.started_at else None,
-            "finished_at": finished_at.isoformat(),
-            "execution_time_sec": (
-                round((finished_at - submission.started_at).total_seconds(), 2) if submission.started_at else None
+            "learnability": results.learnability(
+                attempts, submission.strategy, submission.confidence, self._settings
             ),
-            "waves": [wave.model_dump(include={"index", "offset", "size"}) for wave in submission.progress.waves],
+            "started_at": started_at.isoformat() if started_at else None,
+            "finished_at": finished_at.isoformat(),
+            "execution_time_sec": elapsed,
+            "waves": [
+                wave.model_dump(include={"index", "offset", "size"}) for wave in submission.progress.waves
+            ],
             "attempts": attempts,
         }
         all_errored = outcome["summary"]["errored_attempts"] == len(attempts)
@@ -318,10 +325,11 @@ class TaskRunner:
 
     def _cleanup(self, submission_id: str) -> None:
         """Release cluster and Docker resources; safe to call repeatedly."""
+        image = task_image_tag(submission_id)
         for step in (
             lambda: self._kube.delete_submission_jobs(submission_id),
             lambda: docker_ops.remove_labelled_resources(f"aq.submission={submission_id}"),
-            lambda: docker_ops.remove_images(task_image_tag(submission_id), f"{task_image_tag(submission_id)}-base"),
+            lambda: docker_ops.remove_images(image, f"{image}-base"),
         ):
             try:
                 step()

@@ -112,6 +112,8 @@ def write_compose_file(task_dir: Path, image: str, submission_id: str, resources
                 ],
                 "cpus": resources.cpu_limit,
                 "mem_limit": resources.memory_limit,
+                # Without this Docker adds an equal amount of swap, doubling the limit.
+                "memswap_limit": resources.memory_limit,
                 "labels": labels,
             }
         },
