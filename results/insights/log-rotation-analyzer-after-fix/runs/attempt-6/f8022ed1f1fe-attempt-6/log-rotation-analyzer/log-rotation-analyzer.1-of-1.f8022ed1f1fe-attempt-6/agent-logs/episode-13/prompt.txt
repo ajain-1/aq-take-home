@@ -1,0 +1,40 @@
+    create 644 www-data www-data
+    maxsize 50M
+    dateext
+    dateformat -%Y%m%d
+    postrotate
+        # Reload application if needed
+        /usr/bin/systemctl reload web-server 2>/dev/null || true
+    endscript
+}
+
+# System Log - Critical importance, 90-day retention required
+# Increased rotation count for compliance
+/var/log/samples/system.log {
+    daily
+    rotate 90
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    maxsize 20M
+    dateext
+    dateformat -%Y%m%d
+    sharedscripts
+    postrotate
+        /usr/bin/systemctl kill -s HUP rsyslog 2>/dev/null || true
+    endscript
+}
+
+# Access Log - Medium importance, 45.7 MB/day growth (highest)
+# Changed from monthly to daily - critical for disk space
+root@8a26108f0519:/app# grep -n 'SUMMARY\|RECOMMENDATIONS:\|Total log size:\|Estimated total savings:\|Potential space reduction:' /app/analysis_report.txt; tmu
+x wait -S done
+93:SUMMARY
+108:Total log size: 0.74 MB
+111:Estimated total savings: 0.30 MB (current) + compression savings
+112:Potential space reduction: 40%
+120:RECOMMENDATIONS:
+155:4. MONITORING RECOMMENDATIONS:
+root@8a26108f0519:/app#

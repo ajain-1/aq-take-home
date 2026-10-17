@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The terminal is at a fresh bash prompt in the /app directory. I need to start by exploring the available data - log files in /var/log/samples/, logrotate configurations in /etc/logrotate.d/samples/, and the log_metadata.json file.",
+    "explanation": "First, I'll explore the available data sources to understand what log files exist, their sizes, and current rotation configurations. This will help me build the analysis report.",
+    "commands": [
+        {
+            "keystrokes": "ls -la /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

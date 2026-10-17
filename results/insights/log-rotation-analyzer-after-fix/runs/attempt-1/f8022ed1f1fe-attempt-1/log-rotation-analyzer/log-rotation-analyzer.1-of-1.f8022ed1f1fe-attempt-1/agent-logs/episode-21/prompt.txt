@@ -1,0 +1,40 @@
+}
+
+/var/log/samples/access.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 100M
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true
+root@2ee005a0b04f:/app# grep 'RECOMMENDATIONS:' /app/analysis_report.txt; tmux wait -S done
+RECOMMENDATIONS:
+root@2ee005a0b04f:/app# grep -c 'ISSUE' /app/analysis_report.txt; tmux wait -S done
+8
+root@2ee005a0b04f:/app# grep 'ISSUE' /app/analysis_report.txt; tmux wait -S done
+IDENTIFIED ISSUES
+ISSUE (HIGH): app.log: Size 0.25 MB, growth rate 15.2 MB/day requires frequent rotation
+ISSUE (HIGH): error.log: Size 0.23 MB, growth rate 8.9 MB/day requires frequent rotation
+ISSUE (HIGH): error.log: No rotation configuration found - risk of uncontrolled growth
+ISSUE (HIGH): access.log: High growth rate (45.7 MB/day) with monthly rotation is inadequate
+ISSUE (MEDIUM): access.log: Size 0.15 MB should be monitored
+ISSUE (MEDIUM): debug.log: No rotation configuration found - risk of uncontrolled growth
+ISSUE (MEDIUM): access.log.old: Old log file not compressed - wasting 0.04 MB
+root@2ee005a0b04f:/app# ls -la /app/*.txt /app/*.conf /app/*.csv; tmux wait -S done
+-rw-r--r-- 1 root root 3972 Oct 17 03:14 /app/analysis_report.txt
+-rw-r--r-- 1 root root 1185 Oct 17 03:14 /app/optimized_logrotate.conf
+-rw-r--r-- 1 root root  313 Oct 17 03:14 /app/rotation_summary.csv
+root@2ee005a0b04f:/app# wc -l /app/analysis_report.txt /app/optimized_logrotate.conf /app/rotation_summary.csv; tmux wait -S done
+ 122 /app/analysis_report.txt
+  67 /app/optimized_logrotate.conf
+   6 /app/rotation_summary.csv
+ 195 total
+root@2ee005a0b04f:/app# head -1 /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+root@2ee005a0b04f:/app#

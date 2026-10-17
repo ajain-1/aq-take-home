@@ -1,0 +1,40 @@
+>     # Critical log - longer retention for compliance
+> }
+>
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     # Low importance - short retention
+> }
+> """
+>
+> with open('/app/optimized_logrotate.conf', 'w') as f:
+>     f.write(logrotate_conf)
+>
+> print("Generated optimized_logrotate.conf")
+>
+> # Generate rotation_summary.csv
+> csv_content = "log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb\n"
+>
+> for item in analysis:
+>     csv_content += "{path},{size:.2f},{days},{schedule},{savings:.2f}\n".format(
+>         path=item['path'],
+>         size=item['size_mb'],
+>         days=item['days_since_rotation'],
+>         schedule=item['recommended_schedule'],
+>         savings=item['estimated_savings']
+>     )
+>
+> with open('/app/rotation_summary.csv', 'w') as f:
+>     f.write(csv_content)
+>
+> print("Generated rotation_summary.csv")
+> print("\nAnalysis complete!")
+> SCRIPT; tmux wait -S done
+> ; tmux wait -S done
+> ^C
+root@e93d067d0a20:/app#

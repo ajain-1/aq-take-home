@@ -1,0 +1,40 @@
+   Current Schedule: weekly
+   Retention Requirement: 90 days
+   Status: OK - properly configured with compression
+
+SUMMARY
+-------
+Total log size: 66 MB
+Files analyzed: 6
+root@bdbf79dfea60:/app# head -30 /app/analysis_report.txt; tmux wait -S done
+LOG ROTATION ANALYSIS REPORT
+============================
+Generated: $(date)
+
+SYSTEM OVERVIEW
+---------------
+Total Memory: 8025 MB
+Available Memory: 4500 MB
+Log Partition Usage: 78%
+Available Disk Space: 50 GB
+Backup Frequency: daily
+Compliance Requirements: PCI-DSS, SOX
+
+Current Log Directory: /var/log/samples/
+Total Log Size: 66 MB (across all log files including rotated)
+
+LOG FILE ANALYSIS
+-----------------
+
+1. /var/log/samples/app.log
+   Current Size: 15 MB
+   Growth Rate: 12.5 MB/day
+   Days Since Rotation: 3
+   Current Schedule: weekly
+   Retention Requirement: 30 days
+   ISSUE (MEDIUM): Large file exceeds 10MB threshold - file growing faster than rotation frequency
+
+2. /var/log/samples/access.log
+   Current Size: 25 MB
+   Growth Rate: 45.7 MB/day
+root@bdbf79dfea60:/app#

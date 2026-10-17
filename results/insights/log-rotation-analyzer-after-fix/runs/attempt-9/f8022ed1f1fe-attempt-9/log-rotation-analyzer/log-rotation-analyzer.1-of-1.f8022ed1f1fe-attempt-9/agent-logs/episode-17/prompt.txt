@@ -1,0 +1,40 @@
+    delaycompress
+    postrotate
+/var/log/samples/error.log {
+root@63f40e5a4436:/app# echo ""
+
+root@63f40e5a4436:/app# echo "4. CSV header check:"
+4. CSV header check:
+root@63f40e5a4436:/app# head -1 /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+root@63f40e5a4436:/app# echo "=== Task Completion Summary ==="
+=== Task Completion Summary ===
+root@63f40e5a4436:/app# echo ""
+
+root@63f40e5a4436:/app# echo "Files created in /app:"
+Files created in /app:
+root@63f40e5a4436:/app# ls -la /app/*.txt /app/*.conf /app/*.csv
+-rw-r--r-- 1 root root 4204 Oct 17 03:18 /app/analysis_report.txt
+-rw-r--r-- 1 root root 2214 Oct 17 03:18 /app/optimized_logrotate.conf
+-rw-r--r-- 1 root root  312 Oct 17 03:18 /app/rotation_summary.csv
+root@63f40e5a4436:/app# echo ""
+
+root@63f40e5a4436:/app# echo "Space reduction percentage:"
+Space reduction percentage:
+root@63f40e5a4436:/app# grep "Potential space reduction" /app/analysis_report.txt
+Potential space reduction: 85%
+root@63f40e5a4436:/app# echo ""
+
+root@63f40e5a4436:/app# echo "The solution recommends 85% space reduction through:"
+The solution recommends 85% space reduction through:
+root@63f40e5a4436:/app# echo "- Daily rotation instead of monthly/weekly"
+- Daily rotation instead of monthly/weekly
+root@63f40e5a4436:/app# echo "- Compression on all rotated logs"
+- Compression on all rotated logs
+root@63f40e5a4436:/app# echo "- Proper retention policies"
+- Proper retention policies
+root@63f40e5a4436:/app# echo ""
+
+root@63f40e5a4436:/app# echo "This exceeds the 20% minimum requirement."; tmux wait -S done
+This exceeds the 20% minimum requirement.
+root@63f40e5a4436:/app#

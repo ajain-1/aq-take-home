@@ -1,0 +1,12 @@
+{
+    "state_analysis": "All required lines are present in the correct format:\n- 'Total log size: 1 MB'\n- 'Estimated total savings: 6 MB'\n- 'Potential space reduction: 85%'\n\nNow let me verify all the ISSUE markers are in the correct format (ISSUE (HIGH), ISSUE (MEDIUM), ISSUE (LOW)) in the LOG FILE ANALYSIS section.",
+    "explanation": "Verifying the ISSUE markers are in the correct format.",
+    "commands": [
+        {
+            "keystrokes": "grep -E \"ISSUE \\((HIGH|MEDIUM|LOW)\\)\" /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

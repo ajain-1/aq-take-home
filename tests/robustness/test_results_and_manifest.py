@@ -8,8 +8,8 @@ from runner.k8s import (
     JobSnapshot,
     _attempts_from_pods,
     _pod_state,
+    attempt_deadline_sec,
     build_job_manifest,
-    job_deadline_sec,
 )
 from runner.models import AttemptProgress, AttemptState, TaskSpec, Wave
 
@@ -103,7 +103,8 @@ def test_manifest_derives_limits_and_never_inlines_secrets(settings, tmp_path):
     container = job["template"]["spec"]["containers"][0]
     assert (job["completions"], job["parallelism"], job["completionMode"]) == (3, 3, "Indexed")
     assert job["backoffLimitPerIndex"] == settings.retries_per_attempt
-    assert job["activeDeadlineSeconds"] == job_deadline_sec(spec, settings) == 120
+    assert "activeDeadlineSeconds" not in job  # per try, from pod start: queueing never counts
+    assert job["template"]["spec"]["activeDeadlineSeconds"] == attempt_deadline_sec(spec, settings) == 120
     assert container["resources"]["requests"] == {"cpu": "1", "memory": "2Gi"}
     assert container["resources"]["limits"] == {"memory": settings.harness_memory_limit}
     secret_env = [e for e in container["env"] if e["name"] == "OPENROUTER_API_KEY"]

@@ -1,0 +1,40 @@
+root@63f40e5a4436:/app# echo "2. Report sections check:"
+2. Report sections check:
+root@63f40e5a4436:/app# grep -n "LOG ROTATION ANALYSIS REPORT\|SYSTEM OVERVIEW\|LOG FILE ANALYSIS\|SUMMARY\|RECOMMENDATIONS:" /app/analysis_report.txt
+1:LOG ROTATION ANALYSIS REPORT
+5:SYSTEM OVERVIEW
+19:LOG FILE ANALYSIS
+61:SUMMARY
+81:RECOMMENDATIONS:
+root@63f40e5a4436:/app# echo ""
+
+root@63f40e5a4436:/app# echo "3. Logrotate config check (paths with rotate and compress):"
+3. Logrotate config check (paths with rotate and compress):
+root@63f40e5a4436:/app# grep -E "^/var/log|rotate|compress" /app/optimized_logrotate.conf | head -20
+# Optimized Logrotate Configuration
+# Implements daily rotation with compression for all log files
+# compress: Enable compression for rotated files
+# delaycompress: Don't compress the most recent rotated file (allows easy access)
+# notifempty: Don't rotate empty files
+/var/log/samples/access.log {
+    rotate 14
+    compress
+    delaycompress
+    postrotate
+/var/log/samples/app.log {
+    rotate 30
+    compress
+    delaycompress
+/var/log/samples/system.log {
+    rotate 90
+    compress
+    delaycompress
+    postrotate
+/var/log/samples/error.log {
+root@63f40e5a4436:/app# echo ""
+
+root@63f40e5a4436:/app# echo "4. CSV header check:"
+4. CSV header check:
+root@63f40e5a4436:/app# head -1 /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+root@63f40e5a4436:/app#

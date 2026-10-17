@@ -1,0 +1,40 @@
+> # NOTE: Previously had NO rotation configuration - CRITICAL FIX
+> /var/log/samples/error.log {
+>     daily
+>     rotate 60
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     maxsize 50M
+>     dateext
+>     dateformat -%Y%m%d
+>     postrotate
+>         /usr/bin/killall -HUP web-server 2>/dev/null || true
+>     endscript
+> }
+>
+> # Debug Log - Low importance, 5.3 MB/day growth, 7 day retention
+> # NOTE: Previously had NO rotation configuration
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     maxsize 25M
+>     dateext
+>     dateformat -%Y%m%d
+> }
+> EOF
+root@741fe3493729:/app# cat > /app/rotation_summary.csv << 'EOF'
+> log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+> /var/log/samples/app.log,0.25,0,daily,0.15
+> /var/log/samples/system.log,0.0002,0,daily,0.0001
+> /var/log/samples/access.log,0.15,0,daily,0.10
+> /var/log/samples/error.log,0.23,0,daily,0.14
+> /var/log/samples/debug.log,0.05,0,daily,0.03
+> EOF
+root@741fe3493729:/app#

@@ -1,0 +1,40 @@
+Change: 2026-10-17 01:55:12.695238000 +0000
+ Birth: 2026-10-17 01:55:09.648016013 +0000
+  File: /var/log/samples/system.log
+  Size: 219             Blocks: 8          IO Block: 4096   regular file
+Device: 0,185   Inode: 139360      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.144238001 +0000
+Modify: 2026-10-17 01:55:07.528016012 +0000
+Change: 2026-10-17 01:55:07.528016012 +0000
+ Birth: 2026-10-17 01:55:07.526016012 +0000
+  File: /var/log/samples/system.log.1.gz
+  Size: 551             Blocks: 8          IO Block: 4096   regular file
+Device: 0,185   Inode: 139382      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.144238001 +0000
+Modify: 2026-10-17 01:55:07.615016012 +0000
+Change: 2026-10-17 01:55:07.616016012 +0000
+ Birth: 2026-10-17 01:55:07.616016012 +0000
+root@8a26108f0519:/app# cat /proc/meminfo | head -20; tmux wait -S done
+MemTotal:        8025428 kB
+MemFree:         1164688 kB
+MemAvailable:    4101020 kB
+Buffers:          685232 kB
+Cached:          2065828 kB
+SwapCached:            4 kB
+Active:          4072828 kB
+Inactive:        2138920 kB
+Active(anon):    3300836 kB
+Inactive(anon):   161536 kB
+Active(file):     771992 kB
+Inactive(file):  1977384 kB
+Unevictable:         168 kB
+Mlocked:               0 kB
+SwapTotal:       1048572 kB
+SwapFree:        1046656 kB
+Zswap:                 0 kB
+Zswapped:              0 kB
+Dirty:              9776 kB
+Writeback:             4 kB
+root@8a26108f0519:/app#

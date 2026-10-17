@@ -1,0 +1,40 @@
+Log Partition Usage: 78%
+Available Disk Space: 50 GB
+Backup Frequency: daily
+Compliance Requirements: PCI-DSS, SOX
+
+Current Log Directory: /var/log/samples/
+Total Log Size: 66 MB (across all log files including rotated)
+
+LOG FILE ANALYSIS
+-----------------
+
+1. /var/log/samples/app.log
+   Current Size: 15 MB
+   Growth Rate: 12.5 MB/day
+   Days Since Rotation: 3
+   Current Schedule: weekly
+   Retention Requirement: 30 days
+   ISSUE (MEDIUM): Large file exceeds 10MB threshold - file growing faster than rotation frequency
+
+2. /var/log/samples/access.log
+   Current Size: 25 MB
+   Growth Rate: 45.7 MB/day
+root@bdbf79dfea60:/app# grep -A 15 'SUMMARY' /app/analysis_report.txt; tmux wait -S done
+SUMMARY
+-------
+Total log size: 66 MB
+Files analyzed: 6
+Issues found: 9
+  - HIGH severity: 4
+  - MEDIUM severity: 3
+  - LOW severity: 2
+
+Disk Space Impact:
+  - Current uncompressed size: 66 MB
+  - Estimated size after optimization: 26 MB
+  - Estimated total savings: 40 MB
+  - Potential space reduction: 60%
+
+Key Problems Identified:
+root@bdbf79dfea60:/app#

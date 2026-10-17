@@ -38,6 +38,9 @@ class Validator:
     def list_unfinished(self) -> list[Validation]:
         return self._store.list_unfinished()
 
+    def latest_for_task(self, task_id: str) -> Validation | None:
+        return next((v for v in self._store.list_recent(200) if v.task_id == task_id), None)
+
     def root(self, validation_id: str) -> Path:
         return self._settings.data_dir / "validations" / validation_id
 

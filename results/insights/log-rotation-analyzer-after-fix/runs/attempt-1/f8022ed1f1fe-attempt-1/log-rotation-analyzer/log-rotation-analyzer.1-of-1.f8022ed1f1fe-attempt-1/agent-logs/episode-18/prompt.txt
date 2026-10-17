@@ -1,0 +1,40 @@
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    dateext
+    maxsize 50M
+}
+
+/var/log/samples/system.log {
+    weekly
+    rotate 90
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    dateext
+}
+
+/var/log/samples/access.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 100M
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true
+root@2ee005a0b04f:/app# grep 'RECOMMENDATIONS:' /app/analysis_report.txt; tmux wait -S done
+RECOMMENDATIONS:
+root@2ee005a0b04f:/app# grep -c 'ISSUE' /app/analysis_report.txt; tmux wait -S done
+8
+root@2ee005a0b04f:/app#

@@ -1,0 +1,40 @@
+  Growth Rate: 8.9 MB/day
+  Retention Requirement: 60 days
+  Has Rotation Config: No
+  Days Since Last Rotation: 0
+
+File: /var/log/samples/debug.log
+  Current Size: 0.05 MB (54292 bytes)
+  Type: debug
+root@2ee005a0b04f:/app# head -30 /app/analysis_report.txt; tmux wait -S done
+LOG ROTATION ANALYSIS REPORT
+============================
+Generated: 2026-10-17 03:14:56
+
+SYSTEM OVERVIEW
+---------------
+Disk Partition Usage: 78%
+Available Disk Space: 50 GB
+Total Memory: 8 GB
+Compliance Requirements: PCI-DSS, SOX
+Backup Frequency: daily
+
+Current Issues Identified:
+- High disk usage on log partition
+- Inconsistent rotation schedules
+- Missing compression on some logs
+- Some critical logs lack rotation configuration
+
+LOG FILE ANALYSIS
+-----------------
+
+File: /var/log/samples/app.log
+  Current Size: 0.25 MB (259893 bytes)
+  Type: application
+  Importance: high
+  Growth Rate: 15.2 MB/day
+  Retention Requirement: 30 days
+  Has Rotation Config: Yes
+  Days Since Last Rotation: 0
+
+root@2ee005a0b04f:/app#

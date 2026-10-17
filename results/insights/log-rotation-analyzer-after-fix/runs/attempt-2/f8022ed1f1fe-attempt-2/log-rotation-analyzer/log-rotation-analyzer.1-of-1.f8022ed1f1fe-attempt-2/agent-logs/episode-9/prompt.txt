@@ -1,0 +1,40 @@
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     maxsize 30M
+> }}
+> """.format(date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+>
+> with open('/app/optimized_logrotate.conf', 'w') as f:
+>     f.write(logrotate_conf)
+>
+> print("Created optimized_logrotate.conf")
+>
+> # Generate rotation_summary.csv
+> csv_content = "log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb\n"
+>
+> schedule_map = {
+>     '/var/log/samples/app.log': 'weekly',
+>     '/var/log/samples/system.log': 'weekly',
+>     '/var/log/samples/access.log': 'daily',
+>     '/var/log/samples/error.log': 'daily',
+>     '/var/log/samples/debug.log': 'daily'
+> }
+>
+> for path, info in log_files_info.items():
+>     size_mb = info['size_mb']
+>     days_since = 0  # Files were just created/modified
+>     schedule = schedule_map.get(path, 'weekly')
+>     # Estimate savings: compression ratio ~70% + better rotation practices
+>     savings = size_mb * 0.6 if size_mb > 0.01 else 0.01
+>
+>     csv_content += f"{path},{size_mb:.3f},{days_since},{schedule},{savings:.3f}\n"
+>
+> with open('/app/rotation_summary.csv', 'w') as f:
+>     f.write(csv_content)
+>
+> print("Created rotation_summary.csv")
+> print("\nAll files created successfully!")
+> EOF
+root@35c890c98987:/app#

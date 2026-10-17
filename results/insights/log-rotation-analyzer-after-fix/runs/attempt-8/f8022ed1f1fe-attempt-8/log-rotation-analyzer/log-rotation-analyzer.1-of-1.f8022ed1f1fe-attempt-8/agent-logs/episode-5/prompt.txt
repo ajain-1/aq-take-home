@@ -1,0 +1,50 @@
+Previous command:
+keystrokes='du -sh /var/log/samples/*\n' is_blocking=True timeout_sec=10.0
+
+The previous command timed out after 10.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+    compress
+    missingok
+}
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@15c67a1a5c04:/app# find /var/log/samples/ -type f -exec ls -lah {} ;; tmux wait -S done
+bash: syntax error near unexpected token `;;'
+root@15c67a1a5c04:/app# ls -lah /var/log/samples/; tmux wait -S done
+total 768K
+drwxr-xr-x 1 root root 4.0K Oct 17 01:55 .
+drwxr-xr-x 1 root root 4.0K Oct 17 01:55 ..
+-rw-r--r-- 1 root root 158K Oct 17 01:55 access.log
+-rw-r--r-- 1 root root  40K Oct 17 01:55 access.log.old
+-rw-r--r-- 1 root root 254K Oct 17 01:55 app.log
+-rw-r--r-- 1 root root  54K Oct 17 01:55 debug.log
+-rw-r--r-- 1 root root 234K Oct 17 01:55 error.log
+-rw-r--r-- 1 root root  219 Oct 17 01:55 system.log
+-rw-r--r-- 1 root root  551 Oct 17 01:55 system.log.1.gz
+root@15c67a1a5c04:/app# du -sh /var/log/samples/*; tmux wait -S done
+160K    /var/log/samples/access.log
+40K     /var/log/samples/access.log.old
+256K    /var/log/samples/app.log
+56K     /var/log/samples/debug.log
+236K    /var/log/samples/error.log
+4.0K    /var/log/samples/system.log
+4.0K    /var/log/samples/system.log.1.gz
+root@15c67a1a5c04:/app#
+

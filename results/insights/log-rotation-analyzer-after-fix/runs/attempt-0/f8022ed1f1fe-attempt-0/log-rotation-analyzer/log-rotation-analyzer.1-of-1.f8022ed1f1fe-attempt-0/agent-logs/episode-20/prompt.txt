@@ -1,0 +1,40 @@
+Total daily growth rate: 77.2 MB/day
+Projected monthly growth: 2.3 GB
+Current disk usage: 78%
+---
+RECOMMENDATIONS:
+================
+
+1. ROTATION FREQUENCY:
+   - access.log: Change from monthly to daily rotation (critical - 45.7 MB/day growth)
+   - app.log: Change from weekly to daily rotation (high growth rate of 15.2 MB/day)
+   - error.log: Add daily rotation configuration (8.9 MB/day growth, critical importance)
+   - debug.log: Add daily rotation configuration (5.3 MB/day growth)
+   - system.log: Keep weekly rotation (low growth rate of 2.1 MB/day)
+
+2. COMPRESSION:
+   - Enable compression on ALL rotated logs immediately
+   - Use gzip compression (default) for 80-90% space savings
+   - Remove delaycompress where not needed to save space sooner
+   - Compress existing access.log.old file manually
+
+3. RETENTION:
+   - access.log: Keep 14 rotated copies (14 days per compliance)
+   - app.log: Keep 30 rotated copies (30 days retention requirement)
+   - error.log: Keep 60 rotated copies (60 days for debugging/compliance)
+   - debug.log: Keep 7 rotated copies (7 days sufficient for debug logs)
+--
+5. ADDITIONAL RECOMMENDATIONS:
+   - Add 'notifempty' to avoid rotating empty log files
+   - Add 'missingok' to handle missing log files gracefully
+root@3e09ffd123d3:/app# grep -E '(Estimated total savings|Potential space reduction)' /app/analysis_report.txt; tmux wait -S done
+Estimated total savings: 0.52 MB
+Potential space reduction: 72%
+root@3e09ffd123d3:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.25,0,daily,0.20
+/var/log/samples/access.log,0.15,0,daily,0.12
+/var/log/samples/error.log,0.23,0,daily,0.18
+/var/log/samples/debug.log,0.05,0,daily,0.04
+/var/log/samples/system.log,0.0002,0,weekly,0.0001
+root@3e09ffd123d3:/app#

@@ -38,6 +38,9 @@ class ValidationService:
     def get(self, validation_id: str) -> Validation:
         return self._validator.get(validation_id)
 
+    def latest_for_task(self, task_id: str) -> Validation | None:
+        return self._validator.latest_for_task(task_id)
+
     def resume_unfinished(self) -> None:
         for validation in self._validator.list_unfinished():
             # A gating validation is resumed by the submission it gates.

@@ -1,0 +1,40 @@
+================================================================================
+Generated: 2026-10-17 03:15:22
+
+SYSTEM OVERVIEW
+--------------------------------------------------------------------------------
+Total Memory: 8 GB
+Available Disk: 50 GB
+Log Partition Usage: 78%
+Compliance Requirements: PCI-DSS, SOX
+Backup Frequency: daily
+
+LOG FILE ANALYSIS
+--------------------------------------------------------------------------------
+
+File: /var/log/samples/app.log
+  Type: application | Importance: high
+  Current Size: 0.248 MB
+  Growth Rate: 15.2 MB/day
+  Retention Requirement: 30 days
+  Rotated Files: None
+
+File: /var/log/samples/system.log
+  Type: system | Importance: critical
+  Current Size: 0.000 MB
+  Growth Rate: 2.1 MB/day
+  Retention Requirement: 90 days
+  Rotated Files: ['system.log.1.gz']
+
+File: /var/log/samples/access.log
+  Type: access | Importance: medium
+  Current Size: 0.154 MB
+  Growth Rate: 45.7 MB/day
+  Retention Requirement: 14 days
+  Rotated Files: ['access.log.old']
+  ISSUE (MEDIUM): Rotated files are not compressed - wasting disk space
+  ISSUE (HIGH): Monthly rotation too infrequent for 45.7 MB/day growth rate
+
+File: /var/log/samples/error.log
+  Type: error | Importance: critical
+root@35c890c98987:/app#

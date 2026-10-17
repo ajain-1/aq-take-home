@@ -1,0 +1,40 @@
+root@63f40e5a4436:/app# echo "=== Checking report sections ==="
+=== Checking report sections ===
+root@63f40e5a4436:/app# grep -E "^(LOG ROTATION|SYSTEM OVERVIEW|LOG FILE ANALYSIS|SUMMARY|RECOMMENDATIONS)" /app/analysis_report.txt; tmux wait -S done
+LOG ROTATION ANALYSIS REPORT
+SYSTEM OVERVIEW
+LOG FILE ANALYSIS
+SUMMARY
+RECOMMENDATIONS:
+root@63f40e5a4436:/app# grep -A 15 "^SUMMARY" /app/analysis_report.txt; tmux wait -S done
+SUMMARY
+-------
+Total log size: 1 MB
+Files analyzed: 5
+High severity issues: 4
+Medium severity issues: 3
+Low severity issues: 2
+
+Projected Weekly Growth Without Optimization:
+- access.log: 319.9 MB/week
+- app.log: 87.5 MB/week
+- system.log: 177.1 MB/week
+- error.log: 62.3 MB/week
+- debug.log: 37.1 MB/week
+Total projected: 683.9 MB/week uncompressed
+
+root@63f40e5a4436:/app# grep -E "(Total log size|Estimated total savings|Potential space reduction)" /app/analysis_report.txt; tmux wait -S done
+Total log size: 1 MB
+Estimated total savings: 6 MB
+Potential space reduction: 85%
+root@63f40e5a4436:/app# grep -E "ISSUE \((HIGH|MEDIUM|LOW)\)" /app/analysis_report.txt; tmux wait -S done
+  ISSUE (HIGH): Large file exceeds 10MB threshold potential - with 45.7 MB/day growth rate, monthly rotation will result in files over 1GB
+  ISSUE (HIGH): Rotation schedule (monthly) inadequate for high-growth access log
+  ISSUE (MEDIUM): Uncompressed old file access.log.old found - missing compression
+  ISSUE (MEDIUM): Weekly rotation may allow files to grow to 87.5 MB before rotation
+  ISSUE (LOW): Configuration adequate but daily rotation recommended for 25.3 MB/day growth
+  ISSUE (HIGH): Critical log file has no rotation configuration
+  ISSUE (HIGH): Missing rotation for critical error logs poses compliance risk (PCI-DSS, SOX)
+  ISSUE (MEDIUM): Debug log has no rotation configuration
+  ISSUE (LOW): Low importance file but still requires rotation to prevent disk fill
+root@63f40e5a4436:/app#

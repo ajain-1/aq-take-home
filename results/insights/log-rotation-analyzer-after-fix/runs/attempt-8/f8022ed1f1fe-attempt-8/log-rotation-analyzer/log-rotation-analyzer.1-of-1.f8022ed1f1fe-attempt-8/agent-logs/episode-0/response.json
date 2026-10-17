@@ -1,0 +1,22 @@
+{
+    "state_analysis": "The terminal is at a fresh bash prompt in the /app directory. I need to start analyzing the log rotation patterns and create the required files.",
+    "explanation": "First, I'll explore the available data: examine the log files in /var/log/samples/, check the current logrotate configurations, and look at the log_metadata.json file to understand what we're working with.",
+    "commands": [
+        {
+            "keystrokes": "ls -la /var/log/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "ls -la /etc/logrotate.d/samples/\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "cat log_metadata.json\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

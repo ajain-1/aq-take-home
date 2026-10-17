@@ -1,0 +1,40 @@
+-rw-r--r-- 1 root root  312 Oct 17 03:18 rotation_summary.csv
+root@8a26108f0519:/app# head -30 /app/analysis_report.txt; tmux wait -S done
+LOG ROTATION ANALYSIS REPORT
+================================================================================
+Generated: $(date)
+Analyzer Version: 1.0
+
+================================================================================
+SYSTEM OVERVIEW
+================================================================================
+
+Disk Space Status:
+- Log partition usage: 78%
+- Available disk space: 50 GB
+- Status: WARNING - High disk usage detected
+
+System Memory:
+- Total Memory: 8025 MB
+- Available Memory: 4101 MB
+
+Compliance Requirements: PCI-DSS, SOX
+Backup Frequency: Daily
+Peak Traffic Hours: 09:00-11:00, 14:00-16:00, 20:00-22:00
+
+Total Log Files Analyzed: 5
+Total Current Log Size: 0.74 MB
+Log Files with Rotation Config: 3
+Log Files without Rotation Config: 2
+
+================================================================================
+LOG FILE ANALYSIS
+================================================================================
+root@8a26108f0519:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/app.log,0.25,0,daily,0.05
+/var/log/samples/system.log,0.00,0,daily,0.00
+/var/log/samples/access.log,0.16,0,daily,0.08
+/var/log/samples/error.log,0.23,0,daily,0.05
+/var/log/samples/debug.log,0.05,0,daily,0.02
+root@8a26108f0519:/app#

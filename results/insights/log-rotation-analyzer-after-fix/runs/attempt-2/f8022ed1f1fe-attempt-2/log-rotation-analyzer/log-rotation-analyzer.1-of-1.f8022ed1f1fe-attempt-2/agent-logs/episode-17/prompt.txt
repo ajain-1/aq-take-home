@@ -1,0 +1,40 @@
+}
+
+# System Log - Critical importance, low growth, long retention
+/var/log/samples/system.log {
+    weekly
+    rotate 13
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    dateext
+root@35c890c98987:/app# grep -E '^/var/log|rotate|compress' /app/optimized_logrotate.conf; tmux wait -S done
+# Optimized Logrotate Configuration
+# Purpose: Implement proper rotation schedules with compression and retention
+/var/log/samples/app.log {
+    rotate 5
+    compress
+    delaycompress
+    postrotate
+/var/log/samples/system.log {
+    rotate 13
+    compress
+    delaycompress
+    postrotate
+/var/log/samples/access.log {
+    rotate 14
+    compress
+    delaycompress
+    postrotate
+/var/log/samples/error.log {
+    rotate 60
+    compress
+    delaycompress
+    postrotate
+/var/log/samples/debug.log {
+    rotate 7
+    compress
+    delaycompress
+root@35c890c98987:/app#

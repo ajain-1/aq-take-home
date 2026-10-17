@@ -1,0 +1,50 @@
+Previous command:
+keystrokes="grep 'Potential space reduction' /app/analysis_report.txt\n" is_blocking=True timeout_sec=10.0
+
+The previous command timed out after 10.0 seconds
+
+It is possible that the command is not yet finished executing. If that is the case, then do nothing. It is also possible that you have entered an interactive shell and should continue sending keystrokes as normal.
+
+Here is the current state of the terminal:
+
+    maxsize 100M
+    dateext
+    dateformat -%Y%m%d
+    sharedscripts
+    postrotate
+        /usr/bin/systemctl reload nginx > /dev/null 2>&1 || true
+    endscript
+}
+
+# Application Log - High importance, 12.5 MB/day growth
+# Changed from weekly to daily rotation
+/var/log/samples/app.log {
+    daily
+    rotate 30
+    compress
+    compresscmd /bin/gzip
+    compressext .gz
+    missingok
+    notifempty
+    create 644 www-data www-data
+    maxsize 100M
+    dateext
+    dateformat -%Y%m%d
+}
+
+root@15c67a1a5c04:/app# grep -A10 'SUMMARY' /app/analysis_report.txt; tmux wait -S done
+SUMMARY
+-------
+Total Files Analyzed: 6
+Files with Issues: 5
+Files Missing Rotation Config: 2 (error.log, debug.log)
+Files with Inadequate Rotation: 2 (access.log, app.log)
+Uncompressed Rotated Files: 1 (access.log.old)
+
+Total log size: 0.74 MB
+Projected 30-day growth without optimization: 2,233 MB
+Estimated total savings: 0.19 MB
+root@15c67a1a5c04:/app# grep 'Potential space reduction' /app/analysis_report.txt; tmux wait -S done
+Potential space reduction: 26%
+root@15c67a1a5c04:/app#
+

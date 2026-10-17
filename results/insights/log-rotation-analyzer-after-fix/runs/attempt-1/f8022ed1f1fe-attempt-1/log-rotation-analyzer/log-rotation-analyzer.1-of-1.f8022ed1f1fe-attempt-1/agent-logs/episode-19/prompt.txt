@@ -1,0 +1,40 @@
+}
+
+/var/log/samples/system.log {
+    weekly
+    rotate 90
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 root adm
+    dateext
+}
+
+/var/log/samples/access.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    maxsize 100M
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid) 2>/dev/null || true
+root@2ee005a0b04f:/app# grep 'RECOMMENDATIONS:' /app/analysis_report.txt; tmux wait -S done
+RECOMMENDATIONS:
+root@2ee005a0b04f:/app# grep -c 'ISSUE' /app/analysis_report.txt; tmux wait -S done
+8
+root@2ee005a0b04f:/app# grep 'ISSUE' /app/analysis_report.txt; tmux wait -S done
+IDENTIFIED ISSUES
+ISSUE (HIGH): app.log: Size 0.25 MB, growth rate 15.2 MB/day requires frequent rotation
+ISSUE (HIGH): error.log: Size 0.23 MB, growth rate 8.9 MB/day requires frequent rotation
+ISSUE (HIGH): error.log: No rotation configuration found - risk of uncontrolled growth
+ISSUE (HIGH): access.log: High growth rate (45.7 MB/day) with monthly rotation is inadequate
+ISSUE (MEDIUM): access.log: Size 0.15 MB should be monitored
+ISSUE (MEDIUM): debug.log: No rotation configuration found - risk of uncontrolled growth
+ISSUE (MEDIUM): access.log.old: Old log file not compressed - wasting 0.04 MB
+root@2ee005a0b04f:/app#

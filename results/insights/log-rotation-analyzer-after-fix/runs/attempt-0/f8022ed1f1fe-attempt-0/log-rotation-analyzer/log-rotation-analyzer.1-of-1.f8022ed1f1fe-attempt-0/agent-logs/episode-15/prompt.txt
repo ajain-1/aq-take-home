@@ -1,0 +1,40 @@
+>
+> # System Log - Critical importance, 2.1 MB/day growth (low)
+> /var/log/samples/system.log {
+>     weekly
+>     rotate 13
+>     compress
+>     compresscmd /bin/gzip
+>     compressoptions -9
+>     missingok
+>     notifempty
+>     create 644 root adm
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 20M
+> }
+>
+> # Debug Log - Low importance, 5.3 MB/day growth
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     compresscmd /bin/gzip
+>     compressoptions -9
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 30M
+> }
+> EOF
+root@3e09ffd123d3:/app# cat > /app/rotation_summary.csv << 'EOF'
+> log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+> /var/log/samples/app.log,0.25,0,daily,0.20
+> /var/log/samples/access.log,0.15,0,daily,0.12
+> /var/log/samples/error.log,0.23,0,daily,0.18
+> /var/log/samples/debug.log,0.05,0,daily,0.04
+> /var/log/samples/system.log,0.0002,0,weekly,0.0001
+> EOF
+root@3e09ffd123d3:/app#

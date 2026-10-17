@@ -1,0 +1,22 @@
+{
+    "state_analysis": "All three files have been created. Let me verify that all files exist and have the correct content by checking them.",
+    "explanation": "Verifying the created files exist and have the proper content.",
+    "commands": [
+        {
+            "keystrokes": "ls -la /app/\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "head -20 /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        },
+        {
+            "keystrokes": "cat /app/rotation_summary.csv\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

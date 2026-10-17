@@ -34,6 +34,7 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
 - `tasks/log-rotation-analyzer/generate-samples.sh`: The sample logs and logrotate configs were written to `/app/sample_logs` and `/app/sample_configs`, while the instruction points the agent at `/var/log/samples/` and `/etc/logrotate.d/samples/`, which were left empty. The script now writes there; `log_metadata.json` stays in `/app`.
 - `tasks/log-rotation-analyzer/task.yaml`: The tests read `analysis_report.txt`, `optimized_logrotate.conf` and `rotation_summary.csv` from the working directory, but the instruction never said where to write them. It now says `/app`.
   - **Report format.** The tests also require exact text the instruction never stated: the title `LOG ROTATION ANALYSIS REPORT`, the section headings `SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `SUMMARY` and `RECOMMENDATIONS:`, `ISSUE (HIGH|MEDIUM|LOW)` markers, and the `Total log size:`, `Estimated total savings:` and `Potential space reduction: N%` lines. Stretch goal D's insight report found this (`results/insights/log-rotation-analyzer/insights.md`): 0/5 terminus-1 attempts resolved, with four tests failing in every attempt on exactly these strings. The instruction now states the format, the CSV header and the config expectations; the tests are unchanged. The oracle still passes 7/7 and nop fails 7/7 (`results/task-verification/log-rotation-analyzer.*.log`). The insight runs predate this fix.
+  - **Result after the fix:** 10/10 terminus-1 attempts resolved, all 7/7 tests (`results/insights/log-rotation-analyzer-after-fix/`). Both B's rule and D's report now classify the task as `too_easy`. The 0/5 before the fix measured the under-specified instruction, not the agent.
 - `tasks/csv-to-json-cli-fix`: Checked; no changes needed.
 
 #### Design decisions
@@ -42,7 +43,7 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
 - **`task.yaml` drives execution.**
   - `resource_class` maps to pod resource requests, so the scheduler queues work when the node is full, and to `cpus`/`mem_limit` on the task container.
   - The agent and test timeouts are enforced by `tb`.
-  - The Job's `activeDeadlineSeconds` (`(agent + test + overhead) × (1 + retries)`) is the backstop for hangs.
+  - Each attempt pod has `activeDeadlineSeconds` = `agent + test + overhead` as the backstop for hangs. A pod's deadline counts from when it starts, so time spent queued for cluster capacity never counts against it.
 - **Shared storage is a hostPath at the same absolute path** in the API, the pods, and the task containers. This is the local stand-in for a bucket. Docker Desktop's daemon sees macOS paths under `/host_mnt`, so the compose bind mounts are prefixed with it (`AQ_HOST_PATH_PREFIX`).
 - **Passing, across N attempts.** `passed` means every attempt resolved the task. `summary.resolved_attempts`/`pass_rate` and per-test `pass_rate` give the distribution, which is what the "learnable data point" classification needs.
 
@@ -61,7 +62,12 @@ Every task was checked with plain Docker (`scripts/verify_task.sh`; logs in `res
   - Pods that can never start fail the submission immediately instead of waiting out the deadline: container-level errors (`ErrImageNeverPull`, `CreateContainerConfigError`, …) and volume failures (`FailedMount`, read from pod events after 3 repeats so a transient hiccup doesn't count).
 - **Task container memory.** `resource_class` caps the task container through compose `mem_limit`, with `memswap_limit` set to the same value (otherwise Docker silently adds an equal amount of swap and the limit doubles). If a task exceeds it, Docker kills the task container rather than the pod. terminal-bench would report that as a plain agent or test failure, so the pod watches Docker's `oom` events for its task container, and the attempt's `infrastructure_issues` says it was OOM-killed.
 - **Partial results.** Each attempt has one of three statuses: `completed` (tests ran), `tests_not_run` (the trial finished but produced no parseable test results, e.g. a test timeout), or `error` (no results at all, reported with the pod's reason, e.g. `OOMKilled (exit code 137)`). The other attempts still report either way. The submission is `failed` only if every attempt errored.
-- **Timeouts everywhere.** Docker builds (`AQ_BUILD_TIMEOUT_SEC`), the Job deadline, and an executor-side wait deadline (Job deadline plus a grace period) after which the Job is deleted.
+- **Timeouts everywhere.**
+  - **Docker builds:** limited by `AQ_BUILD_TIMEOUT_SEC`.
+  - **Per-pod deadline:** each try of an attempt has its own deadline.
+  - **Executor backstop:** it charges only time while attempts are actually running, persisted per wave so it survives restarts. Past every try's budget plus a grace period, it deletes the Job.
+  - **Queue cap:** a wave whose attempts only wait for capacity fails after `AQ_MAX_QUEUE_SEC` (default 1 hour) with a clear "waited for cluster capacity" error, and `/status` shows queued attempts as `Unschedulable` with the scheduler's message.
+  - **Verified live:** on an N=10 run, 7 attempts queued as `Unschedulable: Insufficient memory` while the wave clock charged only running time.
 - **Cleanup always runs** after a terminal outcome: the Job is deleted, then labelled task containers and networks (which can be orphaned when a pod is killed before compose teardown), then the task images. `ttlSecondsAfterFinished` is a fallback. Each pod log is saved next to its attempt before the Job is deleted.
 - **Bounded concurrency.** A worker pool caps active submissions and a semaphore caps concurrent Docker builds. Pod resource requests let Kubernetes queue attempts rather than overcommit the node.
 - **Secrets.** The OpenRouter key is read from `.env` (gitignored) and reaches pods only through a Kubernetes Secret; it is never written to disk by the executor or logged.
@@ -76,7 +82,6 @@ bash scripts/run_all.sh                           # API_URL=... to use another p
 The first submission builds the Job pod image (a few minutes); later submissions reuse it. Per-submission artifacts live under `data/submissions/<id>/`.
 
 #### Known limitations
-- The Job's `activeDeadlineSeconds` starts when the Job is created, so time spent `Pending` on a saturated node counts against it.
 - Docker builds are not interruptible, so a clean API shutdown waits for in-flight builds to finish.
 
 #### Fixes from code reviews
@@ -108,28 +113,52 @@ The first submission builds the Job pod image (a few minutes); later submissions
 ## Stretch goal A: UI
 
 #### What I did
-- Added a web UI at `GET /ui`. It is plain HTML/CSS/JS in `api/static/` with no build step, served by the same FastAPI app.
-  - **Submit:** drag and drop (or choose) a task ZIP, pick the number of attempts and the agent, and submit. Validation errors from `/submit` (e.g. a malformed ZIP) are shown inline.
-  - **Watch it run:** the page polls `/status` every 2.5s and shows the status, phase, timestamps, and a chip per attempt with its pod state, retry count and failure reason. The submission list refreshes every 5s, and the URL hash makes a submission linkable.
-  - **Agent trajectory:** each LLM turn is shown with the agent's state analysis, plan, the exact keystrokes it sent (blocking/timeout), whether it marked the task complete, and the terminal output it saw afterwards. The initial prompt and the terminal after the agent and after the tests are collapsible. The trajectory works during a run, since agent logs are written as the agent goes.
-  - **Results:** resolved attempts, pass rate, and per-test pass counts across attempts, plus a tab per attempt with per-test pass/fail, timings, token usage and the pytest output.
-- Added read-only endpoints in `api/ui_routes.py`, kept out of `main.py`:
-  - `GET /submissions` lists the most recent submissions.
-  - `GET /submissions/{id}/attempts/{n}/episodes` returns the turn-by-turn trajectory (`agent-logs/episode-N/{prompt.txt,response.json}`) plus the tmux pane snapshots.
+- A web UI at `GET /ui`, organized around how you actually look at results: tasks first, then the runs of a task, then the attempts of a run. It is unbundled ES modules in `api/static/` (`api.js`, `router.js`, `components.js`, `views/*.js`) with a hash router, so every screen has its own link.
+  - **Dashboard** (`#/`): headline numbers (tasks, runs, agent attempts, overall resolve rate with a 95% interval, median attempt time, model spend and tokens), a "running now" strip with each active run's phase, a table with one row per task (resolve rate bar, learnability, runs, median attempt, last outcome), and a breakdown of why agent attempts fail.
+  - **Task page** (`#/tasks/{id}`):
+    - the task's spec: difficulty, category, resources, timeouts, and the instruction (collapsible);
+    - aggregates across all its runs;
+    - a **per-test grid** (rows are tests, columns are attempts across runs, oldest first), so a test that fails in every column stands out;
+    - **Caveat:** a task's aggregates group runs by task ID, so runs of an edited task (e.g. `log-rotation-analyzer` before and after its instruction fix) are combined. Grouping by a hash of the task's contents would separate versions.
+    - failure categories, the latest validation report (C), D's insight findings with their verified evidence, and the list of runs.
+  - **Run page** (`#/runs/{id}`): one outcome badge (Passed, Partially passed, Failed, Running, Queued or Error).
+    - **While running:** a phase stepper and one card per attempt, with the pod state as grey detail.
+    - **When done:** headline numbers, attempt cards (resolved, tests x/y, duration, tokens, failure category, infrastructure issues), the per-test table across this run's attempts (shown once), the adaptive strategy's waves and decision (B), and insights.
+  - **Attempt page** (`#/runs/{id}/attempts/{n}`): the trajectory view.
+    - On the left, a compact timeline: the task given to the agent, then one line per turn with its plan, number of commands, and markers for "declared done", "warned: tests failing" and "command timed out"; it ends with the test verdict.
+    - On the right, the selected turn: what the agent saw, what it decided, the exact commands, and the terminal output it saw next.
+    - `↑`/`↓` or `j`/`k` step through turns, and a live attempt follows the newest turn (one still waiting for the model shows as "Waiting for the model…").
+    - Other tabs: Tests, Pytest output, and **Terminal replay**, which plays the attempt's asciinema recording (asciinema-player 3.8.0, pinned) with the agent's turns as markers.
+  - **Submit** (`#/submit`): a drop zone plus agent, strategy (fixed attempts, or adaptive with a stopping rule) and validation gate. It goes straight to the new run's page; a 422 shows its message and, for a failed static gate, the report's findings.
+- **One status vocabulary:** only the outcome is coloured. Pipeline phase and pod state are neutral grey text, so "pod succeeded" can never sit next to "tests failed" again.
+- **Read-only endpoints** in `api/ui_routes.py`, backed by `runner/catalog.py`, a pure, unit-tested aggregation module (`tests/test_catalog.py`):
+  - `GET /dashboard` and `GET /tasks`;
+  - `GET /tasks/{task_id}` (spec, aggregates, per-test grid, runs, latest validation);
+  - `GET /submissions` and `GET /submissions/{id}/attempts/{n}/episodes`;
+  - `GET /submissions/{id}/attempts/{n}/recording`.
+- **`GET /results`** now adds a `category` to each attempt (from `catalog.attempt_category`, using the same names as D's insights), so the UI never re-derives it.
 
 #### Design decisions
-- **No frontend toolchain.** A single static page keeps the UI deployable with the API and reviewable in one sitting. All content goes through `textContent` (a tiny `h()` DOM helper), never `innerHTML`, so agent output and terminal text can't inject markup.
-- **Turns are paired with what the agent saw next.** terminus-1 feeds the terminal output after a turn's commands back as the next prompt, so the API attaches episode N+1's prompt to episode N as its "observation". That puts each action next to its effect.
-- **Safe paths.** Artifact paths are never taken from the request. The submission ID must exist in the store, the attempt index is an int bounded by `n_attempts`, and the trial directory is found by globbing inside that attempt's own directory.
+- **Aggregates count LLM-agent attempts only.** Oracle/nop runs are listed, but never pooled into a task's resolve rate. A task's learnability prefers the latest adaptive run's exact decision (B) and otherwise applies the same exact 10-run rule to the pooled attempts, so it says "Not enough runs" until it's decided.
+- **Attempts are bounded by what actually ran**, not by `n_attempts`. Adaptive runs launch a variable number of attempts, so the episodes and recording endpoints return 404 for anything else, and paths are never built from the request.
+- **No frontend toolchain, safe rendering.** All content goes through a small `h()` DOM helper that only creates text nodes, never `innerHTML`, so agent output and terminal text can't inject markup. Static files are served with `Cache-Control: no-cache`, so browsers revalidate the modules and never keep running a stale UI after a change.
+- **Polling, not push.** The pages showing live data poll (every 2.5s for a run, 4s for an attempt, 5s on the dashboard while something is running) and stop once the run finishes.
+
+#### Bug found while building the replay
+- terminal-bench merges the agent's turn markers into `agent.cast` while asciinema is still recording; the session is only stopped afterwards. `AsciinemaHandler` rewrote the file in place, so asciinema's later writes landed in the middle of the merged content and split JSON lines, and the player refused the file.
+  - **Fix:** it now writes the merged file elsewhere and atomically replaces it (late writes go to the old inode), and skips partial lines instead of raising mid-trial.
+  - **Older recordings:** the recording endpoint drops corrupt lines, so they still play.
+  - **Tests:** `tests/test_recordings.py` covers both.
 
 #### How I verified it
-- Developed the trajectory viewer against the committed real run (`results/sample-run`). Then did one real `terminus-1` run end to end through the UI in Chrome: uploaded `config-manifest-validator.zip` through the file input, submitted, watched the live status and live trajectory, and saw the final results (7/7 passed). I restarted the API mid-run; the submission resumed and finished.
-- Screenshots are in `docs/ui/`: `submitted-running.jpg`, `live-trajectory.jpg`, `completed-results.jpg`, `pytest-output.jpg`, `trajectory.jpg`.
-- Checked with curl that path-traversal attempts and an out-of-range attempt index return 404, and that a non-ZIP upload returns 422.
+- **Data:** a copy of the real data (the six-task `terminus-1` run and earlier oracle runs), plus one new 3-attempt `terminus-1` run of `log-rotation-analyzer` and an adaptive oracle run of `csv-to-json-cli-fix` submitted through the UI.
+- **Screens in Chrome:** dashboard, task page, run page (live and finished), attempt page (live, finished, keyboard stepping, terminal replay) and the submit flow.
+- **The new run doubles as evidence for the task fix:** it passed 3/3 after the instruction change. The task page's grid shows the earlier run failing the same four tests and all three new attempts passing them.
+- **Screenshots** in `docs/ui/`: `dashboard.jpg`, `task.jpg`, `run-live.jpg`, `run-finished.jpg`, `attempt-trajectory.jpg`, `attempt-replay.jpg`, `submit.jpg`.
 
 #### Tradeoffs / what I'd do next
-- Polling rather than server-sent events or WebSockets: simpler and good enough at a 2.5s interval. SSE would cut latency and load.
-- No asciinema playback yet. The `.cast` recordings are already saved per trial, and embedding asciinema-player would let you replay the terminal.
+- Polling rather than server-sent events: simpler and good enough here. SSE would cut latency and load.
+- The live adaptive run page shows the current wave's attempts but not yet the plan ("wave 2 of up to 10 attempts").
 - No auth. The UI exposes everything the API does, which is fine for a local tool but not for a shared deployment.
 
 ## Stretch goal B: Inference cost optimization
@@ -232,6 +261,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
   - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files. This finding led to fixing the task's instruction (see the tasks section); the committed runs predate that fix.
   - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and gives `undetermined` for learnability (8 passes are needed to call it too easy) rather than declaring it too easy.
   - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `undetermined` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
+  - **`log-rotation-analyzer` after its instruction fix, 10 attempts: 10/10 resolved** (`results/insights/log-rotation-analyzer-after-fix/`), verdict `too_easy`. This was run specifically to get mixed results for divergence detection, but the fixed task turned out too easy for Opus 4.5. Divergence detection therefore still has no real-run evidence; a weaker model would be the cheap way to get a mixed sample.
 
 #### How trust is enforced
 - Every finding carries evidence IDs. Each item is either a verbatim quote, with its source path relative to the submission and, where relevant, line, attempt and episode, or an absence claim scoped to exactly what it is about (`task.yaml#instruction`).

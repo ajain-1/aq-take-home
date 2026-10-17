@@ -1,0 +1,40 @@
+> print("\nAnalysis complete!")
+> SCRIPT; tmux wait -S done
+> ; tmux wait -S done
+> ^C
+root@e93d067d0a20:/app# ls -la /app/; tmux wait -S done
+total 24
+drwxr-xr-x 1 root root 4096 Oct 17 01:55 .
+drwxr-xr-x 1 root root 4096 Oct 17 03:14 ..
+-rwxr-xr-x 1 root root 6285 Oct 17 01:53 generate-samples.sh
+-rw-r--r-- 1 root root 1704 Oct 17 01:55 log_metadata.json
+root@e93d067d0a20:/app# python3 << 'EOF'
+> import os
+> import json
+>
+> # Load metadata
+> with open('log_metadata.json', 'r') as f:
+>     metadata = json.load(f)
+>
+> # Get log file sizes
+> log_dir = '/var/log/samples/'
+> files_info = []
+> for fname in os.listdir(log_dir):
+>     fpath = os.path.join(log_dir, fname)
+>     if os.path.isfile(fpath):
+>         size_mb = os.path.getsize(fpath) / (1024*1024)
+>         files_info.append((fname, fpath, size_mb))
+>
+> print("Files found:")
+> for f in files_info:
+>     print(f"  {f[0]}: {f[2]:.3f} MB")
+> EOF
+Files found:
+  error.log: 0.228 MB
+  access.log: 0.154 MB
+  system.log: 0.000 MB
+  system.log.1.gz: 0.001 MB
+  debug.log: 0.052 MB
+  app.log: 0.248 MB
+  access.log.old: 0.039 MB
+root@e93d067d0a20:/app#

@@ -1,0 +1,40 @@
+>     maxsize 25M
+>     sharedscripts
+>     postrotate
+>         /usr/bin/killall -HUP nginx 2>/dev/null || true
+>     endscript
+> }
+>
+> # System Log - Low growth rate, 90-day retention
+> /var/log/samples/system.log {
+>     weekly
+>     rotate 12
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 root adm
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 50M
+>     postrotate
+>         /usr/bin/killall -HUP rsyslogd 2>/dev/null || true
+>     endscript
+> }
+>
+> # Debug Log - Low importance, 7-day retention
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 20M
+>     # Debug logs can be removed quickly to save space
+> }
+> EOF
+root@bdbf79dfea60:/app#

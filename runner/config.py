@@ -55,6 +55,8 @@ class Settings:
     build_timeout_sec: int = 1800
     attempt_overhead_sec: int = 600
     retries_per_attempt: int = 1
+    # How long a wave's attempts may wait for cluster capacity before the submission fails.
+    max_queue_sec: int = 3600
     poll_interval_sec: float = 5.0
     adaptive_max_wave: int = 10
     adaptive_extra_launches: int = 3
@@ -96,6 +98,7 @@ class Settings:
             build_timeout_sec=int(_env("AQ_BUILD_TIMEOUT_SEC", str(defaults.build_timeout_sec))),
             attempt_overhead_sec=int(_env("AQ_ATTEMPT_OVERHEAD_SEC", str(defaults.attempt_overhead_sec))),
             retries_per_attempt=int(_env("AQ_RETRIES_PER_ATTEMPT", str(defaults.retries_per_attempt))),
+            max_queue_sec=int(_env("AQ_MAX_QUEUE_SEC", str(defaults.max_queue_sec))),
             poll_interval_sec=float(_env("AQ_POLL_INTERVAL_SEC", str(defaults.poll_interval_sec))),
             adaptive_max_wave=int(_env("AQ_ADAPTIVE_MAX_WAVE", str(defaults.adaptive_max_wave))),
             adaptive_extra_launches=int(

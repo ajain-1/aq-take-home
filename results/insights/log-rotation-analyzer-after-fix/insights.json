@@ -1,0 +1,221 @@
+{
+  "task_id": "log-rotation-analyzer",
+  "outcome": {
+    "resolved_attempts": 10,
+    "n_attempts": 10,
+    "learnability": {
+      "verdict": "too_easy",
+      "basis": "10 passing / 0 failing runs decide the 10-run rule (2-7 of 10 pass)",
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.722,
+        1.0
+      ],
+      "n": 10
+    }
+  },
+  "tests": [
+    {
+      "name": "test_analysis_report_content",
+      "passed": 10,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.722,
+        1.0
+      ]
+    },
+    {
+      "name": "test_analysis_report_exists",
+      "passed": 10,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.722,
+        1.0
+      ]
+    },
+    {
+      "name": "test_issue_identification",
+      "passed": 10,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.722,
+        1.0
+      ]
+    },
+    {
+      "name": "test_optimized_logrotate_config",
+      "passed": 10,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.722,
+        1.0
+      ]
+    },
+    {
+      "name": "test_recommendations_quality",
+      "passed": 10,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.722,
+        1.0
+      ]
+    },
+    {
+      "name": "test_rotation_summary_csv",
+      "passed": 10,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.722,
+        1.0
+      ]
+    },
+    {
+      "name": "test_savings_calculation",
+      "passed": 10,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "interval_95": [
+        0.722,
+        1.0
+      ]
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 0,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 25,
+      "declared_complete": true,
+      "duration_sec": 177.06,
+      "input_tokens": 234471,
+      "output_tokens": 5788
+    },
+    {
+      "attempt": 1,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 22,
+      "declared_complete": true,
+      "duration_sec": 174.98,
+      "input_tokens": 190888,
+      "output_tokens": 6148
+    },
+    {
+      "attempt": 2,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 20,
+      "declared_complete": true,
+      "duration_sec": 177.05,
+      "input_tokens": 170166,
+      "output_tokens": 6602
+    },
+    {
+      "attempt": 3,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 19,
+      "declared_complete": true,
+      "duration_sec": 143.68,
+      "input_tokens": 138471,
+      "output_tokens": 4818
+    },
+    {
+      "attempt": 4,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 14,
+      "declared_complete": true,
+      "duration_sec": 130.99,
+      "input_tokens": 90206,
+      "output_tokens": 4260
+    },
+    {
+      "attempt": 5,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 28,
+      "declared_complete": true,
+      "duration_sec": 362.46,
+      "input_tokens": 430827,
+      "output_tokens": 8602
+    },
+    {
+      "attempt": 6,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 17,
+      "declared_complete": true,
+      "duration_sec": 154.24,
+      "input_tokens": 127744,
+      "output_tokens": 5332
+    },
+    {
+      "attempt": 7,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 17,
+      "declared_complete": true,
+      "duration_sec": 205.3,
+      "input_tokens": 159120,
+      "output_tokens": 5319
+    },
+    {
+      "attempt": 8,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 18,
+      "declared_complete": true,
+      "duration_sec": 299.17,
+      "input_tokens": 175812,
+      "output_tokens": 4845
+    },
+    {
+      "attempt": 9,
+      "category": "solved",
+      "resolved": true,
+      "failed_tests": [],
+      "episodes": 18,
+      "declared_complete": true,
+      "duration_sec": 183.68,
+      "input_tokens": 194739,
+      "output_tokens": 7990
+    }
+  ],
+  "attempt_stats": {
+    "resolved": {
+      "n": 10,
+      "mean_episodes": 19.8,
+      "mean_duration_sec": 200.9,
+      "mean_input_tokens": 191244
+    },
+    "unresolved": {
+      "n": 0
+    },
+    "note": "Descriptive only; differences at this sample size are not statistically meaningful."
+  },
+  "insights": [],
+  "rejected_insights": [],
+  "evidence": {},
+  "limitations": [
+    "Pass-rate intervals are 95% Wilson intervals; with few attempts they are wide and verdicts say so.",
+    "Attempt classification is rule-based on recorded artifacts; it does not infer the agent's intent.",
+    "Hidden-requirement detection is lexical: a test literal counts as stated only if it appears (case-insensitively) in the instruction, and as discoverable only if the environment showed it to an agent before that agent typed it; tests that accept any of several alternatives may be over-reported."
+  ]
+}

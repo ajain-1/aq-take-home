@@ -1,0 +1,40 @@
+      "retention_requirement_days": 60,
+      "application": "web-server",
+      "owner": "www-data"
+    },
+    {
+      "path": "/var/log/samples/debug.log",
+      "type": "debug",
+      "importance": "low",
+      "growth_rate_mb_per_day": 5.3,
+      "retention_requirement_days": 7,
+      "application": "web-server",
+      "owner": "www-data"
+    }
+  ],
+  "system_info": {
+    "available_disk_gb": 50,
+    "log_partition_usage_percent": 78,
+    "backup_frequency": "daily",
+    "compliance_requirements": ["PCI-DSS", "SOX"],
+    "peak_traffic_hours": ["09:00-11:00", "14:00-16:00", "20:00-22:00"]
+  },
+  "current_issues": [
+    "High disk usage on log partition",
+    "Inconsistent rotation schedules",
+    "Missing compression on some logs",
+    "Some critical logs lack rotation configuration"
+  ]
+}
+root@947f0d620c99:/app# ls -la /var/log/samples/; tmux wait -S done
+total 768
+drwxr-xr-x 1 root root   4096 Oct 17 01:55 .
+drwxr-xr-x 1 root root   4096 Oct 17 01:55 ..
+-rw-r--r-- 1 root root 161214 Oct 17 01:55 access.log
+-rw-r--r-- 1 root root  40500 Oct 17 01:55 access.log.old
+-rw-r--r-- 1 root root 259893 Oct 17 01:55 app.log
+-rw-r--r-- 1 root root  54292 Oct 17 01:55 debug.log
+-rw-r--r-- 1 root root 239071 Oct 17 01:55 error.log
+-rw-r--r-- 1 root root    219 Oct 17 01:55 system.log
+-rw-r--r-- 1 root root    551 Oct 17 01:55 system.log.1.gz
+root@947f0d620c99:/app#

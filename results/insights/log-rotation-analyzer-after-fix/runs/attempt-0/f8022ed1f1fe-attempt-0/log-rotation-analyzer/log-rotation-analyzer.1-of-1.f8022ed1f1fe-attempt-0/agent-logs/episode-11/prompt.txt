@@ -1,0 +1,40 @@
+Device: 0,386   Inode: 139360      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.144238001 +0000
+Modify: 2026-10-17 01:55:07.528016012 +0000
+Change: 2026-10-17 01:55:07.528016012 +0000
+ Birth: 2026-10-17 01:55:07.526016012 +0000
+  File: /var/log/samples/access.log.old
+  Size: 40500           Blocks: 80         IO Block: 4096   regular file
+Device: 0,386   Inode: 141090      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.141238001 +0000
+Modify: 2026-10-17 01:55:09.648016013 +0000
+Change: 2026-10-17 01:55:09.648016013 +0000
+ Birth: 2026-10-17 01:55:09.255016013 +0000
+  File: /var/log/samples/system.log.1.gz
+  Size: 551             Blocks: 8          IO Block: 4096   regular file
+Device: 0,386   Inode: 139382      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.144238001 +0000
+Modify: 2026-10-17 01:55:07.615016012 +0000
+Change: 2026-10-17 01:55:07.616016012 +0000
+ Birth: 2026-10-17 01:55:07.616016012 +0000
+root@3e09ffd123d3:/app# stat /var/log/samples/app.log /var/log/samples/access.log; tmux wait -S done
+  File: /var/log/samples/app.log
+  Size: 259893          Blocks: 512        IO Block: 4096   regular file
+Device: 0,386   Inode: 134996      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.143238001 +0000
+Modify: 2026-10-17 01:55:07.525016012 +0000
+Change: 2026-10-17 01:55:07.525016012 +0000
+ Birth: 2026-10-17 01:55:05.335016011 +0000
+  File: /var/log/samples/access.log
+  Size: 161214          Blocks: 320        IO Block: 4096   regular file
+Device: 0,386   Inode: 139361      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-10-17 01:55:14.138238001 +0000
+Modify: 2026-10-17 01:55:09.254016013 +0000
+Change: 2026-10-17 01:55:09.254016013 +0000
+ Birth: 2026-10-17 01:55:07.616016012 +0000
+root@3e09ffd123d3:/app#

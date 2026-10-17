@@ -1,0 +1,12 @@
+{
+    "state_analysis": "I can see the middle section of the report. Let me check the very beginning to verify the title line and first sections are correct.",
+    "explanation": "Checking the first 30 lines of analysis_report.txt to verify the title and initial sections.",
+    "commands": [
+        {
+            "keystrokes": "head -30 /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

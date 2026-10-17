@@ -1,0 +1,85 @@
+instruction: |-
+  You are a system administrator tasked with analyzing log rotation patterns across multiple servers.
+  Your organization has been experiencing disk space issues and inconsistent log management practices.
+  Your task is to create a log rotation analyzer that:
+
+  Analyzes existing log files in /var/log/samples/ to understand current rotation patterns
+  Identifies problematic patterns such as:
+
+  Files growing too large without rotation
+  Inconsistent rotation schedules
+  Missing compression on old logs
+  Retention periods that are too long/short
+
+
+  Generates optimization recommendations in a structured report
+  Creates an optimized logrotate configuration file
+
+  Available Data
+  You have access to:
+
+  Sample log files with various rotation states in /var/log/samples/
+  Current logrotate configurations in /etc/logrotate.d/samples/
+  System information in /proc/meminfo and /proc/diskstats
+  A log file metadata database in log_metadata.json
+
+  Requirements
+  Your solution should create the following files in /app (the working directory):
+
+  analysis_report.txt - A human-readable report containing:
+
+  Summary of current log rotation status
+  Identified issues and their severity
+  Disk space impact analysis
+  Recommendations for improvement
+
+  The report must use this format (it is checked automatically):
+  - A title line "LOG ROTATION ANALYSIS REPORT", then sections headed "SYSTEM OVERVIEW",
+    "LOG FILE ANALYSIS", "SUMMARY" and "RECOMMENDATIONS:" (in that order).
+  - Under LOG FILE ANALYSIS, mark each problem as "ISSUE (HIGH)", "ISSUE (MEDIUM)" or
+    "ISSUE (LOW)" followed by a description, e.g. "ISSUE (HIGH): Large file exceeds 10MB threshold".
+    Describe the files in terms of their size, rotation and days since last rotation.
+  - Under SUMMARY, include the lines "Total log size: <N> MB", "Estimated total savings: <N> MB"
+    and "Potential space reduction: <P>%", where P is a number.
+  - Under RECOMMENDATIONS:, give specific actions: rotation frequency (daily/weekly/monthly),
+    compression, retention, and monitoring disk usage.
+
+
+  optimized_logrotate.conf - An optimized logrotate configuration that:
+
+  Implements proper rotation schedules
+  Includes appropriate compression settings
+  Sets reasonable retention policies
+  Handles edge cases (empty files, rapid growth, etc.)
+  Uses standard logrotate blocks ("<path> { ... }") with "rotate" and "compress" directives,
+  covering at least two of /var/log/samples/app.log, system.log, access.log and error.log.
+
+
+  rotation_summary.csv - A CSV file whose header row is exactly:
+
+  log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+
+  with one row per log file; current_size_mb and estimated_savings_mb are numbers and
+  days_since_rotation is a whole number of days.
+
+  Success Criteria
+  Your analyzer should handle various log types (application logs, system logs, access logs) and
+  provide actionable recommendations that could realistically reduce disk usage by at least 20%
+  while maintaining appropriate log retention for debugging and compliance needs.
+difficulty: medium
+category: system-administration
+tags:
+  - logs
+  - system-optimization
+  - file-analysis
+  - configuration-management
+  - disk-management
+parser_name: pytest
+max_agent_timeout_sec: 900.0
+max_test_timeout_sec: 120.0
+run_tests_in_same_shell: false
+disable_asciinema: false
+estimated_duration_sec: 900
+expert_time_estimate_min: 75
+junior_time_estimate_min: 180
+resource_class: medium

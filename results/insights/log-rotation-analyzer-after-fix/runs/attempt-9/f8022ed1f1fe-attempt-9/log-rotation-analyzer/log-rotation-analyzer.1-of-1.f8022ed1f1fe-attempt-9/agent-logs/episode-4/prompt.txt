@@ -1,0 +1,40 @@
+  "system_info": {
+    "available_disk_gb": 50,
+    "log_partition_usage_percent": 78,
+    "backup_frequency": "daily",
+    "compliance_requirements": ["PCI-DSS", "SOX"],
+    "peak_traffic_hours": ["09:00-11:00", "14:00-16:00", "20:00-22:00"]
+  },
+  "current_issues": [
+    "High disk usage on log partition",
+    "Inconsistent rotation schedules",
+    "Missing compression on some logs",
+    "Some critical logs lack rotation configuration"
+  ]
+}
+root@63f40e5a4436:/app# for f in /etc/logrotate.d/samples/*; do echo "=== $f ==="; cat "$f"; done; tmux wait -S done
+=== /etc/logrotate.d/samples/access ===
+/var/log/samples/access.log {
+    monthly
+    rotate 2
+    compress
+    missingok
+}
+=== /etc/logrotate.d/samples/app ===
+/var/log/samples/app.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+=== /etc/logrotate.d/samples/system ===
+/var/log/samples/system.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    create 644 root adm
+}
+root@63f40e5a4436:/app#

@@ -1,0 +1,22 @@
+services:
+  client:
+    image: aq-task-f8022ed1f1fe:latest
+    container_name: ${T_BENCH_TASK_DOCKER_CLIENT_CONTAINER_NAME}
+    command:
+    - sh
+    - -c
+    - sleep infinity
+    environment:
+    - TEST_DIR=${T_BENCH_TEST_DIR}
+    volumes:
+    - ${AQ_HOST_PATH_PREFIX:-}${T_BENCH_TASK_LOGS_PATH}:${T_BENCH_CONTAINER_LOGS_PATH}
+    - ${AQ_HOST_PATH_PREFIX:-}${T_BENCH_TASK_AGENT_LOGS_PATH}:${T_BENCH_CONTAINER_AGENT_LOGS_PATH}
+    cpus: 2.0
+    mem_limit: 2g
+    memswap_limit: 2g
+    labels: &id001
+      aq.submission: f8022ed1f1fe
+      aq.attempt: ${AQ_ATTEMPT:-0}
+networks:
+  default:
+    labels: *id001

@@ -1,0 +1,40 @@
+File: /var/log/samples/app.log
+  Current Size: 0.25 MB (259893 bytes)
+  Type: application
+  Importance: high
+  Growth Rate: 15.2 MB/day
+  Retention Requirement: 30 days
+  Has Rotation Config: Yes
+  Days Since Last Rotation: 0
+
+File: /var/log/samples/system.log
+  Current Size: 0.00 MB (219 bytes)
+  Type: system
+  Importance: critical
+  Growth Rate: 2.1 MB/day
+  Retention Requirement: 90 days
+  Has Rotation Config: Yes
+  Days Since Last Rotation: 0
+
+File: /var/log/samples/access.log
+  Current Size: 0.15 MB (161214 bytes)
+  Type: access
+  Importance: medium
+  Growth Rate: 45.7 MB/day
+  Retention Requirement: 14 days
+  Has Rotation Config: Yes
+  Days Since Last Rotation: 0
+
+File: /var/log/samples/error.log
+  Current Size: 0.23 MB (239071 bytes)
+  Type: error
+  Importance: critical
+  Growth Rate: 8.9 MB/day
+  Retention Requirement: 60 days
+  Has Rotation Config: No
+  Days Since Last Rotation: 0
+
+File: /var/log/samples/debug.log
+  Current Size: 0.05 MB (54292 bytes)
+  Type: debug
+root@2ee005a0b04f:/app#

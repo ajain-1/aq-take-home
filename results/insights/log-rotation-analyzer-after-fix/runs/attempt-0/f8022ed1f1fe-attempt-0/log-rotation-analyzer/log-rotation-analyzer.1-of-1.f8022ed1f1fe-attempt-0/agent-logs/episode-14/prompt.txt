@@ -1,0 +1,40 @@
+>     create 644 www-data www-data
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 50M
+>     postrotate
+>         /usr/bin/systemctl reload web-server 2>/dev/null || true
+>     endscript
+> }
+>
+> # System Log - Critical importance, 2.1 MB/day growth (low)
+> /var/log/samples/system.log {
+>     weekly
+>     rotate 13
+>     compress
+>     compresscmd /bin/gzip
+>     compressoptions -9
+>     missingok
+>     notifempty
+>     create 644 root adm
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 20M
+> }
+>
+> # Debug Log - Low importance, 5.3 MB/day growth
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     compresscmd /bin/gzip
+>     compressoptions -9
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     dateext
+>     dateformat -%Y%m%d
+>     maxsize 30M
+> }
+> EOF
+root@3e09ffd123d3:/app#

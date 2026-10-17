@@ -1,0 +1,40 @@
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    maxsize 50M
+    postrotate
+        /usr/bin/systemctl reload web-server 2>/dev/null || true
+    endscript
+}
+
+# Access Log - Medium importance, 45.7 MB/day growth (highest)
+/var/log/samples/access.log {
+    daily
+    rotate 14
+    compress
+    compresscmd /bin/gzip
+    compressoptions -9
+    missingok
+    notifempty
+    create 644 www-data www-data
+    dateext
+    dateformat -%Y%m%d
+    maxsize 100M
+    sharedscripts
+    postrotate
+        /usr/bin/systemctl reload nginx 2>/dev/null || true
+    endscript
+}
+
+# Error Log - Critical importance, 8.9 MB/day growth
+/var/log/samples/error.log {
+    daily
+    rotate 60
+    compress
+    compresscmd /bin/gzip
+    compressoptions -9
+    missingok
+    notifempty
+root@3e09ffd123d3:/app#

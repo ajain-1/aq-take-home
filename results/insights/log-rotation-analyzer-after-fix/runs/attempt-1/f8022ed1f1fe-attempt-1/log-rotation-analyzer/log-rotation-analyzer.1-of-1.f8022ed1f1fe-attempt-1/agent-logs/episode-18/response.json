@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The report has the RECOMMENDATIONS: section and 8 ISSUE entries. Let me verify the ISSUE format is correct (should be 'ISSUE (HIGH):', 'ISSUE (MEDIUM):', or 'ISSUE (LOW):').",
+    "explanation": "Verifying the ISSUE format in the report.",
+    "commands": [
+        {
+            "keystrokes": "grep 'ISSUE' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

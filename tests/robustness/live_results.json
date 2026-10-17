@@ -60,7 +60,7 @@
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "75a5ecc00ebc",
+      "submission": "acb32c4dbfff",
       "results": {
         "status": "completed",
         "passed": true,
@@ -69,6 +69,7 @@
         "summary": {
           "n_attempts": 2,
           "completed_attempts": 2,
+          "tests_not_run_attempts": 0,
           "errored_attempts": 0,
           "resolved_attempts": 2,
           "pass_rate": 1.0
@@ -79,7 +80,8 @@
             "attempt": 0,
             "status": "completed",
             "resolved": true,
-            "failure_mode": "unset",
+            "failure_mode": "none",
+            "infrastructure_issues": [],
             "retries": 0,
             "error": null,
             "passed_tests": 1,
@@ -89,7 +91,8 @@
             "attempt": 1,
             "status": "completed",
             "resolved": true,
-            "failure_mode": "unset",
+            "failure_mode": "none",
+            "infrastructure_issues": [],
             "retries": 0,
             "error": null,
             "passed_tests": 1,
@@ -98,8 +101,8 @@
         ]
       },
       "pod_logs": [
-        "data/submissions/75a5ecc00ebc/runs/attempt-0/pod.log",
-        "data/submissions/75a5ecc00ebc/runs/attempt-1/pod.log"
+        "data/submissions/acb32c4dbfff/runs/attempt-0/pod-try-0.log",
+        "data/submissions/acb32c4dbfff/runs/attempt-1/pod-try-0.log"
       ],
       "leftovers": {
         "containers": [],
@@ -108,13 +111,13 @@
         "jobs": []
       }
     },
-    "duration_sec": 91
+    "duration_sec": 36
   },
   "agent_timeout": {
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "d9d0c37a7fe8",
+      "submission": "718a4b3c0825",
       "results": {
         "status": "completed",
         "passed": false,
@@ -123,6 +126,7 @@
         "summary": {
           "n_attempts": 1,
           "completed_attempts": 1,
+          "tests_not_run_attempts": 0,
           "errored_attempts": 0,
           "resolved_attempts": 0,
           "pass_rate": 0.0
@@ -134,6 +138,7 @@
             "status": "completed",
             "resolved": false,
             "failure_mode": "agent_timeout",
+            "infrastructure_issues": [],
             "retries": 0,
             "error": null,
             "passed_tests": 0,
@@ -148,14 +153,14 @@
         "jobs": []
       }
     },
-    "duration_sec": 119
+    "duration_sec": 73
   },
   "task_container_oom": {
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "99d9c311873c",
-      "task_container_memory_bytes_and_nanocpus": "1073741824 1000000000",
+      "submission": "3af36b193dde",
+      "task_container_memory_bytes_and_nanocpus": "1073741824 1073741824 1000000000",
       "results": {
         "status": "completed",
         "passed": true,
@@ -164,6 +169,7 @@
         "summary": {
           "n_attempts": 1,
           "completed_attempts": 1,
+          "tests_not_run_attempts": 0,
           "errored_attempts": 0,
           "resolved_attempts": 1,
           "pass_rate": 1.0
@@ -174,7 +180,10 @@
             "attempt": 0,
             "status": "completed",
             "resolved": true,
-            "failure_mode": "unset",
+            "failure_mode": "none",
+            "infrastructure_issues": [
+              "task container was OOM-killed (exceeded its resource_class memory limit)"
+            ],
             "retries": 0,
             "error": null,
             "passed_tests": 1,
@@ -189,14 +198,14 @@
         "jobs": []
       }
     },
-    "duration_sec": 81
+    "duration_sec": 36
   },
   "build_failure": {
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "02d954f01420",
-      "error": "docker build failed:\n#7 ERROR: process \"/bin/sh -c echo \\\"intentional build failure\\\" && exit 3\" did not complete successfully: exit code: 3\n------\n > [4/4] RUN echo \"intentional build failure\" && exit 3:\n0.117 intentional build failure\n------\nDockerfile:4\n--------------------\n   2 |     RUN pip install --no-cache-dir pytest==8.3.3\n   3 |     WORKDIR /app\n   4 | >>> RUN echo \"intentional build failure\" && exit 3\n   5 |     \n--------------------\nERROR: failed to solve: process \"/bin/sh -c echo \\\"intentional build failure\\\" && exit 3\" did not complete successfully: exit code: 3\n\nView build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/kz6nmb9fl2zv63avrr3kdzclw",
+      "submission": "4ae2fafb09ec",
+      "error": "docker build failed:\n#7 ERROR: process \"/bin/sh -c echo \\\"intentional build failure\\\" && exit 3\" did not complete successfully: exit code: 3\n------\n > [4/4] RUN echo \"intentional build failure\" && exit 3:\n0.142 intentional build failure\n------\nDockerfile:4\n--------------------\n   2 |     RUN pip install --no-cache-dir pytest==8.3.3\n   3 |     WORKDIR /app\n   4 | >>> RUN echo \"intentional build failure\" && exit 3\n   5 |     \n--------------------\nERROR: failed to solve: process \"/bin/sh -c echo \\\"intentional build failure\\\" && exit 3\" did not complete successfully: exit code: 3\n\nView build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/q9icjawq7h1g4r3qaw5ebku8m",
       "leftovers": {
         "containers": [],
         "networks": [],
@@ -204,18 +213,22 @@
         "jobs": []
       }
     },
-    "duration_sec": 6
+    "duration_sec": 3
   },
   "crash_retry_partial_orphans": {
     "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "393924bd0867",
+      "submission": "cea5e7f4a0e7",
       "killed_pods": [
-        "aq-393924bd0867-1-fqwpd",
-        "aq-393924bd0867-1-f9w2m"
+        "aq-cea5e7f4a0e7-w0-1-bkv99",
+        "aq-cea5e7f4a0e7-w0-1-7qvjj"
       ],
       "orphan_removed_by_retry": true,
+      "pod_try_logs": [
+        "pod-try-0.log",
+        "pod-try-1.log"
+      ],
       "results": {
         "status": "completed",
         "passed": false,
@@ -224,6 +237,7 @@
         "summary": {
           "n_attempts": 2,
           "completed_attempts": 1,
+          "tests_not_run_attempts": 0,
           "errored_attempts": 1,
           "resolved_attempts": 1,
           "pass_rate": 0.5
@@ -234,7 +248,8 @@
             "attempt": 0,
             "status": "completed",
             "resolved": true,
-            "failure_mode": "unset",
+            "failure_mode": "none",
+            "infrastructure_issues": [],
             "retries": 0,
             "error": null,
             "passed_tests": 1,
@@ -245,6 +260,7 @@
             "status": "error",
             "resolved": false,
             "failure_mode": null,
+            "infrastructure_issues": [],
             "retries": 1,
             "error": "Error (exit code 137)",
             "passed_tests": 0,
@@ -259,103 +275,15 @@
         "jobs": []
       }
     },
-    "duration_sec": 82
+    "duration_sec": 131
   },
   "job_deadline": {
     "group": "base",
-    "result": "fail",
-    "error": "ScenarioFailed: deadline reason surfaced: no attempt produced test results: attempt produced no results (pod state: pending)",
-    "trace": "Traceback (most recent call last):\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 425, in run_scenario\n    evidence = scenario(api) if takes_api else scenario()\n                                               ^^^^^^^^^^\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 264, in job_deadline\n    check(\"DeadlineExceeded\" in (results[\"error\"] or \"\"), f\"deadline reason surfaced: {results['error']}\")\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 48, in check\n    raise ScenarioFailed(message)\nScenarioFailed: deadline reason surfaced: no attempt produced test results: attempt produced no results (pod state: pending)\n",
-    "duration_sec": 137
-  },
-  "restart_sigkill_while_running": {
-    "group": "base",
     "result": "pass",
     "evidence": {
-      "submission": "01d38d5467c0",
-      "pod": "aq-01d38d5467c0-0-6qj2j",
-      "resumed_logged": true,
-      "results": {
-        "status": "completed",
-        "passed": true,
-        "passed_tests": 1,
-        "total_tests": 1,
-        "summary": {
-          "n_attempts": 1,
-          "completed_attempts": 1,
-          "errored_attempts": 0,
-          "resolved_attempts": 1,
-          "pass_rate": 1.0
-        },
-        "error": null,
-        "attempts": [
-          {
-            "attempt": 0,
-            "status": "completed",
-            "resolved": true,
-            "failure_mode": "unset",
-            "retries": 0,
-            "error": null,
-            "passed_tests": 1,
-            "total_tests": 1
-          }
-        ]
-      },
-      "leftovers": {
-        "containers": [],
-        "networks": [],
-        "images": [],
-        "jobs": []
-      }
-    },
-    "duration_sec": 79
-  },
-  "restart_sigterm_while_building": {
-    "group": "base",
-    "result": "pass",
-    "evidence": {
-      "submission": "281f052e8c2e",
-      "graceful_shutdown_sec": 0,
-      "results": {
-        "status": "completed",
-        "passed": true,
-        "passed_tests": 1,
-        "total_tests": 1,
-        "summary": {
-          "n_attempts": 1,
-          "completed_attempts": 1,
-          "errored_attempts": 0,
-          "resolved_attempts": 1,
-          "pass_rate": 1.0
-        },
-        "error": null,
-        "attempts": [
-          {
-            "attempt": 0,
-            "status": "completed",
-            "resolved": true,
-            "failure_mode": "unset",
-            "retries": 0,
-            "error": null,
-            "passed_tests": 1,
-            "total_tests": 1
-          }
-        ]
-      },
-      "leftovers": {
-        "containers": [],
-        "networks": [],
-        "images": [],
-        "jobs": []
-      }
-    },
-    "duration_sec": 73
-  },
-  "restart_after_job_vanished": {
-    "group": "base",
-    "result": "pass",
-    "evidence": {
-      "submission": "5870233c024a",
+      "submission": "f2590718387d",
+      "elapsed_sec": 106,
+      "job_deadline_sec": 100,
       "results": {
         "status": "failed",
         "passed": false,
@@ -364,19 +292,21 @@
         "summary": {
           "n_attempts": 1,
           "completed_attempts": 0,
+          "tests_not_run_attempts": 0,
           "errored_attempts": 1,
           "resolved_attempts": 0,
           "pass_rate": 0.0
         },
-        "error": "no attempt produced test results: attempt produced no results (pod state: running)",
+        "error": "no attempt produced test results: job failed: DeadlineExceeded",
         "attempts": [
           {
             "attempt": 0,
             "status": "error",
             "resolved": false,
             "failure_mode": null,
+            "infrastructure_issues": [],
             "retries": 0,
-            "error": "attempt produced no results (pod state: running)",
+            "error": "job failed: DeadlineExceeded",
             "passed_tests": 0,
             "total_tests": 0
           }
@@ -389,7 +319,136 @@
         "jobs": []
       }
     },
-    "duration_sec": 6
+    "duration_sec": 107
+  },
+  "restart_sigkill_while_running": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "cca0ba02db3b",
+      "pod": "aq-cca0ba02db3b-w0-0-tnfpc",
+      "resumed_logged": true,
+      "results": {
+        "status": "completed",
+        "passed": true,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 1,
+          "tests_not_run_attempts": 0,
+          "errored_attempts": 0,
+          "resolved_attempts": 1,
+          "pass_rate": 1.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 78
+  },
+  "restart_sigterm_while_building": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "8506e7f584b1",
+      "graceful_shutdown_sec": 0,
+      "results": {
+        "status": "completed",
+        "passed": true,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 1,
+          "tests_not_run_attempts": 0,
+          "errored_attempts": 0,
+          "resolved_attempts": 1,
+          "pass_rate": 1.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 29
+  },
+  "restart_after_job_vanished": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "0090405315f3",
+      "results": {
+        "status": "failed",
+        "passed": false,
+        "passed_tests": 0,
+        "total_tests": 0,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 0,
+          "tests_not_run_attempts": 0,
+          "errored_attempts": 1,
+          "resolved_attempts": 0,
+          "pass_rate": 0.0
+        },
+        "error": "no attempt produced test results: job failed: JobNotFound",
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "error",
+            "resolved": false,
+            "failure_mode": null,
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": "job failed: JobNotFound",
+            "passed_tests": 0,
+            "total_tests": 0
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 4
   },
   "restart_with_queued_backlog": {
     "group": "single-worker",
@@ -397,7 +456,7 @@
     "evidence": {
       "second_status_while_first_running": "queued",
       "results": {
-        "087f952595be": {
+        "afaf59a52f7c": {
           "status": "completed",
           "passed": true,
           "passed_tests": 1,
@@ -405,6 +464,7 @@
           "summary": {
             "n_attempts": 1,
             "completed_attempts": 1,
+            "tests_not_run_attempts": 0,
             "errored_attempts": 0,
             "resolved_attempts": 1,
             "pass_rate": 1.0
@@ -415,7 +475,8 @@
               "attempt": 0,
               "status": "completed",
               "resolved": true,
-              "failure_mode": "unset",
+              "failure_mode": "none",
+              "infrastructure_issues": [],
               "retries": 0,
               "error": null,
               "passed_tests": 1,
@@ -423,7 +484,7 @@
             }
           ]
         },
-        "4c400e5a7262": {
+        "c6a282e5cd2c": {
           "status": "completed",
           "passed": true,
           "passed_tests": 1,
@@ -431,6 +492,7 @@
           "summary": {
             "n_attempts": 1,
             "completed_attempts": 1,
+            "tests_not_run_attempts": 0,
             "errored_attempts": 0,
             "resolved_attempts": 1,
             "pass_rate": 1.0
@@ -441,7 +503,8 @@
               "attempt": 0,
               "status": "completed",
               "resolved": true,
-              "failure_mode": "unset",
+              "failure_mode": "none",
+              "infrastructure_issues": [],
               "retries": 0,
               "error": null,
               "passed_tests": 1,
@@ -451,13 +514,13 @@
         }
       },
       "leftovers": {
-        "087f952595be": {
+        "afaf59a52f7c": {
           "containers": [],
           "networks": [],
           "images": [],
           "jobs": []
         },
-        "4c400e5a7262": {
+        "c6a282e5cd2c": {
           "containers": [],
           "networks": [],
           "images": [],
@@ -465,20 +528,55 @@
         }
       }
     },
-    "duration_sec": 110
+    "duration_sec": 101
   },
   "harness_oom_retry": {
     "group": "tiny-harness-memory",
-    "result": "fail",
-    "error": "IndexError: list index out of range",
-    "trace": "Traceback (most recent call last):\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 425, in run_scenario\n    evidence = scenario(api) if takes_api else scenario()\n                                               ^^^^^^^^^^\n  File \"/Users/aryanjain/Downloads/aq-swe-take-home-2026-q3-ajain-1/.claude/worktrees/agent-adbdc8932814a00af/tests/robustness/live_scenarios.py\", line 371, in harness_oom_retry\n    attempt = results[\"attempts\"][0]\n              ~~~~~~~~~~~~~~~~~~~^^^\nIndexError: list index out of range\n",
-    "duration_sec": 2
+    "result": "pass",
+    "evidence": {
+      "submission": "45aa9442526f",
+      "results": {
+        "status": "failed",
+        "passed": false,
+        "passed_tests": 0,
+        "total_tests": 0,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 0,
+          "tests_not_run_attempts": 0,
+          "errored_attempts": 1,
+          "resolved_attempts": 0,
+          "pass_rate": 0.0
+        },
+        "error": "no attempt produced test results: OOMKilled (exit code 247)",
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "error",
+            "resolved": false,
+            "failure_mode": null,
+            "infrastructure_issues": [],
+            "retries": 1,
+            "error": "OOMKilled (exit code 247)",
+            "passed_tests": 0,
+            "total_tests": 0
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 18
   },
   "unstartable_pod_fails_fast": {
     "group": "broken-runner-image",
     "result": "pass",
     "evidence": {
-      "submission": "ae780571e217",
+      "submission": "bb24e3863e85",
       "elapsed_sec": 4,
       "error": "attempt pods cannot start: ErrImageNeverPull: Container image \"aq-runner:does-not-exist\" is not present with pull policy of Never",
       "leftovers": {
@@ -488,13 +586,13 @@
         "jobs": []
       }
     },
-    "duration_sec": 5
+    "duration_sec": 4
   },
   "build_timeout": {
     "group": "broken-runner-image",
     "result": "pass",
     "evidence": {
-      "submission": "ebb45a69c145",
+      "submission": "00b875d580c7",
       "elapsed_sec": 16,
       "error": "docker build timed out after 15s",
       "leftovers": {
@@ -504,7 +602,7 @@
         "jobs": []
       }
     },
-    "duration_sec": 17
+    "duration_sec": 16
   },
   "secret_not_leaked": {
     "group": "final",
@@ -514,5 +612,279 @@
       "scanned": "data"
     },
     "duration_sec": 0
+  },
+  "gate_static_reject": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "cases": {
+        "static": {
+          "http_status": 422,
+          "detail": "task failed static validation",
+          "checks": [
+            "workdir",
+            "test_paths_outside_image"
+          ]
+        },
+        "full": {
+          "http_status": 422,
+          "detail": "task failed static validation",
+          "checks": [
+            "workdir",
+            "test_paths_outside_image"
+          ]
+        }
+      }
+    },
+    "duration_sec": 0
+  },
+  "gate_full_restart_mid_validation": {
+    "group": "base",
+    "result": "pass",
+    "evidence": {
+      "submission": "0f62b6ff9d79",
+      "validation": "c01fb434003a",
+      "restarted_while_running": "856947f3657d",
+      "reference_runs": {
+        "856947f3657d": {
+          "waves": 1,
+          "pods": [
+            1,
+            1
+          ]
+        },
+        "cb93dc2f54b2": {
+          "waves": 1,
+          "pods": [
+            1
+          ]
+        }
+      },
+      "stages_run": [
+        "static",
+        "image_probe",
+        "oracle",
+        "nop"
+      ],
+      "results": {
+        "status": "completed",
+        "passed": true,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 1,
+          "completed_attempts": 1,
+          "tests_not_run_attempts": 0,
+          "errored_attempts": 0,
+          "resolved_attempts": 1,
+          "pass_rate": 1.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          }
+        ]
+      },
+      "leftovers": {
+        "0f62b6ff9d79": {
+          "containers": [],
+          "networks": [],
+          "images": [],
+          "jobs": []
+        },
+        "856947f3657d": {
+          "containers": [],
+          "networks": [],
+          "images": [],
+          "jobs": []
+        },
+        "cb93dc2f54b2": {
+          "containers": [],
+          "networks": [],
+          "images": [],
+          "jobs": []
+        }
+      }
+    },
+    "duration_sec": 58
+  },
+  "adaptive_restart_mid_wave": {
+    "group": "adaptive",
+    "result": "pass",
+    "evidence": {
+      "submission": "37a4bec8e4f6",
+      "killed_during_attempt": 2,
+      "waves": [
+        {
+          "index": 0,
+          "offset": 0,
+          "size": 2,
+          "launched_at": "2026-10-17T03:21:48.728575+00:00",
+          "done": true
+        },
+        {
+          "index": 1,
+          "offset": 2,
+          "size": 2,
+          "launched_at": "2026-10-17T03:22:17.070587+00:00",
+          "done": true
+        },
+        {
+          "index": 2,
+          "offset": 4,
+          "size": 2,
+          "launched_at": "2026-10-17T03:22:50.033451+00:00",
+          "done": true
+        },
+        {
+          "index": 3,
+          "offset": 6,
+          "size": 2,
+          "launched_at": "2026-10-17T03:23:16.388811+00:00",
+          "done": true
+        }
+      ],
+      "learnability": {
+        "strategy": "adaptive",
+        "confidence": 1.0,
+        "target_runs": 10,
+        "classification": "too_easy",
+        "passing_runs": 8,
+        "failing_runs": 0,
+        "attempts_used": 8,
+        "tokens": {
+          "input": 0,
+          "output": 0
+        },
+        "estimated_cost_usd": 0.0,
+        "estimated_savings_vs_target": {
+          "attempts": 2,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cost_usd": 0.0
+        }
+      },
+      "results": {
+        "status": "completed",
+        "passed": true,
+        "passed_tests": 1,
+        "total_tests": 1,
+        "summary": {
+          "n_attempts": 8,
+          "completed_attempts": 8,
+          "tests_not_run_attempts": 0,
+          "errored_attempts": 0,
+          "resolved_attempts": 8,
+          "pass_rate": 1.0
+        },
+        "error": null,
+        "attempts": [
+          {
+            "attempt": 0,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 1,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 2,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 3,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 4,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 5,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 6,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          },
+          {
+            "attempt": 7,
+            "status": "completed",
+            "resolved": true,
+            "failure_mode": "none",
+            "infrastructure_issues": [],
+            "retries": 0,
+            "error": null,
+            "passed_tests": 1,
+            "total_tests": 1
+          }
+        ]
+      },
+      "leftovers": {
+        "containers": [],
+        "networks": [],
+        "images": [],
+        "jobs": []
+      }
+    },
+    "duration_sec": 116
   }
 }

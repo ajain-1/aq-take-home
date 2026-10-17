@@ -1,0 +1,40 @@
+>     elif finfo['size_mb'] > 0.1:
+>         report += "  ISSUE (LOW): File could benefit from more frequent rotation\n"
+>         total_savings += finfo['size_mb'] * 0.2
+>
+> # Check rotated uncompressed files
+> for fname, finfo in files.items():
+>     if finfo['rotated'] and not finfo['compressed']:
+>         report += "\nFile: {}\n".format(finfo['path'])
+>         report += "  Size: {:.2f} MB\n".format(finfo['size_mb'])
+>         report += "  ISSUE (MEDIUM): Rotated file not compressed, wasting disk space\n"
+>         total_savings += finfo['size_mb'] * 0.75
+>
+> reduction = (total_savings / total_size * 100) if total_size > 0 else 0
+>
+> report += """
+> SUMMARY
+> -------
+> Total log size: {:.2f} MB
+> Estimated total savings: {:.2f} MB
+> Potential space reduction: {:.0f}%
+>
+> RECOMMENDATIONS:
+> ----------------
+> 1. Implement daily rotation for high-growth logs (access.log, app.log)
+> 2. Enable compression on all rotated logs - access.log.old is uncompressed
+> 3. Add rotation configuration for error.log (critical) and debug.log
+> 4. Set retention: error.log 60 days (compliance), access.log 14 days, debug.log 7 days
+> 5. Monitor disk usage - alert when partition exceeds 80%
+> 6. Schedule rotation during off-peak hours
+> 7. Use delaycompress for active logs
+> """.format(total_size, total_savings, reduction)
+>
+> with open('/app/analysis_report.txt', 'w') as f:
+>     f.write(report)
+> print("Created analysis_report.txt")
+> print(f"Total size: {total_size:.2f} MB, Savings: {total_savings:.2f} MB, Reduction: {reduction:.0f}%")
+> EOF
+Created analysis_report.txt
+Total size: 0.72 MB, Savings: 0.26 MB, Reduction: 37%
+root@e93d067d0a20:/app#

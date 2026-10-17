@@ -1,0 +1,40 @@
+Medium severity issues: 3
+Low severity issues: 0
+
+Estimated total savings: 0.71 MB
+Potential space reduction: 85%
+
+RECOMMENDATIONS:
+----------------
+1. ROTATION FREQUENCY:
+   - access.log: Change from monthly to daily rotation due to high growth rate (45.7 MB/day)
+   - app.log: Keep weekly rotation, appropriate for 15.2 MB/day growth
+   - system.log: Keep weekly rotation, low growth rate (2.1 MB/day)
+   - error.log: Implement daily rotation (critical importance, 8.9 MB/day)
+   - debug.log: Implement daily rotation with short retention (low importance)
+
+2. COMPRESSION:
+   - Enable compression on all rotated logs immediately
+   - Use gzip compression (compress directive)
+   - Enable delaycompress to avoid compressing the most recent rotated file
+   - Compress existing .old files to reclaim space
+
+3. RETENTION:
+   - access.log: 14 rotated files (14 days per compliance)
+   - app.log: 30 rotated files (30 days for debugging)
+   - system.log: 90 rotated files (90 days for compliance - PCI-DSS, SOX)
+   - error.log: 60 rotated files (60 days for critical error analysis)
+   - debug.log: 7 rotated files (7 days sufficient for debugging)
+
+4. MONITORING:
+   - Set up disk usage alerts at 70% and 85% thresholds
+   - Monitor log growth rates weekly
+   - Review rotation effectiveness monthly
+   - Implement log shipping to central server for compliance
+
+5. IMMEDIATE ACTIONS:
+   - Create rotation configs for error.log and debug.log
+   - Compress access.log.old to save space
+   - Adjust access.log rotation from monthly to daily
+   - Verify all configs have proper permissions and ownership
+root@2ee005a0b04f:/app#

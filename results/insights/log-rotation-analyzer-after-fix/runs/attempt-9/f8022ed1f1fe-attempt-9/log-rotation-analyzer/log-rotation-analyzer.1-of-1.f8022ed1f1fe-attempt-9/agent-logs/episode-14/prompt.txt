@@ -1,0 +1,40 @@
+}
+root@63f40e5a4436:/app# echo "=== rotation_summary.csv ==="
+=== rotation_summary.csv ===
+root@63f40e5a4436:/app# cat /app/rotation_summary.csv; tmux wait -S done
+log_path,current_size_mb,days_since_rotation,recommended_schedule,estimated_savings_mb
+/var/log/samples/access.log,0.15,0,daily,0.05
+/var/log/samples/app.log,0.24,0,daily,0.08
+/var/log/samples/system.log,0.00,0,daily,0.00
+/var/log/samples/error.log,0.22,0,daily,0.07
+/var/log/samples/debug.log,0.05,0,daily,0.02
+root@63f40e5a4436:/app# echo "=== Checking report sections ==="
+=== Checking report sections ===
+root@63f40e5a4436:/app# grep -E "^(LOG ROTATION|SYSTEM OVERVIEW|LOG FILE ANALYSIS|SUMMARY|RECOMMENDATIONS)" /app/analysis_report.txt; tmux wait -S done
+LOG ROTATION ANALYSIS REPORT
+SYSTEM OVERVIEW
+LOG FILE ANALYSIS
+SUMMARY
+RECOMMENDATIONS:
+root@63f40e5a4436:/app# grep -A 15 "^SUMMARY" /app/analysis_report.txt; tmux wait -S done
+SUMMARY
+-------
+Total log size: 1 MB
+Files analyzed: 5
+High severity issues: 4
+Medium severity issues: 3
+Low severity issues: 2
+
+Projected Weekly Growth Without Optimization:
+- access.log: 319.9 MB/week
+- app.log: 87.5 MB/week
+- system.log: 177.1 MB/week
+- error.log: 62.3 MB/week
+- debug.log: 37.1 MB/week
+Total projected: 683.9 MB/week uncompressed
+
+root@63f40e5a4436:/app# grep -E "(Total log size|Estimated total savings|Potential space reduction)" /app/analysis_report.txt; tmux wait -S done
+Total log size: 1 MB
+Estimated total savings: 6 MB
+Potential space reduction: 85%
+root@63f40e5a4436:/app#

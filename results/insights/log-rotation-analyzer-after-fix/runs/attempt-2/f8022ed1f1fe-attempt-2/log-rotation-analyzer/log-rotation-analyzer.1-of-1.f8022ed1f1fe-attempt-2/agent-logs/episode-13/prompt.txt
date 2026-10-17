@@ -1,0 +1,40 @@
+  Growth Rate: 8.9 MB/day
+  Retention Requirement: 60 days
+  Rotated Files: None
+  ISSUE (HIGH): Critical log lacks rotation configuration - risk of disk exhaustion
+
+File: /var/log/samples/debug.log
+  Type: debug | Importance: low
+  Current Size: 0.052 MB
+  Growth Rate: 5.3 MB/day
+  Retention Requirement: 7 days
+  Rotated Files: None
+  ISSUE (MEDIUM): Log file lacks rotation configuration
+
+SUMMARY
+--------------------------------------------------------------------------------
+Total log files analyzed: 5
+Total log size: 0.72 MB
+Files with rotation config: 3
+Files without rotation config: 2
+Total issues found: 4
+  - HIGH severity: 2
+  - MEDIUM severity: 2
+  - LOW severity: 0
+
+Disk Space Impact:
+  Current usage: 78%
+  Estimated total savings: 685.93 MB
+  Potential space reduction: 65%
+
+RECOMMENDATIONS:
+--------------------------------------------------------------------------------
+1. ROTATION FREQUENCY:
+   - access.log: Change from monthly to DAILY rotation (45.7 MB/day growth)
+   - app.log: Keep weekly rotation (15.2 MB/day is manageable)
+   - system.log: Keep weekly rotation (low growth rate)
+   - error.log: Implement DAILY rotation (critical log, 8.9 MB/day)
+   - debug.log: Implement DAILY rotation with short retention (low importance)
+
+2. COMPRESSION:
+root@35c890c98987:/app#

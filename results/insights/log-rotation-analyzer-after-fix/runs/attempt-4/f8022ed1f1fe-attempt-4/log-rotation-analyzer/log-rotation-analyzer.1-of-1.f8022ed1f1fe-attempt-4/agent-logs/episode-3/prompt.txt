@@ -1,0 +1,40 @@
+  ],
+  "system_info": {
+    "available_disk_gb": 50,
+    "log_partition_usage_percent": 78,
+    "backup_frequency": "daily",
+    "compliance_requirements": ["PCI-DSS", "SOX"],
+    "peak_traffic_hours": ["09:00-11:00", "14:00-16:00", "20:00-22:00"]
+  },
+  "current_issues": [
+    "High disk usage on log partition",
+    "Inconsistent rotation schedules",
+    "Missing compression on some logs",
+    "Some critical logs lack rotation configuration"
+  ]
+}
+root@bdbf79dfea60:/app# cat /proc/meminfo | head -10; tmux wait -S done
+MemTotal:        8025428 kB
+MemFree:         1837052 kB
+MemAvailable:    4500076 kB
+Buffers:          665632 kB
+Cached:          1833064 kB
+SwapCached:            4 kB
+Active:          3678664 kB
+Inactive:        1888676 kB
+Active(anon):    2908596 kB
+Inactive(anon):   161560 kB
+root@bdbf79dfea60:/app# cat /proc/diskstats | head -10; tmux wait -S done
+   1       0 ram0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       1 ram1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       2 ram2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       3 ram3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       4 ram4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       5 ram5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       6 ram6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       7 ram7 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       8 ram8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   1       9 ram9 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+root@bdbf79dfea60:/app# du -sh /var/log/samples/; tmux wait -S done
+760K    /var/log/samples/
+root@bdbf79dfea60:/app#

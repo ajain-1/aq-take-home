@@ -1,0 +1,12 @@
+{
+    "state_analysis": "The files are created but I need to verify the exact format of the SUMMARY section to ensure it has the required lines in the correct format. Let me check the exact formatting.",
+    "explanation": "Check the exact format of the SUMMARY section to ensure it meets requirements.",
+    "commands": [
+        {
+            "keystrokes": "grep -E '(Total log size:|Estimated total savings:|Potential space reduction:)' /app/analysis_report.txt\n",
+            "is_blocking": true,
+            "timeout_sec": 10
+        }
+    ],
+    "is_task_complete": false
+}

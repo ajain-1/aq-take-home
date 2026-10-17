@@ -1,0 +1,40 @@
+>         /usr/bin/systemctl reload nginx 2>/dev/null || true
+>     endscript
+> }
+>
+> # Error Log - Critical importance, NO previous rotation config!
+> # New configuration - 60-day retention for compliance
+> /var/log/samples/error.log {
+>     daily
+>     rotate 60
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     maxsize 50M
+>     dateext
+>     dateformat -%Y%m%d
+>     postrotate
+>         /usr/bin/systemctl reload web-server 2>/dev/null || true
+>     endscript
+> }
+>
+> # Debug Log - Low importance, NO previous rotation config!
+> # New configuration - aggressive rotation, short retention
+> /var/log/samples/debug.log {
+>     daily
+>     rotate 7
+>     compress
+>     delaycompress
+>     missingok
+>     notifempty
+>     create 644 www-data www-data
+>     maxsize 25M
+>     dateext
+>     dateformat -%Y%m%d
+>     # Debug logs can be truncated if empty for extended period
+>     ifempty
+> }
+> EOF
+root@8a26108f0519:/app#
