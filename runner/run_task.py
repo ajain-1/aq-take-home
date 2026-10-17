@@ -165,12 +165,16 @@ class TaskRunner:
         deadline = time.monotonic() + job_deadline_sec(spec, self._settings) + WAIT_GRACE_SEC
 
         while True:
-            snapshot = self._kube.snapshot(name, submission.n_attempts)
-            self._record_attempts(submission.id, snapshot)
-            if not snapshot.exists or snapshot.finished:
-                return
-            if reason := snapshot.fatal_reason:
-                raise ExecutionError(f"attempt pods cannot start: {reason}")
+            try:
+                snapshot = self._kube.snapshot(name, submission.n_attempts)
+            except Exception:
+                logger.warning("could not read job %s; will retry", name, exc_info=True)
+            else:
+                self._record_attempts(submission.id, snapshot)
+                if not snapshot.exists or snapshot.finished:
+                    return
+                if reason := snapshot.fatal_reason:
+                    raise ExecutionError(f"attempt pods cannot start: {reason}")
             if time.monotonic() > deadline:
                 logger.warning("submission %s exceeded its deadline; stopping job", submission.id)
                 self._kube.delete_job(name)
