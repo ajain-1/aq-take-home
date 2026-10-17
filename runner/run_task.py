@@ -81,10 +81,26 @@ class TaskRunner:
     def stop(self) -> None:
         self._stopping.set()
 
-    def create(self, archive: bytes, n_attempts: int, agent: str) -> Submission:
-        """Persist a new submission after validating its bundle; raises InvalidTaskBundle."""
+    def create(
+        self,
+        archive: bytes,
+        n_attempts: int,
+        agent: str,
+        strategy: Strategy = Strategy.FIXED,
+        confidence: float = 1.0,
+        validation_id: str | None = None,
+    ) -> Submission:
+        """Persist a new submission after validating its bundle; raises InvalidTaskBundle.
+
+        The bundle is checked synchronously so a malformed task is rejected up front
+        instead of surfacing later as a failed submission."""
         model = self._settings.model if self._settings.requires_model(agent) else None
-        submission = Submission.create(uuid.uuid4().hex[:12], n_attempts, agent, model)
+        submission = Submission.create(
+            uuid.uuid4().hex[:12], n_attempts, agent, model, strategy=strategy, confidence=confidence
+        )
+        if validation_id:
+            submission.validation_id = validation_id
+            submission.progress.phase = Phase.VALIDATING
         paths = self.paths(submission.id)
         paths.root.mkdir(parents=True)
         paths.upload.write_bytes(archive)
