@@ -47,9 +47,10 @@ def job_name(submission_id: str, wave: int) -> str:
     return f"aq-{submission_id}-w{wave}"
 
 
-def job_deadline_sec(spec: TaskSpec, settings: Settings) -> int:
-    per_try = spec.max_agent_timeout_sec + spec.max_test_timeout_sec + settings.attempt_overhead_sec
-    return int(per_try * (1 + settings.retries_per_attempt))
+def attempt_deadline_sec(spec: TaskSpec, settings: Settings) -> int:
+    """How long one try of an attempt may run, counted from its pod's start, so time spent
+    waiting to be scheduled never counts against it."""
+    return int(spec.max_agent_timeout_sec + spec.max_test_timeout_sec + settings.attempt_overhead_sec)
 
 
 def build_job_manifest(
@@ -114,12 +115,12 @@ def build_job_manifest(
             "parallelism": wave.size,
             "backoffLimitPerIndex": settings.retries_per_attempt,
             "maxFailedIndexes": wave.size,
-            "activeDeadlineSeconds": job_deadline_sec(spec, settings),
             "ttlSecondsAfterFinished": 24 * 3600,
             "template": {
                 "metadata": {"labels": labels},
                 "spec": {
                     "restartPolicy": "Never",
+                    "activeDeadlineSeconds": attempt_deadline_sec(spec, settings),
                     "terminationGracePeriodSeconds": 30,
                     "containers": [container],
                     "volumes": [
@@ -253,6 +254,9 @@ def _pod_state(pod) -> tuple[AttemptState, str | None]:
         case "Succeeded":
             return AttemptState.SUCCEEDED, None
         case "Failed":
+            if pod.status.reason == "DeadlineExceeded":
+                detail = pod.status.message or "attempt ran too long"
+                return AttemptState.FAILED, f"DeadlineExceeded: {detail}"
             terminated = next((s.state.terminated for s in statuses if s.state.terminated), None)
             if terminated:
                 return AttemptState.FAILED, f"{terminated.reason} (exit code {terminated.exit_code})"
@@ -260,6 +264,12 @@ def _pod_state(pod) -> tuple[AttemptState, str | None]:
         case "Running":
             return AttemptState.RUNNING, None
         case _:
+            unscheduled = next(
+                (c for c in pod.status.conditions or [] if c.type == "PodScheduled" and c.status == "False"),
+                None,
+            )
+            if unscheduled is not None:
+                return AttemptState.PENDING, f"{unscheduled.reason}: {unscheduled.message}"
             waiting = next((s.state.waiting for s in statuses if s.state.waiting), None)
             if waiting is None:
                 return AttemptState.PENDING, None

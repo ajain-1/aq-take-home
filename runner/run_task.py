@@ -20,7 +20,7 @@ from typing import Any
 
 from runner import bundle, docker_ops, learnability, results
 from runner.config import RESOURCE_CLASSES, Settings
-from runner.k8s import JobSnapshot, KubeClient, build_job_manifest, job_deadline_sec, job_name
+from runner.k8s import JobSnapshot, KubeClient, attempt_deadline_sec, build_job_manifest, job_name
 from runner.models import AttemptProgress, Phase, Status, Strategy, Submission, TaskSpec, Wave, utcnow
 from runner.paths import SubmissionPaths
 from runner.store import SubmissionNotFound, SubmissionStore
@@ -223,21 +223,40 @@ class TaskRunner:
     def _wait(self, submission: Submission, spec: TaskSpec, wave: Wave) -> None:
         self._set_phase(submission.id, Phase.RUNNING_ATTEMPTS)
         name = job_name(submission.id, wave.index)
-        deadline = time.monotonic() + job_deadline_sec(spec, self._settings) + WAIT_GRACE_SEC
+        # Backstop in case Kubernetes never finishes the Job: every try may use its full pod
+        # deadline. Only running time is charged, so a queue of pending pods is not a hang.
+        running_budget = attempt_deadline_sec(spec, self._settings) * (1 + self._settings.retries_per_attempt)
+        last_poll = time.monotonic()
 
         while True:
             snapshot = self._kube.snapshot(name, wave)
             self._record_attempts(submission.id, snapshot)
+            now = time.monotonic()
+            wave = self._advance_wave_clock(submission.id, wave.index, snapshot, now - last_poll)
+            last_poll = now
             if not snapshot.exists or snapshot.finished:
                 return
             if reason := snapshot.fatal_reason:
                 raise ExecutionError(f"attempt pods cannot start: {reason}")
-            if time.monotonic() > deadline:
+            if wave.queued_sec > self._settings.max_queue_sec:
+                waiting = next((a.reason for a in snapshot.attempts if a.reason), "no capacity")
+                raise ExecutionError(
+                    f"attempts waited over {self._settings.max_queue_sec}s for cluster capacity ({waiting})"
+                )
+            if wave.running_sec > running_budget + WAIT_GRACE_SEC:
                 logger.warning("submission %s exceeded its deadline; stopping job", submission.id)
                 self._kube.delete_job(name)
                 return
             if self._stopping.wait(self._settings.poll_interval_sec):
                 raise Interrupted
+
+    def _advance_wave_clock(
+        self, submission_id: str, wave_index: int, snapshot: JobSnapshot, elapsed_sec: float
+    ) -> Wave:
+        def mutate(s: Submission) -> None:
+            s.progress.waves[wave_index].advance_clock(snapshot.attempts, elapsed_sec)
+
+        return self._store.update(submission_id, mutate).progress.waves[wave_index]
 
     def _record_attempts(self, submission_id: str, snapshot: JobSnapshot) -> None:
         if not snapshot.attempts:

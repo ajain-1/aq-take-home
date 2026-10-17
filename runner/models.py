@@ -66,6 +66,18 @@ class Wave(BaseModel):
     size: int
     launched_at: datetime | None = None
     done: bool = False
+    # Wall-clock seconds while any attempt was running, and while attempts were only
+    # waiting for cluster capacity; persisted so deadlines survive a restart.
+    running_sec: float = 0.0
+    queued_sec: float = 0.0
+
+    def advance_clock(self, attempts: list["AttemptProgress"], elapsed_sec: float) -> None:
+        """Charge elapsed time to running if any attempt runs, else to queueing if any waits."""
+        states = {attempt.state for attempt in attempts}
+        if AttemptState.RUNNING in states:
+            self.running_sec += elapsed_sec
+        elif AttemptState.PENDING in states:
+            self.queued_sec += elapsed_sec
 
 
 class Progress(BaseModel):
