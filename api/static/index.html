@@ -5,48 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Task Executor</title>
   <link rel="stylesheet" href="/ui/static/styles.css">
+  <script type="module" src="/ui/static/app.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <h1>Task Executor</h1>
+    <a class="brand" href="#/">Task Executor</a>
+    <nav class="nav">
+      <a href="#/" data-nav="dashboard">Dashboard</a>
+      <a href="#/submit" class="button primary small" data-nav="submit">New run</a>
+    </nav>
     <span id="health" class="health"></span>
   </header>
-
-  <main class="layout">
-    <aside class="sidebar">
-      <section class="panel">
-        <h2>Submit a task</h2>
-        <form id="submit-form">
-          <label id="dropzone" class="dropzone" for="file-input">
-            <input id="file-input" type="file" accept=".zip" hidden>
-            <span id="dropzone-text">Drop a task .zip here or click to choose</span>
-          </label>
-          <div class="field-row">
-            <label>Attempts <input id="n-attempts" type="number" min="1" max="10" value="1"></label>
-            <label>Agent
-              <select id="agent">
-                <option value="terminus-1">terminus-1</option>
-                <option value="oracle">oracle</option>
-                <option value="nop">nop</option>
-              </select>
-            </label>
-          </div>
-          <button id="submit-button" type="submit" disabled>Submit</button>
-          <p id="submit-error" class="error" hidden></p>
-        </form>
-      </section>
-
-      <section class="panel">
-        <h2>Submissions</h2>
-        <ul id="submission-list" class="submission-list"></ul>
-      </section>
-    </aside>
-
-    <section id="detail" class="detail">
-      <p class="empty">Select a submission to see its progress and results.</p>
-    </section>
+  <main class="page">
+    <nav id="breadcrumbs" class="breadcrumbs" aria-label="Breadcrumb"></nav>
+    <div id="view"></div>
   </main>
-
-  <script src="/ui/static/app.js"></script>
 </body>
 </html>
