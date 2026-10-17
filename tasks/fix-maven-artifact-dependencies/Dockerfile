@@ -9,7 +9,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY CMakeLists.txt /app/CMakeLists.txt
-COPY libs /app/lib
+COPY libs /app/libs
 COPY app /app/app
 
 COPY applypatch /app/applypatch

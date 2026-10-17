@@ -44,7 +44,7 @@ perl -0777 -pe 'BEGIN{$/=undef;}
 # Fix calculator app: correct link order, explicit dependencies, RPATH
 perl -0777 -pe 'BEGIN{$/=undef;}
  s/target_link_libraries\(\s*calculator\s+PRIVATE\s+calc\s+math\s*\)/target_link_libraries(calculator PRIVATE math calc)/g;
- if(!/add_dependencies\(\s*calculator\s+math\s+calc\s*\)/){ 
+ if(!/^\s*add_dependencies\(\s*calculator\s+math\s+calc\s*\)/m){ 
    s/add_executable\([^\)]*\)/$&\n\nadd_dependencies(calculator math calc)\n/; 
  }
  # Configure RPATH so executable can find shared libraries

@@ -17,6 +17,12 @@ def run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, cwd=str(cwd) if cwd else None, check=True, text=True, capture_output=True)
 
 
+def app_cmake_code() -> str:
+    """app/CMakeLists.txt with comments stripped, so commented-out text never matches."""
+    lines = (ROOT / "app" / "CMakeLists.txt").read_text().splitlines()
+    return "\n".join(line.split("#", 1)[0] for line in lines)
+
+
 def clean_build_tree():
     if BUILD.exists():
         shutil.rmtree(BUILD)
@@ -91,46 +97,14 @@ def test_rpath_configured_properly():
 
 
 def test_shared_lib_link_order_math_before_calc():
-    """Final link line for calculator orders shared libs with math before calc."""
+    """calculator declares its shared libs with math before calc."""
     clean_build_tree()
     configure_and_build()
-    
-    # Gather candidates: link.txt, build.ninja, and any build files mentioning both libs
-    candidates = list((BUILD / "CMakeFiles").rglob("link.txt"))
-    bn = BUILD / "build.ninja"
-    if bn.exists():
-        candidates.append(bn)
-
-    matched_contents = []
-    scanned = set()
-    for p in candidates:
-        try:
-            content = p.read_text(errors="ignore")
-        except Exception:
-            continue
-        if "libmath.so" in content and "libcalc.so" in content:
-            matched_contents.append(content)
-            scanned.add(p)
-
-    # Fallback: scan all text-like files under build for both libs
-    if not matched_contents:
-        for p in BUILD.rglob("*"):
-            if p.is_file() and p not in scanned and p.stat().st_size < 2_000_000:
-                try:
-                    text = p.read_text(errors="ignore")
-                except Exception:
-                    continue
-                if "libmath.so" in text and "libcalc.so" in text:
-                    matched_contents.append(text)
-                    break
-
-    assert matched_contents, "No link lines containing both libmath.so and libcalc.so found"
-
-    joined = "\n".join(matched_contents)
-    idx_math = joined.find("libmath.so")
-    idx_calc = joined.find("libcalc.so")
-    assert idx_math != -1 and idx_calc != -1, "Both libmath.so and libcalc.so should be in link line"
-    assert idx_math < idx_calc, "Shared libraries must be ordered: math before calc"
+    match = re.search(r"target_link_libraries\(\s*calculator\b([^)]*)\)", app_cmake_code())
+    assert match, "app/CMakeLists.txt must link calculator with target_link_libraries"
+    libs = match.group(1).split()
+    assert "math" in libs and "calc" in libs, "calculator must link both math and calc"
+    assert libs.index("math") < libs.index("calc"), "Shared libraries must be ordered: math before calc"
 
 
 def test_public_includes_and_no_manual_includes_in_app():
@@ -138,8 +112,7 @@ def test_public_includes_and_no_manual_includes_in_app():
     clean_build_tree()
     # Build must succeed using only PUBLIC includes from libraries
     configure_and_build()
-    app_cml = ROOT / "app" / "CMakeLists.txt"
-    content = app_cml.read_text()
+    content = app_cmake_code()
     assert not re.search(r"(^|\n)\s*target_include_directories\(\s*calculator\b", content), (
         "app/CMakeLists.txt must not manually add include directories for headers;"
         " libraries must export PUBLIC include dirs"
@@ -151,8 +124,7 @@ def test_explicit_dependencies_present_to_avoid_races():
     clean_build_tree()
     # After a successful build, verify explicit dependencies are present in app CMake
     configure_and_build()
-    app_cml = ROOT / "app" / "CMakeLists.txt"
-    content = app_cml.read_text()
+    content = app_cmake_code()
     assert re.search(r"add_dependencies\(\s*calculator\s+math\s+calc\s*\)", content), (
         "add_dependencies(calculator math calc) must be present to avoid build races"
     )
