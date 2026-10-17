@@ -7,7 +7,7 @@ from typing import Any
 
 from runner.config import Settings
 from runner.learnability import TARGET_RUNS, decide
-from runner.models import AttemptProgress
+from runner.models import AttemptProgress, Strategy
 from runner.paths import find_trial_dir
 from runner.trial_entrypoint import TASK_CONTAINER_EVENTS_FILE
 
@@ -181,10 +181,15 @@ def learnability(
         "attempts_used": len(attempts),
         "tokens": {"input": input_tokens, "output": output_tokens},
         "estimated_cost_usd": round(cost_usd, 4),
-        "estimated_savings_vs_target": {
-            "attempts": saved,
-            "input_tokens": round(per_attempt(input_tokens)),
-            "output_tokens": round(per_attempt(output_tokens)),
-            "cost_usd": round(per_attempt(cost_usd), 4),
-        },
+        # Only the adaptive strategy decides how many attempts to run, so only it saves any.
+        "estimated_savings_vs_target": (
+            {
+                "attempts": saved,
+                "input_tokens": round(per_attempt(input_tokens)),
+                "output_tokens": round(per_attempt(output_tokens)),
+                "cost_usd": round(per_attempt(cost_usd), 4),
+            }
+            if strategy == Strategy.ADAPTIVE
+            else None
+        ),
     }

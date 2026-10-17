@@ -4,8 +4,8 @@
     "resolved_attempts": 0,
     "n_attempts": 5,
     "learnability": {
-      "verdict": "insufficient_evidence",
-      "basis": "95% interval 0%-43% overlaps the 20-70% boundary; more runs needed",
+      "verdict": "undetermined",
+      "basis": "0 passing / 5 failing runs; the 10-run rule (2-7 of 10 pass) is not yet decided",
       "pass_rate": 0.0,
       "interval_95": [
         0.0,

@@ -212,7 +212,7 @@ The first submission builds the Job pod image (a few minutes); later submissions
 #### What I did
 - Added `runner/insights/`, which turns the N attempts of a submission into findings a customer can act on. It is served by `GET /insights/{id}` (`?format=markdown`, `?refresh=true`, `?narrative=false`) and written to `insights.json` / `insights.md` in the submission directory. `python -m runner.insights <dir>` regenerates and re-verifies a report offline.
 - What it reports:
-  - **Outcome with honest uncertainty.** Resolved k/N with a 95% Wilson interval, and a learnability verdict. At N=10 it applies the exact 2–7-of-10 rule; below that it commits to "likely learnable / too easy / too hard" only when the whole interval supports it, and otherwise says `insufficient_evidence`.
+  - **Outcome with honest uncertainty.** Resolved k/N with a 95% Wilson interval for context, and the learnability class from `runner.learnability`, the same exact 10-run rule the adaptive strategy (B) stops on. Errored attempts are excluded, as in B. If the runs so far don't decide the class, the verdict is `undetermined` rather than a guess, so B and D can never disagree about the same run.
   - **Per-test pass rates**, each with its own interval.
   - **Per-attempt failure taxonomy**: `infrastructure_issue` (e.g. task-container OOM, cited from the pod's `task-container-events.jsonl`), `infrastructure_error`, `tests_not_run`, `agent_timeout`, `test_timeout`, `llm_error`, `tests_unparseable`, `stopped_without_completing`, `declared_done_with_failing_tests`, and `declared_done_despite_failure_warning` (terminus showed the agent its "TESTS FAILED! Are you sure" prompt and it declared done anyway).
   - **Consistent failures**: a test that fails in every completed attempt, flagged as systematic when the assertion message is identical each time.
@@ -220,8 +220,8 @@ The first submission builds the Job pod image (a few minutes); later submissions
   - **Divergence**: for tests that pass in some attempts and fail in others, a literal that every passing attempt typed and no failing attempt did.
 - Evidence committed in `results/insights/`:
   - **`log-rotation-analyzer`, 5 attempts: 0/5 resolved.** Four tests fail in all 5 attempts, three of them with an identical assertion each time. Every attempt declared success with failing tests. The tests require strings the instruction never states (`SYSTEM OVERVIEW`, `LOG FILE ANALYSIS`, `Total log size:`, `Potential space reduction:`, `Large file`, …). Concretely: the task under-specifies its report format, so the 0% pass rate measures the spec, not the agent. 67/67 evidence items verify from the committed files.
-  - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and still gives `insufficient_evidence` for learnability (interval 57–100%) rather than declaring it too easy.
-  - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `insufficient_evidence` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
+  - **`broken-flask-api`, 5 attempts: 5/5 resolved.** The report says so, and gives `undetermined` for learnability (8 passes are needed to call it too easy) rather than declaring it too easy.
+  - **`broken-coordinate-transform`, 5 attempts: 5/5 resolved**, with the same honest `undetermined` verdict. None of the live runs produced mixed results, so pass-versus-fail divergence detection is exercised only by the synthetic unit test (`tests/test_insights.py`), not by committed run evidence.
 
 #### How trust is enforced
 - Every finding carries evidence IDs. Each item is either a verbatim quote, with its source path relative to the submission and, where relevant, line, attempt and episode, or an absence claim scoped to exactly what it is about (`task.yaml#instruction`).

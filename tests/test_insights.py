@@ -102,10 +102,13 @@ def test_wilson_interval_is_wide_for_small_samples():
 
 
 def test_learnability_uses_exact_rule_at_ten_and_hedges_below():
-    assert learnability_verdict(4, 10)["verdict"] == "learnable"
-    assert learnability_verdict(9, 10)["verdict"] == "too_easy"
-    assert learnability_verdict(2, 5)["verdict"] == "insufficient_evidence"
-    assert learnability_verdict(0, 40)["verdict"] == "likely_too_hard"
+    assert learnability_verdict(4, 6)["verdict"] == "learnable"
+    assert learnability_verdict(9, 1)["verdict"] == "too_easy"
+    assert learnability_verdict(2, 3)["verdict"] == "learnable"  # decided early, as the adaptive runner
+    assert learnability_verdict(8, 0)["verdict"] == "too_easy"
+    assert learnability_verdict(0, 9)["verdict"] == "too_hard"
+    assert learnability_verdict(5, 0)["verdict"] == "undetermined"
+    assert "1 errored" in learnability_verdict(1, 1, errored=1)["basis"]
 
 
 def test_literal_extraction_ignores_messages_docstrings_and_call_args():

@@ -51,12 +51,14 @@ class Analyzer:
         rejected = [i for i in self.insights if not self.ledger.all_verified(i.evidence)]
         cited = {e for insight in accepted + rejected for e in insight.evidence}
         resolved = sum(a.resolved for a in self.s.attempts)
+        errored = sum(a.status == "error" for a in self.s.attempts)
+        failures = len(self.s.attempts) - errored - resolved
         return {
             "task_id": self.s.task_id,
             "outcome": {
                 "resolved_attempts": resolved,
                 "n_attempts": len(self.s.attempts),
-                "learnability": learnability_verdict(resolved, len(self.s.attempts)),
+                "learnability": learnability_verdict(resolved, failures, errored),
             },
             "tests": self._test_table(),
             "attempts": attempts,

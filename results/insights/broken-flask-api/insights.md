@@ -1,7 +1,7 @@
 # Insights: broken-flask-api
 
 **5/5 attempts resolved the task** (95% interval for the true pass rate: 57%-100%).
-Learnability verdict: **insufficient_evidence** (95% interval 57%-100% overlaps the 20-70% boundary; more runs needed).
+Learnability verdict: **undetermined** (5 passing / 0 failing runs; the 10-run rule (2-7 of 10 pass) is not yet decided).
 
 Every finding below cites evidence that was re-checked verbatim against the run artifacts. Findings whose evidence did not verify are withheld and listed at the end.
 
